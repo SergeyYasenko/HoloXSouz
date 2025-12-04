@@ -1,0 +1,37 @@
+/* Usual Font */
+@font-face {
+  font-family: 'Usual';
+  src: url('../assets/fonts/Usual-Regular.eot');
+  src: url('../assets/fonts/Usual-Regular.eot?#iefix') format('embedded-opentype'),
+       url('../assets/fonts/Usual-Regular.woff2') format('woff2'),
+       url('../assets/fonts/Usual-Regular.woff') format('woff'),
+       url('../assets/fonts/Usual-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Usual';
+  src: url('../assets/fonts/Usual-Medium.eot');
+  src: url('../assets/fonts/Usual-Medium.eot?#iefix') format('embedded-opentype'),
+       url('../assets/fonts/Usual-Medium.woff2') format('woff2'),
+       url('../assets/fonts/Usual-Medium.woff') format('woff'),
+       url('../assets/fonts/Usual-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Usual';
+  src: url('../assets/fonts/Usual-Bold.eot');
+  src: url('../assets/fonts/Usual-Bold.eot?#iefix') format('embedded-opentype'),
+       url('../assets/fonts/Usual-Bold.woff2') format('woff2'),
+       url('../assets/fonts/Usual-Bold.woff') format('woff'),
+       url('../assets/fonts/Usual-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
