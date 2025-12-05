@@ -1,9 +1,13 @@
 <script setup>
 import { ref, onMounted, onUnmounted, provide } from "vue";
 import Header from "./components/Header.vue";
+import Preloader from "./components/Preloader.vue";
 import { useFullscreen } from "./composables/useFullscreen.js";
+import { usePreloader } from "./composables/usePreloader.js";
 
 const { autoEnterFullscreen, setupFullscreenOnInteraction } = useFullscreen();
+const { progress, isLoading, startPreload } = usePreloader();
+
 const showHeader = ref(false);
 let headerHoverTimeout = null;
 
@@ -56,7 +60,10 @@ const handleMouseLeave = () => {
 // Provide header visibility state to child components
 provide("showHeader", showHeader);
 
-onMounted(() => {
+onMounted(async () => {
+   // Start preloading all assets
+   await startPreload();
+
    // Setup listeners for first user interaction to enter fullscreen
    // (browsers require user gesture for fullscreen API)
    setupFullscreenOnInteraction();
@@ -77,6 +84,10 @@ onUnmounted(() => {
 
 <template>
    <div id="app" @mouseleave="showHeader = false">
+      <!-- Preloader -->
+      <Preloader :progress="progress" :is-loading="isLoading" />
+
+      <!-- Main App Content -->
       <Header :class="{ 'header-visible': showHeader }" />
       <main :class="{ 'main-with-header': showHeader }">
          <router-view v-slot="{ Component }">
