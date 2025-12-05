@@ -1,6 +1,5 @@
 import { ref, nextTick } from "vue";
 import { levelTransitions, floorsConfig, levelImages } from "../config/navigation.js";
-import { getCachedVideo } from "./usePreloader.js";
 
 /**
  * Composable for managing video transitions between levels
@@ -206,10 +205,9 @@ export function useTransitions(currentLevel, levelHistory) {
       // Store original path for comparison later
       originalVideoPath.value = transitionVideoPath;
 
-      // Use cached blob URL if available for faster playback
-      const cachedVideoSrc = getCachedVideo(transitionVideoPath);
-      loadVideo(cachedVideoSrc);
-      transitionVideoSrc.value = cachedVideoSrc;
+      // Load and set video source
+      loadVideo(transitionVideoPath);
+      transitionVideoSrc.value = transitionVideoPath;
 
       await nextTick();
       if (transitionVideo.value) {

@@ -217,6 +217,9 @@
             class="home-video home-video-transition"
             muted
             playsinline
+            preload="auto"
+            webkit-playsinline
+            x5-playsinline
             @ended="handleTransitionEnd"
             @loadedmetadata="handleVideoLoaded"
          ></video>
@@ -640,6 +643,11 @@ onUnmounted(() => {
    position: absolute;
    top: 0;
    left: 0;
+   /* Hardware acceleration for smoother video */
+   transform: translateZ(0);
+   -webkit-transform: translateZ(0);
+   backface-visibility: hidden;
+   -webkit-backface-visibility: hidden;
 }
 
 .home-image {
@@ -651,7 +659,12 @@ onUnmounted(() => {
    -webkit-user-select: none;
    -moz-user-select: none;
    -ms-user-select: none;
-   pointer-events: none; /* Позволяем событиям проходить через картинку к wrapper */
+   pointer-events: none;
+   /* Hardware acceleration for smoother rendering */
+   transform: translateZ(0);
+   -webkit-transform: translateZ(0);
+   backface-visibility: hidden;
+   -webkit-backface-visibility: hidden;
 }
 
 .home-image-preload {
@@ -668,6 +681,8 @@ onUnmounted(() => {
 .home-video-transition {
    opacity: 1;
    z-index: 10;
+   /* Ensure video plays smoothly */
+   will-change: opacity;
 }
 
 .home-content-wrapper {

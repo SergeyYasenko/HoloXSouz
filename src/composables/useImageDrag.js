@@ -75,9 +75,13 @@ export function useImageDrag(containerRef, imageRef, scale = ref(1), onDragStart
    const imageStyle = computed(() => {
       const scaleValue = getScaleValue();
       return {
-         transform: `translate(${position.value.x}px, ${position.value.y}px) scale(${scaleValue})`,
+         // Use translate3d for hardware acceleration on mobile
+         transform: `translate3d(${position.value.x}px, ${position.value.y}px, 0) scale(${scaleValue})`,
          transformOrigin: "0 0",
-         transition: isDragging.value ? "none" : "transform 0.1s ease-out",
+         transition: isDragging.value ? "none" : "transform 0.15s ease-out",
+         willChange: isDragging.value ? "transform" : "auto",
+         backfaceVisibility: "hidden",
+         WebkitBackfaceVisibility: "hidden",
       };
    });
 
@@ -103,13 +107,16 @@ export function useImageDrag(containerRef, imageRef, scale = ref(1), onDragStart
 
    const handleMouseMove = (event) => {
       if (isDragging.value) {
-         const newPosition = {
-            x: event.clientX - dragStart.value.x,
-            y: event.clientY - dragStart.value.y,
-         };
-         // Constrain position to bounds
-         position.value = constrainPosition(newPosition, getScaleValue());
-         lastPosition.value = { ...position.value };
+         // Use requestAnimationFrame for smoother updates
+         requestAnimationFrame(() => {
+            const newPosition = {
+               x: event.clientX - dragStart.value.x,
+               y: event.clientY - dragStart.value.y,
+            };
+            // Constrain position to bounds
+            position.value = constrainPosition(newPosition, getScaleValue());
+            lastPosition.value = { ...position.value };
+         });
       }
    };
 
@@ -142,13 +149,19 @@ export function useImageDrag(containerRef, imageRef, scale = ref(1), onDragStart
       if (isDragging.value && event.touches.length === 1) {
          event.preventDefault(); // Prevent scrolling
          const touch = event.touches[0];
-         const newPosition = {
-            x: touch.clientX - dragStart.value.x,
-            y: touch.clientY - dragStart.value.y,
-         };
-         // Constrain position to bounds
-         position.value = constrainPosition(newPosition, getScaleValue());
-         lastPosition.value = { ...position.value };
+         const clientX = touch.clientX;
+         const clientY = touch.clientY;
+
+         // Use requestAnimationFrame for smoother updates on mobile
+         requestAnimationFrame(() => {
+            const newPosition = {
+               x: clientX - dragStart.value.x,
+               y: clientY - dragStart.value.y,
+            };
+            // Constrain position to bounds
+            position.value = constrainPosition(newPosition, getScaleValue());
+            lastPosition.value = { ...position.value };
+         });
       }
    };
 

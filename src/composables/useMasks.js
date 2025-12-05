@@ -21,7 +21,7 @@ export function useMasks() {
    const editMode = ref(defaultEditMode);
 
    // Disclaimer mode - shows red overlay and always-visible masks
-   const showDisclaimerMode = ref(true);
+   const showDisclaimerMode = ref(false);
 
    // House outline configuration for Map level
    const showHouseOutline1 = ref(true); // Первая маска на Map
