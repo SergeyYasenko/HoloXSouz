@@ -814,9 +814,20 @@ onUnmounted(() => {
 <style scoped>
 .home {
    width: 100%;
-   height: 100vh;
+   /* Use dynamic viewport height - adjusts for browser UI */
+   height: 100dvh;
    overflow: hidden;
    position: relative;
+
+   /* Fallback for browsers that don't support dvh */
+   height: 100vh;
+}
+
+/* Modern browsers with dvh support */
+@supports (height: 100dvh) {
+   .home {
+      height: 100dvh;
+   }
 }
 
 .home-image-wrapper {

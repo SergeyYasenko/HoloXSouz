@@ -26,9 +26,19 @@ html:focus-within {
 
 /* Set core body defaults */
 body {
-  min-height: 100vh;
+  min-height: 100dvh; /* Use dynamic viewport height - adjusts for browser UI */
   text-rendering: optimizeSpeed;
   line-height: 1.5;
+  
+  /* Fallback for browsers that don't support dvh */
+  min-height: 100vh;
+}
+
+/* Modern browsers with dvh support */
+@supports (min-height: 100dvh) {
+  body {
+    min-height: 100dvh;
+  }
 }
 
 /* A elements that don't have a class get default styles */

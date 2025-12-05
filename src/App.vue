@@ -3,14 +3,43 @@ import { ref, onMounted, onUnmounted, provide } from "vue";
 import Header from "./components/Header.vue";
 import Preloader from "./components/Preloader.vue";
 import { usePreloader } from "./composables/usePreloader.js";
-import { useScreenOrientation } from "./composables/useScreenOrientation.js";
 
 const { progress, isLoading, currentAsset, startPreload } = usePreloader();
-const { setupOrientationLock, lockToLandscape } = useScreenOrientation();
 
 const showHeader = ref(false);
 let headerHoverTimeout = null;
-let orientationCleanup = null;
+
+// Check if browser supports dynamic viewport units (dvh)
+// If not, we'll use JavaScript to update CSS variables as fallback
+const supportsDvh = CSS.supports("height", "100dvh");
+
+// Calculate real viewport height for browsers that don't support dvh
+const realViewportHeight = ref(window.innerHeight);
+
+// Update viewport height on resize and orientation change (fallback for older browsers)
+const updateViewportHeight = () => {
+   // Only update if browser doesn't support dvh
+   if (!supportsDvh) {
+      // Use innerHeight which accounts for browser UI
+      realViewportHeight.value = window.innerHeight;
+
+      // Also use visualViewport API if available (more accurate on mobile)
+      if (window.visualViewport) {
+         realViewportHeight.value = window.visualViewport.height;
+      }
+
+      // Set CSS variable for use in styles (fallback)
+      document.documentElement.style.setProperty(
+         "--real-vh-fallback",
+         `${realViewportHeight.value}px`
+      );
+   }
+};
+
+// Initial calculation (only if needed)
+if (!supportsDvh) {
+   updateViewportHeight();
+}
 
 // Hover zone height (top of screen)
 const HOVER_ZONE_HEIGHT = 40; // pixels from top
@@ -70,19 +99,21 @@ onMounted(async () => {
       // Continue even if preloader fails
    }
 
-   // Setup screen orientation lock for mobile devices
-   orientationCleanup = setupOrientationLock();
-
-   // Also try to lock immediately after preloader (user has interacted)
-   if (!isLoading.value) {
-      setTimeout(() => {
-         lockToLandscape();
-      }, 500);
-   }
-
    // Add mouse move listener for header visibility
    document.addEventListener("mousemove", handleMouseMove);
    document.addEventListener("mouseleave", handleMouseLeave);
+
+   // Listen for viewport changes (mobile browser UI show/hide) - only if dvh not supported
+   if (!supportsDvh) {
+      window.addEventListener("resize", updateViewportHeight);
+      window.addEventListener("orientationchange", updateViewportHeight);
+
+      // Use visualViewport API if available (more accurate on mobile)
+      if (window.visualViewport) {
+         window.visualViewport.addEventListener("resize", updateViewportHeight);
+         window.visualViewport.addEventListener("scroll", updateViewportHeight);
+      }
+   }
 });
 
 onUnmounted(() => {
@@ -91,9 +122,20 @@ onUnmounted(() => {
    if (headerHoverTimeout) {
       clearTimeout(headerHoverTimeout);
    }
-   // Cleanup orientation lock if needed
-   if (orientationCleanup && typeof orientationCleanup === "function") {
-      orientationCleanup();
+   // Remove viewport listeners (only if they were added)
+   if (!supportsDvh) {
+      window.removeEventListener("resize", updateViewportHeight);
+      window.removeEventListener("orientationchange", updateViewportHeight);
+      if (window.visualViewport) {
+         window.visualViewport.removeEventListener(
+            "resize",
+            updateViewportHeight
+         );
+         window.visualViewport.removeEventListener(
+            "scroll",
+            updateViewportHeight
+         );
+      }
    }
 });
 </script>
@@ -122,7 +164,7 @@ onUnmounted(() => {
 <style>
 #app {
    width: 100%;
-   height: 100vh;
+   height: var(--real-vh, 100vh); /* Use real viewport height */
    overflow: hidden;
    display: flex;
    flex-direction: column;
