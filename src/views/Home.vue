@@ -43,81 +43,166 @@
             @ended="handleTransitionEnd"
             @loadedmetadata="handleVideoLoaded"
          ></video>
-         <!-- Red territory mask for disclaimer mode (non-clickable) -->
-         <HouseOutline
-            v-if="currentLevel === 'map' && showDisclaimerMode"
-            :points="mapMaskConfig.territory.points"
-            :path="mapMaskConfig.territory.path"
-            :stroke-width="mapMaskConfig.territory.strokeWidth"
-            :glow-color="mapMaskConfig.territory.glowColor"
-            :glow-blur="mapMaskConfig.territory.glowBlur"
-            :animated="mapMaskConfig.territory.animated"
-            :always-visible="mapMaskConfig.territory.alwaysVisible"
-            :on-click="() => {}"
-            class="home-disclaimer-mask"
-         />
-         <!-- House outline overlays for Map level -->
-         <HouseOutline
-            v-if="currentLevel === 'map' && showHouseOutline1"
-            :points="mapMaskConfig.house1.points"
-            :path="mapMaskConfig.house1.path"
-            :stroke-width="mapMaskConfig.house1.strokeWidth"
-            :glow-color="mapMaskConfig.house1.glowColor"
-            :glow-blur="mapMaskConfig.house1.glowBlur"
-            :animated="mapMaskConfig.house1.animated"
-            :always-visible="mapMaskConfig.house1.alwaysVisible"
-            :on-click="handleHouse1Click"
-         />
-         <HouseOutline
-            v-if="currentLevel === 'map' && showHouseOutline2"
-            :points="mapMaskConfig.house2.points"
-            :path="mapMaskConfig.house2.path"
-            :stroke-width="mapMaskConfig.house2.strokeWidth"
-            :glow-color="mapMaskConfig.house2.glowColor"
-            :glow-blur="mapMaskConfig.house2.glowBlur"
-            :animated="mapMaskConfig.house2.animated"
-            :always-visible="mapMaskConfig.house2.alwaysVisible"
-            :on-click="handleHouse2Click"
-         />
-         <!-- House outline overlays for 2-projects level -->
-         <HouseOutline
-            v-if="currentLevel === '2-projects' && showHouseOutline1"
-            :points="twoProjectsMaskConfig.project1.points"
-            :path="twoProjectsMaskConfig.project1.path"
-            :stroke-width="twoProjectsMaskConfig.project1.strokeWidth"
-            :glow-color="twoProjectsMaskConfig.project1.glowColor"
-            :glow-blur="twoProjectsMaskConfig.project1.glowBlur"
-            :animated="twoProjectsMaskConfig.project1.animated"
-            :always-visible="twoProjectsMaskConfig.project1.alwaysVisible"
-            :on-click="handleProject1Click"
-         />
-         <HouseOutline
-            v-if="currentLevel === '2-projects' && showHouseOutline2"
-            :points="twoProjectsMaskConfig.project2.points"
-            :path="twoProjectsMaskConfig.project2.path"
-            :stroke-width="twoProjectsMaskConfig.project2.strokeWidth"
-            :glow-color="twoProjectsMaskConfig.project2.glowColor"
-            :glow-blur="twoProjectsMaskConfig.project2.glowBlur"
-            :animated="twoProjectsMaskConfig.project2.animated"
-            :always-visible="twoProjectsMaskConfig.project2.alwaysVisible"
-            :on-click="handleProject2Click"
-         />
-         <!-- House outline overlays for Start level (6 floors) -->
-         <template
-            v-for="floorId in ['g', '1', '2', '3', '4', '5']"
-            :key="floorId"
-         >
+         <!-- Edit Mode: Show all masks for all levels simultaneously -->
+         <template v-if="editMode">
+            <!-- Map level masks -->
+            <template v-if="currentLevel === 'map'">
+               <!-- Red territory mask -->
+               <HouseOutline
+                  :points="mapMaskConfig.territory.points"
+                  :path="mapMaskConfig.territory.path"
+                  :stroke-width="mapMaskConfig.territory.strokeWidth"
+                  :glow-color="mapMaskConfig.territory.glowColor"
+                  :glow-blur="mapMaskConfig.territory.glowBlur"
+                  :animated="mapMaskConfig.territory.animated"
+                  :always-visible="mapMaskConfig.territory.alwaysVisible"
+                  :on-click="() => {}"
+                  class="home-disclaimer-mask"
+               />
+               <!-- House 1 -->
+               <HouseOutline
+                  :points="mapMaskConfig.house1.points"
+                  :path="mapMaskConfig.house1.path"
+                  :stroke-width="mapMaskConfig.house1.strokeWidth"
+                  :glow-color="mapMaskConfig.house1.glowColor"
+                  :glow-blur="mapMaskConfig.house1.glowBlur"
+                  :animated="mapMaskConfig.house1.animated"
+                  :always-visible="mapMaskConfig.house1.alwaysVisible"
+                  :on-click="handleHouse1Click"
+               />
+               <!-- House 2 -->
+               <HouseOutline
+                  :points="mapMaskConfig.house2.points"
+                  :path="mapMaskConfig.house2.path"
+                  :stroke-width="mapMaskConfig.house2.strokeWidth"
+                  :glow-color="mapMaskConfig.house2.glowColor"
+                  :glow-blur="mapMaskConfig.house2.glowBlur"
+                  :animated="mapMaskConfig.house2.animated"
+                  :always-visible="mapMaskConfig.house2.alwaysVisible"
+                  :on-click="handleHouse2Click"
+               />
+            </template>
+            <!-- 2-projects level masks -->
+            <template v-if="currentLevel === '2-projects'">
+               <HouseOutline
+                  :points="twoProjectsMaskConfig.project1.points"
+                  :path="twoProjectsMaskConfig.project1.path"
+                  :stroke-width="twoProjectsMaskConfig.project1.strokeWidth"
+                  :glow-color="twoProjectsMaskConfig.project1.glowColor"
+                  :glow-blur="twoProjectsMaskConfig.project1.glowBlur"
+                  :animated="twoProjectsMaskConfig.project1.animated"
+                  :always-visible="twoProjectsMaskConfig.project1.alwaysVisible"
+                  :on-click="handleProject1Click"
+               />
+               <HouseOutline
+                  :points="twoProjectsMaskConfig.project2.points"
+                  :path="twoProjectsMaskConfig.project2.path"
+                  :stroke-width="twoProjectsMaskConfig.project2.strokeWidth"
+                  :glow-color="twoProjectsMaskConfig.project2.glowColor"
+                  :glow-blur="twoProjectsMaskConfig.project2.glowBlur"
+                  :animated="twoProjectsMaskConfig.project2.animated"
+                  :always-visible="twoProjectsMaskConfig.project2.alwaysVisible"
+                  :on-click="handleProject2Click"
+               />
+            </template>
+            <!-- Start level masks (all floors) -->
+            <template v-if="currentLevel === 'start'">
+               <template
+                  v-for="floorId in ['g', '1', '2', '3', '4', '5']"
+                  :key="floorId"
+               >
+                  <HouseOutline
+                     v-if="getFloorMaskConfig(floorId)"
+                     :points="getFloorMaskConfig(floorId).points"
+                     :path="getFloorMaskConfig(floorId).path"
+                     :stroke-width="getFloorMaskConfig(floorId).strokeWidth"
+                     :glow-color="getFloorMaskConfig(floorId).glowColor"
+                     :glow-blur="getFloorMaskConfig(floorId).glowBlur"
+                     :animated="getFloorMaskConfig(floorId).animated"
+                     :always-visible="getFloorMaskConfig(floorId).alwaysVisible"
+                     :on-click="() => handleFloorClick(floorId)"
+                  />
+               </template>
+            </template>
+         </template>
+         <!-- Normal Mode: Show masks only for current level -->
+         <template v-else>
+            <!-- Red territory mask for disclaimer mode (non-clickable) -->
             <HouseOutline
-               v-if="currentLevel === 'start' && getFloorMaskConfig(floorId)"
-               :points="getFloorMaskConfig(floorId).points"
-               :path="getFloorMaskConfig(floorId).path"
-               :stroke-width="getFloorMaskConfig(floorId).strokeWidth"
-               :glow-color="getFloorMaskConfig(floorId).glowColor"
-               :glow-blur="getFloorMaskConfig(floorId).glowBlur"
-               :animated="getFloorMaskConfig(floorId).animated"
-               :always-visible="getFloorMaskConfig(floorId).alwaysVisible"
-               :on-click="() => handleFloorClick(floorId)"
+               v-if="currentLevel === 'map' && showDisclaimerMode"
+               :points="mapMaskConfig.territory.points"
+               :path="mapMaskConfig.territory.path"
+               :stroke-width="mapMaskConfig.territory.strokeWidth"
+               :glow-color="mapMaskConfig.territory.glowColor"
+               :glow-blur="mapMaskConfig.territory.glowBlur"
+               :animated="mapMaskConfig.territory.animated"
+               :always-visible="mapMaskConfig.territory.alwaysVisible"
+               :on-click="() => {}"
+               class="home-disclaimer-mask"
             />
+            <!-- House outline overlays for Map level -->
+            <HouseOutline
+               v-if="currentLevel === 'map' && showHouseOutline1"
+               :points="mapMaskConfig.house1.points"
+               :path="mapMaskConfig.house1.path"
+               :stroke-width="mapMaskConfig.house1.strokeWidth"
+               :glow-color="mapMaskConfig.house1.glowColor"
+               :glow-blur="mapMaskConfig.house1.glowBlur"
+               :animated="mapMaskConfig.house1.animated"
+               :always-visible="mapMaskConfig.house1.alwaysVisible"
+               :on-click="handleHouse1Click"
+            />
+            <HouseOutline
+               v-if="currentLevel === 'map' && showHouseOutline2"
+               :points="mapMaskConfig.house2.points"
+               :path="mapMaskConfig.house2.path"
+               :stroke-width="mapMaskConfig.house2.strokeWidth"
+               :glow-color="mapMaskConfig.house2.glowColor"
+               :glow-blur="mapMaskConfig.house2.glowBlur"
+               :animated="mapMaskConfig.house2.animated"
+               :always-visible="mapMaskConfig.house2.alwaysVisible"
+               :on-click="handleHouse2Click"
+            />
+            <!-- House outline overlays for 2-projects level -->
+            <HouseOutline
+               v-if="currentLevel === '2-projects' && showHouseOutline1"
+               :points="twoProjectsMaskConfig.project1.points"
+               :path="twoProjectsMaskConfig.project1.path"
+               :stroke-width="twoProjectsMaskConfig.project1.strokeWidth"
+               :glow-color="twoProjectsMaskConfig.project1.glowColor"
+               :glow-blur="twoProjectsMaskConfig.project1.glowBlur"
+               :animated="twoProjectsMaskConfig.project1.animated"
+               :always-visible="twoProjectsMaskConfig.project1.alwaysVisible"
+               :on-click="handleProject1Click"
+            />
+            <HouseOutline
+               v-if="currentLevel === '2-projects' && showHouseOutline2"
+               :points="twoProjectsMaskConfig.project2.points"
+               :path="twoProjectsMaskConfig.project2.path"
+               :stroke-width="twoProjectsMaskConfig.project2.strokeWidth"
+               :glow-color="twoProjectsMaskConfig.project2.glowColor"
+               :glow-blur="twoProjectsMaskConfig.project2.glowBlur"
+               :animated="twoProjectsMaskConfig.project2.animated"
+               :always-visible="twoProjectsMaskConfig.project2.alwaysVisible"
+               :on-click="handleProject2Click"
+            />
+            <!-- House outline overlays for Start level (6 floors) -->
+            <template
+               v-for="floorId in ['g', '1', '2', '3', '4', '5']"
+               :key="floorId"
+            >
+               <HouseOutline
+                  v-if="currentLevel === 'start' && getFloorMaskConfig(floorId)"
+                  :points="getFloorMaskConfig(floorId).points"
+                  :path="getFloorMaskConfig(floorId).path"
+                  :stroke-width="getFloorMaskConfig(floorId).strokeWidth"
+                  :glow-color="getFloorMaskConfig(floorId).glowColor"
+                  :glow-blur="getFloorMaskConfig(floorId).glowBlur"
+                  :animated="getFloorMaskConfig(floorId).animated"
+                  :always-visible="getFloorMaskConfig(floorId).alwaysVisible"
+                  :on-click="() => handleFloorClick(floorId)"
+               />
+            </template>
          </template>
          <!-- House outline overlay for other levels (if needed in future) -->
          <div class="home-content-wrapper">
@@ -153,13 +238,20 @@
                <!-- <div class="home-content-top-title">
                   <p>ROVE Home Marasi Drive</p>
                </div> -->
-               <div
-                  v-if="currentLevel === 'map'"
-                  class="home-content-top-about"
-                  @click="toggleDisclaimerMode"
-               >
-                  <Icon name="attention" :size="24" color="currentColor" />
-                  <p>About</p>
+               <div class="home-content-top-actions">
+                  <div
+                     v-if="currentLevel === 'map'"
+                     class="home-content-top-about"
+                     @click="toggleDisclaimerMode"
+                  >
+                     <Icon name="attention" :size="24" color="currentColor" />
+                     <p>About</p>
+                  </div>
+                  <!-- Edit mode indicator -->
+                  <div v-if="editMode" class="home-content-top-edit-mode">
+                     <Icon name="help" :size="24" color="currentColor" />
+                     <p>Edit Mode</p>
+                  </div>
                </div>
             </div>
             <!-- Swipe hint modal for start level -->
@@ -198,7 +290,15 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch, nextTick } from "vue";
+import {
+   ref,
+   computed,
+   onMounted,
+   onUnmounted,
+   watch,
+   nextTick,
+   inject,
+} from "vue";
 import Icon from "../components/Icon.vue";
 import BottomActions from "../components/BottomActions.vue";
 import HouseOutline from "../components/HouseOutline.vue";
@@ -220,11 +320,15 @@ import { useTransitions } from "../composables/useTransitions.js";
 // Level system for navigation hierarchy
 // Levels: 'map' -> '2-projects' -> 'start' -> 'video-sides' (1, 2, 3, 4)
 
+// Inject header visibility state
+const showHeader = inject("showHeader", ref(false));
+
 // Use level storage composable
 const { currentLevel, levelHistory } = useLevelStorage();
 
 // Use masks composable
 const {
+   editMode,
    showDisclaimerMode,
    showHouseOutline1,
    showHouseOutline2,
@@ -371,10 +475,10 @@ onUnmounted(() => {
 
 .home-content-wrapper {
    position: absolute;
-   top: 92px;
+   top: 0;
    left: 0;
    width: 100%;
-   height: calc(100% - 92px);
+   height: 100%;
    display: flex;
    flex-direction: column;
    justify-content: space-between;
@@ -392,9 +496,23 @@ onUnmounted(() => {
    padding: 3rem 4rem;
 }
 
+@media (max-width: 768px) {
+   .home-content {
+      padding: 1.5rem 1rem;
+   }
+}
+
 .home-content-top {
    display: flex;
    justify-content: space-between;
+   align-items: center;
+   transition: transform 0.3s ease;
+}
+
+.home-content-top-actions {
+   display: flex;
+   align-items: center;
+   gap: 0.5rem;
 }
 
 .home-content-top-back {
@@ -437,6 +555,17 @@ onUnmounted(() => {
    &:hover {
       opacity: 0.8;
    }
+}
+
+.home-content-top-edit-mode {
+   display: flex;
+   align-items: center;
+   gap: 0.5rem;
+   background-color: #ff6b6b;
+   color: #fff;
+   padding: 0.5rem 1rem;
+   border-radius: 1rem;
+   font-weight: 600;
 }
 
 .home-content-slider {

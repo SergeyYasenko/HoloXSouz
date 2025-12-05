@@ -435,12 +435,16 @@ const handleGlobalMouseMove = (event) => {
 
    // Если alwaysVisible включен, маска всегда видна
    if (props.alwaysVisible) {
+      // Убеждаемся, что маска видна
       if (!isVisible.value) {
          isVisible.value = true;
          updateCanvas(true);
          if (props.animated) {
             animate();
          }
+      } else {
+         // Обновляем canvas даже если маска уже видна (для анимации)
+         updateCanvas(true);
       }
       return; // Не скрываем маску при выходе курсора
    }
@@ -578,7 +582,6 @@ const animate = () => {
 // Инициализация
 const init = () => {
    animationStartTime = Date.now();
-   updateCanvas(true); // Инициализируем, но не показываем
 
    // Если alwaysVisible включен, показываем маску сразу
    if (props.alwaysVisible) {
@@ -588,6 +591,8 @@ const init = () => {
          animate();
       }
       // Курсор будет устанавливаться динамически при движении мыши
+   } else {
+      updateCanvas(true); // Инициализируем, но не показываем
    }
 
    // Слушаем глобальное движение мыши для точного отслеживания

@@ -34,6 +34,10 @@
             @mousemove="handleMouseMove"
             @mouseup="handleMouseUp"
             @mouseleave="handleMouseUp"
+            @touchstart="handleTouchStart"
+            @touchmove="handleTouchMove"
+            @touchend="handleTouchEnd"
+            @touchcancel="handleTouchEnd"
          >
             <img
                ref="mapImageRef"
@@ -456,6 +460,41 @@ const handleMouseUp = () => {
    }
 };
 
+// Touch handlers for mobile
+const handleTouchStart = (event) => {
+   if (event.touches.length === 1) {
+      // Single touch - allow dragging
+      isDragging.value = true;
+      const touch = event.touches[0];
+      dragStart.value = {
+         x: touch.clientX - position.value.x,
+         y: touch.clientY - position.value.y,
+      };
+      // Hide modal on drag start
+      if (showModal.value) {
+         hideModal();
+      }
+   }
+};
+
+const handleTouchMove = (event) => {
+   if (isDragging.value && event.touches.length === 1) {
+      event.preventDefault(); // Prevent scrolling
+      const touch = event.touches[0];
+      const newPosition = {
+         x: touch.clientX - dragStart.value.x,
+         y: touch.clientY - dragStart.value.y,
+      };
+      // Constrain position to bounds
+      position.value = constrainPosition(newPosition, scale.value);
+      lastPosition.value = { ...position.value };
+   }
+};
+
+const handleTouchEnd = () => {
+   isDragging.value = false;
+};
+
 const resetMap = () => {
    const currentMinZoom = calculateMinZoom();
    scale.value = currentMinZoom;
@@ -552,10 +591,10 @@ watch(scale, (newScale) => {
 <style scoped>
 .map-page {
    position: absolute;
-   top: 92px;
+   top: 0;
    left: 0;
    width: 100%;
-   height: calc(100% - 92px);
+   height: 100%;
    overflow: hidden;
 }
 
@@ -685,6 +724,7 @@ watch(scale, (newScale) => {
    color: #fff;
    pointer-events: all;
    z-index: 10;
+   transition: transform 0.3s ease;
 }
 
 .map-info-items {
@@ -749,16 +789,39 @@ watch(scale, (newScale) => {
 }
 
 @media (max-width: 768px) {
-   .map-page {
-      height: calc(100vh - 70px);
-   }
-
    .map-info-panel {
       top: 20px;
-      right: 20px;
-      left: 20px;
+      right: auto;
+      left: auto;
       max-width: none;
-      padding: 20px;
+      padding: 16px 10px;
+   }
+
+   .map-info-items {
+      padding: 0 20px;
+      margin-bottom: 10px;
+   }
+
+   .map-info-item {
+      padding-bottom: 10px;
+      font-size: 0.9em;
+   }
+
+   .map-info-item:last-of-type {
+      margin-bottom: 0;
+   }
+
+   .map-info-label {
+      font-size: 10px;
+   }
+
+   .map-info-value {
+      font-size: 12px;
+   }
+
+   .map-info-temperature {
+      font-size: 1.5rem;
+      padding: 0 20px;
    }
 
    .map-info-title {

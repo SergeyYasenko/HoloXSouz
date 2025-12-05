@@ -27,6 +27,7 @@
 
 <script setup>
 import Icon from "./Icon.vue";
+import { useFullscreen } from "../composables/useFullscreen.js";
 
 defineProps({
    showLabels: {
@@ -41,39 +42,7 @@ defineProps({
 
 defineEmits(["disclaimer", "help"]);
 
-const toggleFullscreen = () => {
-   if (!document.fullscreenElement) {
-      // Enter fullscreen - try to find the closest parent container
-      const bottomActions = document.querySelector(".bottom-actions");
-      let targetElement =
-         bottomActions?.closest(".map-page") ||
-         bottomActions?.closest(".home") ||
-         document.documentElement;
-
-      if (targetElement) {
-         if (targetElement.requestFullscreen) {
-            targetElement.requestFullscreen();
-         } else if (targetElement.webkitRequestFullscreen) {
-            // Safari
-            targetElement.webkitRequestFullscreen();
-         } else if (targetElement.msRequestFullscreen) {
-            // IE/Edge
-            targetElement.msRequestFullscreen();
-         }
-      }
-   } else {
-      // Exit fullscreen
-      if (document.exitFullscreen) {
-         document.exitFullscreen();
-      } else if (document.webkitExitFullscreen) {
-         // Safari
-         document.webkitExitFullscreen();
-      } else if (document.msExitFullscreen) {
-         // IE/Edge
-         document.msExitFullscreen();
-      }
-   }
-};
+const { toggleFullscreen } = useFullscreen();
 </script>
 
 <style scoped>

@@ -5,6 +5,21 @@ import { mapMasks, twoProjectsMasks, floorsConfig } from "../config/navigation.j
  * Composable for managing house outline masks and disclaimer mode
  */
 export function useMasks() {
+   // Edit mode - shows all masks always visible for editing
+   // По умолчанию отключен, можно включить через ?edit=true
+   let defaultEditMode = false;
+
+   // Check URL for edit mode (можно отключить через ?edit=false)
+   if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlEditParam = urlParams.get('edit');
+      if (urlEditParam !== null) {
+         defaultEditMode = urlEditParam === 'true';
+      }
+   }
+
+   const editMode = ref(defaultEditMode);
+
    // Disclaimer mode - shows red overlay and always-visible masks
    const showDisclaimerMode = ref(true);
 
@@ -35,8 +50,8 @@ export function useMasks() {
          strokeWidth: houseOutlineWidth.value,
          glowColor: houseOutlineGlow.value,
          glowBlur: houseOutlineGlowBlur.value,
-         animated: houseOutlineAnimatedMap.value,
-         alwaysVisible: showDisclaimerMode.value,
+         animated: editMode.value ? false : houseOutlineAnimatedMap.value,
+         alwaysVisible: editMode.value || showDisclaimerMode.value,
       },
       house2: {
          points: mapMasks.house2.points,
@@ -44,8 +59,8 @@ export function useMasks() {
          strokeWidth: houseOutlineWidth.value,
          glowColor: houseOutlineGlow.value,
          glowBlur: houseOutlineGlowBlur.value,
-         animated: houseOutlineAnimatedMap.value,
-         alwaysVisible: showDisclaimerMode.value,
+         animated: editMode.value ? false : houseOutlineAnimatedMap.value,
+         alwaysVisible: editMode.value || showDisclaimerMode.value,
       },
       territory: {
          points: mapMasks.territory.points,
@@ -65,8 +80,8 @@ export function useMasks() {
          strokeWidth: houseOutlineWidth.value,
          glowColor: houseOutlineGlow.value,
          glowBlur: houseOutlineGlowBlur.value,
-         animated: houseOutlineAnimatedMap.value,
-         alwaysVisible: false,
+         animated: editMode.value ? false : houseOutlineAnimatedMap.value,
+         alwaysVisible: editMode.value,
       },
       project2: {
          points: twoProjectsMasks.project2.points,
@@ -74,8 +89,8 @@ export function useMasks() {
          strokeWidth: houseOutlineWidth.value,
          glowColor: houseOutlineGlow.value,
          glowBlur: houseOutlineGlowBlur.value,
-         animated: houseOutlineAnimatedMap.value,
-         alwaysVisible: false,
+         animated: editMode.value ? false : houseOutlineAnimatedMap.value,
+         alwaysVisible: editMode.value,
       },
    }));
 
@@ -90,13 +105,14 @@ export function useMasks() {
          strokeWidth: houseOutlineWidth.value,
          glowColor: houseOutlineGlow.value,
          glowBlur: houseOutlineGlowBlur.value,
-         animated: houseOutlineAnimated.value,
-         alwaysVisible: false,
+         animated: editMode.value ? false : houseOutlineAnimated.value,
+         alwaysVisible: editMode.value,
       };
    };
 
    return {
       // State
+      editMode,
       showDisclaimerMode,
       showHouseOutline1,
       showHouseOutline2,
