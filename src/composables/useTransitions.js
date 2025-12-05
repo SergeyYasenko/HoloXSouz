@@ -16,7 +16,7 @@ export function useTransitions(currentLevel, levelHistory) {
    const reverseSourceLevel = ref(null); // Store source level for reverse to keep image visible
    const preloadImage = ref(null);
    const preloadImageLoaded = ref(false);
-   let reverseInterval = null;
+   let reverseRafId = null; // For requestAnimationFrame-based reverse playback (60fps smooth)
    let isHandlingTransitionEnd = false; // Flag to prevent multiple calls to handleTransitionEnd
 
    // Helper to get level image
@@ -34,14 +34,24 @@ export function useTransitions(currentLevel, levelHistory) {
       return null;
    };
 
-   // Load video helper
+   // Load video helper - optimized for mobile
    const loadVideo = (videoSrc) => {
       if (!videoSrc || loadedVideos.value.has(videoSrc)) return;
       const video = document.createElement("video");
       video.src = videoSrc;
       video.preload = "auto";
       video.muted = true;
+      video.playsInline = true;
+      // Optimize for mobile playback
+      video.setAttribute("playsinline", "");
+      video.setAttribute("webkit-playsinline", "");
+      video.setAttribute("x5-playsinline", "");
+      // Start loading
       video.load();
+      // Pre-buffer video for smoother playback
+      video.addEventListener("canplaythrough", () => {
+         // Video is ready to play through without buffering
+      }, { once: true });
       loadedVideos.value.add(videoSrc);
    };
 
@@ -53,9 +63,9 @@ export function useTransitions(currentLevel, levelHistory) {
          return;
       }
 
-      if (reverseInterval) {
-         clearInterval(reverseInterval);
-         reverseInterval = null;
+      if (reverseRafId) {
+         cancelAnimationFrame(reverseRafId);
+         reverseRafId = null;
       }
 
       // For reverse transitions, ensure video has finished before changing level
@@ -120,6 +130,10 @@ export function useTransitions(currentLevel, levelHistory) {
             clearInterval(reverseInterval);
             reverseInterval = null;
          }
+         if (reverseRafId) {
+            cancelAnimationFrame(reverseRafId);
+            reverseRafId = null;
+         }
 
          const startReverse = () => {
             if (!video || !isReverseTransition.value) return;
@@ -152,11 +166,12 @@ export function useTransitions(currentLevel, levelHistory) {
                   video.currentTime = startVideoTime;
                }
 
-               reverseInterval = setInterval(() => {
+               // Use requestAnimationFrame for smoother reverse playback on mobile
+               const reverseFrame = () => {
                   if (!video || !isReverseTransition.value) {
-                     if (reverseInterval) {
-                        clearInterval(reverseInterval);
-                        reverseInterval = null;
+                     if (reverseRafId) {
+                        cancelAnimationFrame(reverseRafId);
+                        reverseRafId = null;
                      }
                      return;
                   }
@@ -165,24 +180,28 @@ export function useTransitions(currentLevel, levelHistory) {
                   const newTime = Math.max(0, startVideoTime - elapsed);
 
                   if (newTime <= 0 || elapsed >= startVideoTime) {
-                     if (reverseInterval) {
-                        clearInterval(reverseInterval);
-                        reverseInterval = null;
+                     if (reverseRafId) {
+                        cancelAnimationFrame(reverseRafId);
+                        reverseRafId = null;
                      }
                      video.currentTime = 0;
                      // Wait a bit longer to ensure video frame is updated and reverse is complete
-                     setTimeout(() => {
+                     requestAnimationFrame(() => {
                         // Ensure video is still visible and we're still in reverse transition
                         if (video && isReverseTransition.value && isTransitioning.value) {
                            // Reverse is complete, trigger transition end
                            handleTransitionEnd();
                         }
-                     }, 150);
+                     });
                      return;
                   }
 
                   video.currentTime = newTime;
-               }, 33); // ~30fps for smooth reverse playback
+                  reverseRafId = requestAnimationFrame(reverseFrame);
+               };
+
+               // Start reverse playback using requestAnimationFrame for 60fps smoothness
+               reverseRafId = requestAnimationFrame(reverseFrame);
             }, 150); // Delay for mobile devices to ensure video is ready
          };
 
@@ -359,28 +378,59 @@ export function useTransitions(currentLevel, levelHistory) {
       await nextTick();
       if (transitionVideo.value) {
          const video = transitionVideo.value;
+
+         // Optimize video for mobile playback
          video.load();
+
+         // Ensure video is ready before playing (critical for mobile)
+         const playVideo = async () => {
+            try {
+               // Wait for video to be ready
+               if (video.readyState < 2) {
+                  await new Promise((resolve) => {
+                     const onCanPlay = () => {
+                        video.removeEventListener("canplay", onCanPlay);
+                        resolve();
+                     };
+                     video.addEventListener("canplay", onCanPlay, { once: true });
+
+                     // Fallback timeout
+                     setTimeout(() => {
+                        video.removeEventListener("canplay", onCanPlay);
+                        resolve();
+                     }, 500);
+                  });
+               }
+
+               // Use requestAnimationFrame to ensure smooth start
+               await new Promise((resolve) => {
+                  requestAnimationFrame(async () => {
+                     try {
+                        await video.play();
+                        resolve();
+                     } catch (error) {
+                        console.error("Error playing transition video:", error);
+                        handleLevelTransitionEnd(targetLevel);
+                        resolve();
+                     }
+                  });
+               });
+            } catch (error) {
+               console.error("Error in playVideo:", error);
+               handleLevelTransitionEnd(targetLevel);
+            }
+         };
 
          if (!isReverseTransition.value) {
             // Normal forward transition
-            try {
-               await video.play();
-            } catch (error) {
-               console.error("Error playing transition video:", error);
-               handleLevelTransitionEnd(targetLevel);
-            }
+            await playVideo();
          } else {
             // Reverse transition
             // If we have a dedicated reverse video, play it normally (forward)
             // If not, use programmatic reverse
             if (!isProgrammaticReverse.value) {
                // Dedicated reverse video - play normally
-               try {
-                  await video.play();
-               } catch (error) {
-                  console.error("Error playing reverse transition video:", error);
-                  handleLevelTransitionEnd(targetLevel);
-               }
+               await playVideo();
             } else {
                // Use programmatic reverse - wait for video to load, then start reverse playback
                const startReverseWhenReady = () => {
@@ -539,9 +589,9 @@ export function useTransitions(currentLevel, levelHistory) {
 
    // Cleanup
    const cleanup = () => {
-      if (reverseInterval) {
-         clearInterval(reverseInterval);
-         reverseInterval = null;
+      if (reverseRafId) {
+         cancelAnimationFrame(reverseRafId);
+         reverseRafId = null;
       }
    };
 

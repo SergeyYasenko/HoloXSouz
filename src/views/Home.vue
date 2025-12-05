@@ -220,8 +220,17 @@
             preload="auto"
             webkit-playsinline
             x5-playsinline
+            x5-video-player-type="h5"
+            x5-video-player-fullscreen="true"
+            x5-video-orientation="portraint"
+            disablePictureInPicture
+            controlsList="nodownload nofullscreen noremoteplayback"
             @ended="handleTransitionEnd"
             @loadedmetadata="handleVideoLoaded"
+            @canplay="handleVideoCanPlay"
+            @canplaythrough="handleVideoCanPlayThrough"
+            @waiting="handleVideoWaiting"
+            @playing="handleVideoPlaying"
          ></video>
          <!-- House outline overlay for other levels (if needed in future) -->
          <div class="home-content-wrapper">
@@ -561,6 +570,67 @@ const handleTransitionEnd = () => {
    });
 };
 
+// Video event handlers for optimization
+const handleVideoCanPlay = () => {
+   // Video can start playing - ensure it's ready
+   if (transitionVideo.value && isTransitioning.value) {
+      // Video is ready, ensure it's on GPU layer
+      requestAnimationFrame(() => {
+         if (transitionVideo.value) {
+            transitionVideo.value.style.willChange =
+               "transform, opacity, contents";
+         }
+      });
+   }
+};
+
+const handleVideoCanPlayThrough = () => {
+   // Video can play through without buffering - fully loaded
+   if (transitionVideo.value && isTransitioning.value) {
+      // Ensure smooth playback
+      requestAnimationFrame(() => {
+         if (transitionVideo.value) {
+            transitionVideo.value.style.willChange =
+               "transform, opacity, contents";
+         }
+      });
+   }
+};
+
+const handleVideoWaiting = () => {
+   // Video is buffering - try to preload more
+   if (transitionVideo.value && isTransitioning.value) {
+      // Increase buffer if possible
+      try {
+         if (transitionVideo.value.buffered.length > 0) {
+            const bufferedEnd = transitionVideo.value.buffered.end(0);
+            const currentTime = transitionVideo.value.currentTime;
+            // If buffer is close to current time, try to load more
+            if (bufferedEnd - currentTime < 1) {
+               transitionVideo.value.load();
+            }
+         }
+      } catch (e) {
+         // Ignore errors
+      }
+   }
+};
+
+const handleVideoPlaying = () => {
+   // Video started playing - ensure optimal performance
+   if (transitionVideo.value && isTransitioning.value) {
+      // Promote to GPU layer for smooth playback
+      requestAnimationFrame(() => {
+         if (transitionVideo.value) {
+            // Force GPU acceleration
+            transitionVideo.value.style.transform = "translate3d(0, 0, 0)";
+            transitionVideo.value.style.willChange =
+               "transform, opacity, contents";
+         }
+      });
+   }
+};
+
 // Wrapper for goBackToLevel with disabled arrows
 const goBackToLevel = (targetLevel) => {
    goBackToLevelTransition(targetLevel, disabledArrowLeft, disabledArrowRight);
@@ -886,11 +956,24 @@ onUnmounted(() => {
    position: absolute;
    top: 0;
    left: 0;
-   /* Hardware acceleration for smoother video */
-   transform: translateZ(0);
-   -webkit-transform: translateZ(0);
+   /* Maximum hardware acceleration for smoother video playback on mobile */
+   transform: translate3d(0, 0, 0);
+   -webkit-transform: translate3d(0, 0, 0);
+   will-change: transform, opacity;
    backface-visibility: hidden;
    -webkit-backface-visibility: hidden;
+   perspective: 1000px;
+   -webkit-perspective: 1000px;
+   /* Optimize rendering */
+   image-rendering: -webkit-optimize-contrast;
+   image-rendering: crisp-edges;
+   /* Prevent flickering */
+   -webkit-font-smoothing: antialiased;
+   -moz-osx-font-smoothing: grayscale;
+   /* GPU layer promotion */
+   isolation: isolate;
+   /* Smooth video playback */
+   -webkit-tap-highlight-color: transparent;
 }
 
 .home-image {
@@ -924,8 +1007,15 @@ onUnmounted(() => {
 .home-video-transition {
    opacity: 1;
    z-index: 10;
-   /* Ensure video plays smoothly */
-   will-change: opacity;
+   /* Maximum optimization for transition videos */
+   will-change: transform, opacity, contents;
+   /* Ensure video is on its own layer for smooth playback */
+   transform: translate3d(0, 0, 0);
+   -webkit-transform: translate3d(0, 0, 0);
+   /* Prevent repaints during playback */
+   contain: layout style paint;
+   /* Optimize for mobile */
+   -webkit-tap-highlight-color: transparent;
 }
 
 .home-content-wrapper {
