@@ -381,8 +381,10 @@ watch(currentLevel, () => {
    nextTick(() => {
       if (homeImageRef.value?.complete) {
          // Image already loaded, center immediately
-         imageDrag.centerPosition();
-         shouldCenterOnLoad.value = false; // Reset flag
+         setTimeout(() => {
+            imageDrag.centerPosition();
+            shouldCenterOnLoad.value = false; // Reset flag
+         }, 50); // Small delay to ensure dimensions are calculated
       } else {
          // Image not loaded yet, will center in onImageLoad
          imageDrag.resetPosition();
@@ -401,7 +403,7 @@ watch(currentLevel, () => {
 const imageDimensions = ref({ width: 0, height: 0 });
 
 // Track if we should center on image load (only on level change)
-const shouldCenterOnLoad = ref(false);
+const shouldCenterOnLoad = ref(true); // Start with true to center on initial load
 
 // Handle image load to ensure refs are ready and calculate dimensions
 const onImageLoad = () => {
@@ -445,13 +447,17 @@ const onImageLoad = () => {
             };
          }
 
-         // Only center if this is a level change (not just image reload)
-         if (shouldCenterOnLoad.value) {
-            nextTick(() => {
+         // Center image after dimensions are calculated
+         // This ensures proper centering on initial load and level changes
+         // Use a small delay to ensure dimensions are applied to DOM
+         nextTick(() => {
+            setTimeout(() => {
                imageDrag.centerPosition();
-               shouldCenterOnLoad.value = false; // Reset flag
-            });
-         }
+               if (shouldCenterOnLoad.value) {
+                  shouldCenterOnLoad.value = false; // Reset flag
+               }
+            }, 50); // Small delay to ensure dimensions are applied
+         });
       }
    }
 };
@@ -589,23 +595,35 @@ const {
 } = navigation;
 
 // Watch for image changes to update masks (must be after currentStaticImage is defined)
+// Use debounce to prevent excessive updates
+let maskUpdateTimeout = null;
 watch(currentStaticImage, () => {
+   // Clear previous timeout
+   if (maskUpdateTimeout) {
+      clearTimeout(maskUpdateTimeout);
+   }
+
    // When image changes, update masks after it loads
    nextTick(() => {
       if (homeImageRef.value) {
          if (homeImageRef.value.complete) {
-            // Image already loaded, update masks immediately
-            setTimeout(() => {
+            // Image already loaded, update masks with debounce
+            maskUpdateTimeout = setTimeout(() => {
                window.dispatchEvent(new CustomEvent("mask-update"));
-            }, 50);
+               maskUpdateTimeout = null;
+            }, 100);
          } else {
             // Wait for image to load
             homeImageRef.value.addEventListener(
                "load",
                () => {
-                  setTimeout(() => {
+                  if (maskUpdateTimeout) {
+                     clearTimeout(maskUpdateTimeout);
+                  }
+                  maskUpdateTimeout = setTimeout(() => {
                      window.dispatchEvent(new CustomEvent("mask-update"));
-                  }, 50);
+                     maskUpdateTimeout = null;
+                  }, 100);
                },
                { once: true }
             );
@@ -737,6 +755,52 @@ onMounted(() => {
    if (imageWrapperRef.value) {
       imageWrapperRef.value.style.cursor = "grab";
    }
+
+   // Center image on initial load if it's already loaded
+   nextTick(() => {
+      if (homeImageRef.value?.complete && imageWrapperRef.value) {
+         // Image already loaded, wait for dimensions to be calculated
+         setTimeout(() => {
+            // Recalculate dimensions if needed
+            if (
+               imageDimensions.value.width === 0 ||
+               imageDimensions.value.height === 0
+            ) {
+               const containerWidth = imageWrapperRef.value.offsetWidth;
+               const containerHeight = imageWrapperRef.value.offsetHeight;
+               const naturalWidth = homeImageRef.value.naturalWidth;
+               const naturalHeight = homeImageRef.value.naturalHeight;
+
+               if (
+                  naturalWidth &&
+                  naturalHeight &&
+                  containerWidth &&
+                  containerHeight
+               ) {
+                  const aspectRatio = naturalWidth / naturalHeight;
+                  const containerAspectRatio = containerWidth / containerHeight;
+
+                  if (aspectRatio > containerAspectRatio) {
+                     imageDimensions.value = {
+                        width: containerHeight * aspectRatio,
+                        height: containerHeight,
+                     };
+                  } else {
+                     imageDimensions.value = {
+                        width: containerWidth,
+                        height: containerWidth / aspectRatio,
+                     };
+                  }
+               }
+            }
+            // Center after dimensions are set
+            setTimeout(() => {
+               imageDrag.centerPosition();
+            }, 50);
+         }, 100); // Small delay to ensure dimensions are calculated
+      }
+   });
+
    // Add resize listener for image dimensions
    window.addEventListener("resize", handleResize);
 });

@@ -72,18 +72,26 @@ export function useScreenOrientation() {
       lockToLandscape();
 
       // Also try on first user interaction (required by some browsers)
-      const lockOnInteraction = () => {
-         lockToLandscape();
-         // Remove listeners after first attempt
-         document.removeEventListener("click", lockOnInteraction);
-         document.removeEventListener("touchstart", lockOnInteraction);
-         document.removeEventListener("keydown", lockOnInteraction);
+      let locked = false;
+      const lockOnInteraction = async () => {
+         if (!locked) {
+            await lockToLandscape();
+            locked = true;
+         }
       };
 
-      // Listen for first user interaction
-      document.addEventListener("click", lockOnInteraction, { once: true });
-      document.addEventListener("touchstart", lockOnInteraction, { once: true });
-      document.addEventListener("keydown", lockOnInteraction, { once: true });
+      // Listen for first user interaction - try multiple times
+      const events = ['click', 'touchstart', 'touchend', 'keydown', 'pointerdown'];
+      events.forEach(eventType => {
+         document.addEventListener(eventType, lockOnInteraction, { once: true, passive: true });
+      });
+
+      // Also try after a short delay (some devices need time)
+      setTimeout(() => {
+         if (!locked) {
+            lockToLandscape();
+         }
+      }, 500);
    };
 
    return {

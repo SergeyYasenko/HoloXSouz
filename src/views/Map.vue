@@ -285,9 +285,88 @@ imageDrag.handleMouseMove = (event) => {
    }
 };
 
+// Track pinch zoom state
+const initialPinchDistance = ref(0);
+const initialPinchScale = ref(1);
+const initialPinchCenter = ref({ x: 0, y: 0 });
+const isPinching = ref(false);
+
+const originalHandleTouchStart = imageDrag.handleTouchStart;
+imageDrag.handleTouchStart = (event) => {
+   if (event.touches.length === 2) {
+      // Pinch zoom start
+      event.preventDefault();
+      isPinching.value = true;
+      const touch1 = event.touches[0];
+      const touch2 = event.touches[1];
+      const distance = Math.sqrt(
+         Math.pow(touch2.clientX - touch1.clientX, 2) +
+            Math.pow(touch2.clientY - touch1.clientY, 2)
+      );
+      initialPinchDistance.value = distance;
+      initialPinchScale.value = scale.value;
+
+      // Calculate center point
+      const centerX = (touch1.clientX + touch2.clientX) / 2;
+      const centerY = (touch1.clientY + touch2.clientY) / 2;
+      initialPinchCenter.value = { x: centerX, y: centerY };
+
+      // Calculate the point in the map coordinate system
+      const containerRect = mapContainer.value.getBoundingClientRect();
+      initialPinchCenter.value.mapX =
+         (centerX - containerRect.left - position.value.x) / scale.value;
+      initialPinchCenter.value.mapY =
+         (centerY - containerRect.top - position.value.y) / scale.value;
+   } else if (event.touches.length === 1) {
+      // Single touch - use original handler
+      originalHandleTouchStart(event);
+   }
+};
+
 const originalHandleTouchMove = imageDrag.handleTouchMove;
 imageDrag.handleTouchMove = (event) => {
-   if (isDragging.value && event.touches.length === 1) {
+   if (event.touches.length === 2) {
+      // Pinch zoom
+      event.preventDefault();
+      const touch1 = event.touches[0];
+      const touch2 = event.touches[1];
+      const distance = Math.sqrt(
+         Math.pow(touch2.clientX - touch1.clientX, 2) +
+            Math.pow(touch2.clientY - touch1.clientY, 2)
+      );
+
+      if (initialPinchDistance.value > 0) {
+         const scaleRatio = distance / initialPinchDistance.value;
+         const newScale = Math.max(
+            calculateMinZoom(),
+            Math.min(maxZoom, initialPinchScale.value * scaleRatio)
+         );
+
+         if (newScale !== scale.value) {
+            scale.value = newScale;
+
+            // Adjust position to keep the same point under fingers
+            const containerRect = mapContainer.value.getBoundingClientRect();
+            const centerX = (touch1.clientX + touch2.clientX) / 2;
+            const centerY = (touch1.clientY + touch2.clientY) / 2;
+
+            const newPosition = {
+               x:
+                  centerX -
+                  containerRect.left -
+                  initialPinchCenter.value.mapX * newScale,
+               y:
+                  centerY -
+                  containerRect.top -
+                  initialPinchCenter.value.mapY * newScale,
+            };
+
+            position.value = imageDrag.constrainPosition(newPosition, newScale);
+            lastPosition.value = { ...position.value };
+         }
+      }
+   } else if (isDragging.value && event.touches.length === 1) {
+      // Single touch drag
       event.preventDefault();
       const touch = event.touches[0];
       const newPosition = {
@@ -296,6 +375,27 @@ imageDrag.handleTouchMove = (event) => {
       };
       position.value = imageDrag.constrainPosition(newPosition, scale.value);
       lastPosition.value = { ...position.value };
+   } else if (event.touches.length === 1) {
+      // Single touch but not dragging - use original handler
+      originalHandleTouchMove(event);
+   }
+};
+
+const originalHandleTouchEnd = imageDrag.handleTouchEnd;
+imageDrag.handleTouchEnd = (event) => {
+   if (event.touches.length === 0 || event.touches.length === 1) {
+      // Pinch ended
+      isPinching.value = false;
+      initialPinchDistance.value = 0;
+
+      // If only one touch remains, continue with single touch handling
+      if (event.touches.length === 1) {
+         originalHandleTouchStart(event);
+      } else {
+         originalHandleTouchEnd(event);
+      }
+   } else {
+      originalHandleTouchEnd(event);
    }
 };
 
@@ -574,7 +674,7 @@ watch(scale, (newScale) => {
    position: relative;
    background: #000;
    user-select: none;
-   touch-action: none;
+   touch-action: pan-x pan-y pinch-zoom;
 }
 
 .map-content {

@@ -18,6 +18,8 @@ export function useImageDrag(containerRef, imageRef, scale = ref(1), onDragStart
    const hasMoved = ref(false);
    const DRAG_THRESHOLD = 10; // Minimum pixels to move before starting drag
    const TAP_TIME_THRESHOLD = 300; // Maximum time for tap (ms)
+   let rafId = null;
+   let touchRafId = null;
 
    // Helper to get scale value
    const getScaleValue = () => {
@@ -113,8 +115,13 @@ export function useImageDrag(containerRef, imageRef, scale = ref(1), onDragStart
 
    const handleMouseMove = (event) => {
       if (isDragging.value) {
+         // Cancel previous frame if exists
+         if (rafId !== null) {
+            cancelAnimationFrame(rafId);
+         }
          // Use requestAnimationFrame for smoother updates
-         requestAnimationFrame(() => {
+         rafId = requestAnimationFrame(() => {
+            rafId = null;
             const newPosition = {
                x: event.clientX - dragStart.value.x,
                y: event.clientY - dragStart.value.y,
@@ -191,8 +198,13 @@ export function useImageDrag(containerRef, imageRef, scale = ref(1), onDragStart
          const clientX = touch.clientX;
          const clientY = touch.clientY;
 
+         // Cancel previous frame if exists
+         if (touchRafId !== null) {
+            cancelAnimationFrame(touchRafId);
+         }
          // Use requestAnimationFrame for smoother updates on mobile
-         requestAnimationFrame(() => {
+         touchRafId = requestAnimationFrame(() => {
+            touchRafId = null;
             const newPosition = {
                x: clientX - dragStart.value.x,
                y: clientY - dragStart.value.y,
