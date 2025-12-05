@@ -372,20 +372,36 @@ const homeImageStyle = computed(() => {
    return dragStyle;
 });
 
-// Center image position when level changes
+// Center image position when level changes and update masks
 watch(currentLevel, () => {
+   // Set flag to center image when it loads (if not already loaded)
+   shouldCenterOnLoad.value = true;
+
    // Wait for next tick to ensure image is loaded
    nextTick(() => {
       if (homeImageRef.value?.complete) {
+         // Image already loaded, center immediately
          imageDrag.centerPosition();
+         shouldCenterOnLoad.value = false; // Reset flag
       } else {
+         // Image not loaded yet, will center in onImageLoad
          imageDrag.resetPosition();
       }
+
+      // Update masks after level change (they need to recalculate positions)
+      // Use a small delay to ensure image is fully rendered
+      setTimeout(() => {
+         // Trigger mask update by dispatching a custom event
+         window.dispatchEvent(new CustomEvent("mask-update"));
+      }, 100);
    });
 });
 
 // Image dimensions for proper sizing (to allow drag without black background)
 const imageDimensions = ref({ width: 0, height: 0 });
+
+// Track if we should center on image load (only on level change)
+const shouldCenterOnLoad = ref(false);
 
 // Handle image load to ensure refs are ready and calculate dimensions
 const onImageLoad = () => {
@@ -393,6 +409,13 @@ const onImageLoad = () => {
    if (imageWrapperRef.value) {
       imageWrapperRef.value.style.cursor = "grab";
    }
+
+   // Update masks after image loads (they need to recalculate positions)
+   nextTick(() => {
+      setTimeout(() => {
+         window.dispatchEvent(new CustomEvent("mask-update"));
+      }, 50);
+   });
 
    // Calculate image dimensions to fill container while maintaining aspect ratio
    if (homeImageRef.value && imageWrapperRef.value) {
@@ -422,10 +445,13 @@ const onImageLoad = () => {
             };
          }
 
-         // Center the image after dimensions are calculated
-         nextTick(() => {
-            imageDrag.centerPosition();
-         });
+         // Only center if this is a level change (not just image reload)
+         if (shouldCenterOnLoad.value) {
+            nextTick(() => {
+               imageDrag.centerPosition();
+               shouldCenterOnLoad.value = false; // Reset flag
+            });
+         }
       }
    }
 };
@@ -445,10 +471,39 @@ const homeImageSizeStyle = computed(() => {
    };
 });
 
-// Recalculate dimensions on window resize
-const handleResize = () => {
-   if (homeImageRef.value?.complete) {
-      onImageLoad();
+// Recalculate dimensions on window resize (but don't reset position)
+const handleResize = (event) => {
+   // Only handle real window resize events, not our custom mask update events
+   if (event && event.type === "resize" && event.target === window) {
+      if (homeImageRef.value?.complete) {
+         // Recalculate dimensions without resetting position
+         const containerWidth = imageWrapperRef.value?.offsetWidth;
+         const containerHeight = imageWrapperRef.value?.offsetHeight;
+         const naturalWidth = homeImageRef.value.naturalWidth;
+         const naturalHeight = homeImageRef.value.naturalHeight;
+
+         if (
+            naturalWidth &&
+            naturalHeight &&
+            containerWidth &&
+            containerHeight
+         ) {
+            const aspectRatio = naturalWidth / naturalHeight;
+            const containerAspectRatio = containerWidth / containerHeight;
+
+            if (aspectRatio > containerAspectRatio) {
+               imageDimensions.value = {
+                  width: containerHeight * aspectRatio,
+                  height: containerHeight,
+               };
+            } else {
+               imageDimensions.value = {
+                  width: containerWidth,
+                  height: containerWidth / aspectRatio,
+               };
+            }
+         }
+      }
    }
 };
 
@@ -480,12 +535,25 @@ const {
    transitionVideo,
    preloadImage,
    preloadImageLoaded,
+   isReverseTransition,
+   reverseSourceLevel,
    handleVideoLoaded,
-   handleTransitionEnd,
+   handleTransitionEnd: originalHandleTransitionEnd,
    startLevelTransition,
    goBackToLevel: goBackToLevelTransition,
    onPreloadImageLoaded,
 } = transitions;
+
+// Wrap handleTransitionEnd to update masks after transition
+const handleTransitionEnd = () => {
+   originalHandleTransitionEnd();
+   // Update masks after transition completes
+   nextTick(() => {
+      setTimeout(() => {
+         window.dispatchEvent(new CustomEvent("mask-update"));
+      }, 100);
+   });
+};
 
 // Wrapper for goBackToLevel with disabled arrows
 const goBackToLevel = (targetLevel) => {
@@ -500,7 +568,9 @@ const navigation = useNavigation(
    disabledArrowLeft,
    disabledArrowRight,
    startLevelTransition,
-   goBackToLevel
+   goBackToLevel,
+   isReverseTransition,
+   reverseSourceLevel
 );
 
 const {
@@ -517,6 +587,32 @@ const {
    handleBackClick,
    handleSwipe,
 } = navigation;
+
+// Watch for image changes to update masks (must be after currentStaticImage is defined)
+watch(currentStaticImage, () => {
+   // When image changes, update masks after it loads
+   nextTick(() => {
+      if (homeImageRef.value) {
+         if (homeImageRef.value.complete) {
+            // Image already loaded, update masks immediately
+            setTimeout(() => {
+               window.dispatchEvent(new CustomEvent("mask-update"));
+            }, 50);
+         } else {
+            // Wait for image to load
+            homeImageRef.value.addEventListener(
+               "load",
+               () => {
+                  setTimeout(() => {
+                     window.dispatchEvent(new CustomEvent("mask-update"));
+                  }, 50);
+               },
+               { once: true }
+            );
+         }
+      }
+   });
+});
 
 // Levels that have left/right navigation arrows
 const arrowLevels = ["start", "facade-start", "facade-start-2"];

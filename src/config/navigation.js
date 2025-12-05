@@ -25,6 +25,17 @@ import floor3Video from "../assets/video/Floor3.mp4";
 import floor4Video from "../assets/video/Floor4.mp4";
 import floorGVideo from "../assets/video/FloorG.mp4";
 
+// Импорт реверс видео переходов
+import internetCityReverseVideo from "../assets/video/InternetCityReverse.mp4";
+import theRoyalYachtReverseVideo from "../assets/video/TheRoyalYachtReverse.mp4";
+import facadeStartReverseVideo from "../assets/video/StartReverse.mp4";
+import facadeStart2ReverseVideo from "../assets/video/Start2Reverse.mp4";
+import floorGReverseVideo from "../assets/video/FloorGReverse.mp4";
+import floor1ReverseVideo from "../assets/video/Floor1Reverse.mp4";
+import floor2ReverseVideo from "../assets/video/Floor2Reverse.mp4";
+import floor3ReverseVideo from "../assets/video/Floor3Reverse.mp4";
+import floor4ReverseVideo from "../assets/video/Floor4Reverse.mp4";
+
 // Конфигурация масок для уровня Map
 export const mapMasks = {
    house1: {
@@ -138,6 +149,7 @@ export const floorsConfig = {
       id: "g",
       name: "Ground Floor",
       transitionVideo: floorGVideo,
+      reverseVideo: floorGReverseVideo,
       image: floorImageG,
       path: "", // SVG path (если используется)
       points: [
@@ -180,6 +192,7 @@ export const floorsConfig = {
       id: "1",
       name: "Floor 1",
       transitionVideo: floor1Video,
+      reverseVideo: floor1ReverseVideo,
       image: floorImage1, // Пока нет картинки для этажа 1
       path: "",
       points: [
@@ -227,6 +240,7 @@ export const floorsConfig = {
       id: "2",
       name: "Floor 2",
       transitionVideo: floor2Video,
+      reverseVideo: floor2ReverseVideo,
       image: floorImage2,
       path: "",
       points: [
@@ -276,6 +290,7 @@ export const floorsConfig = {
       id: "3",
       name: "Floor 3",
       transitionVideo: floor3Video,
+      reverseVideo: floor3ReverseVideo,
       image: floorImage3,
       path: "",
       points: [
@@ -317,6 +332,7 @@ export const floorsConfig = {
       id: "4",
       name: "Floor 4",
       transitionVideo: floor4Video,
+      reverseVideo: floor4ReverseVideo,
       image: floorImage4,
       path: "",
       points: [
@@ -401,11 +417,18 @@ export const levelImages = {
 
 // Конфигурация видео переходов между уровнями
 export const levelTransitions = {
+   // Forward transitions
    "map-to-2-projects": internetCityVideo,
    "2-projects-to-start": theRoyalYachtVideo,
    "map-to-start": internetCityVideo, // Для обратной совместимости
    "start-to-facade-start": facadeStartVideo,
    "start-to-facade-start-2": facadeStart2Video,
+
+   // Reverse transitions (отдельные видео для реверса)
+   "2-projects-to-map": internetCityReverseVideo,
+   "start-to-2-projects": theRoyalYachtReverseVideo,
+   "facade-start-to-start": facadeStartReverseVideo,
+   "facade-start-2-to-start": facadeStart2ReverseVideo,
 };
 
 // Экспорт всех конфигураций

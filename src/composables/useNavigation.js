@@ -11,7 +11,9 @@ export function useNavigation(
    disabledArrowLeft,
    disabledArrowRight,
    startLevelTransition,
-   goBackToLevel
+   goBackToLevel,
+   isReverseTransition = null,
+   reverseSourceLevel = null
 ) {
    // Get level image
    const getLevelImage = (level) => {
@@ -28,7 +30,25 @@ export function useNavigation(
       return null;
    };
 
-   const currentStaticImage = computed(() => getLevelImage(currentLevel.value));
+   // During reverse transition, show the source level's image (old image)
+   // to keep it visible for 1 second while reverse video plays
+   // During normal transition, also keep current image until transition completes
+   const currentStaticImage = computed(() => {
+      // If transitioning in reverse, show old image
+      if (isReverseTransition?.value && reverseSourceLevel?.value) {
+         return getLevelImage(reverseSourceLevel.value);
+      }
+
+      // If transitioning normally, keep current image (don't change until transition completes)
+      // This prevents image from changing before video finishes
+      if (isTransitioning?.value) {
+         // Keep showing current level's image during transition
+         return getLevelImage(currentLevel.value);
+      }
+
+      // Normal case: show current level's image
+      return getLevelImage(currentLevel.value);
+   });
 
    // Navigation handlers
    const handleHouse1Click = () => {

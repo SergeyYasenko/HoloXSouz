@@ -679,6 +679,15 @@ const animate = () => {
    }
 };
 
+// Handlers for window events (defined outside init to be accessible in cleanup)
+const handleResize = () => {
+   updateCanvas(true);
+};
+
+const handleMaskUpdate = () => {
+   updateCanvas(true);
+};
+
 // Инициализация
 const init = () => {
    animationStartTime = Date.now();
@@ -704,10 +713,12 @@ const init = () => {
    document.addEventListener("click", handleGlobalClick);
 
    // Слушаем изменение размера окна
-   const handleResize = () => {
-      updateCanvas(true);
-   };
    window.addEventListener("resize", handleResize, {
+      passive: true,
+   });
+
+   // Слушаем событие обновления масок (отдельно от resize, чтобы не конфликтовать)
+   window.addEventListener("mask-update", handleMaskUpdate, {
       passive: true,
    });
 
@@ -748,7 +759,8 @@ const cleanup = () => {
    }
    document.removeEventListener("mousemove", handleGlobalMouseMove);
    document.removeEventListener("click", handleGlobalClick);
-   window.removeEventListener("resize", updateCanvas);
+   window.removeEventListener("resize", handleResize);
+   window.removeEventListener("mask-update", handleMaskUpdate);
 };
 
 // Наблюдаем за изменениями props
