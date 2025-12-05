@@ -6,7 +6,7 @@ import { useFullscreen } from "./composables/useFullscreen.js";
 import { usePreloader } from "./composables/usePreloader.js";
 
 const { autoEnterFullscreen, setupFullscreenOnInteraction } = useFullscreen();
-const { progress, isLoading, startPreload } = usePreloader();
+const { progress, isLoading, currentAsset, startPreload } = usePreloader();
 
 const showHeader = ref(false);
 let headerHoverTimeout = null;
@@ -85,7 +85,11 @@ onUnmounted(() => {
 <template>
    <div id="app" @mouseleave="showHeader = false">
       <!-- Preloader -->
-      <Preloader :progress="progress" :is-loading="isLoading" />
+      <Preloader
+         :progress="progress"
+         :is-loading="isLoading"
+         :current-asset="currentAsset"
+      />
 
       <!-- Main App Content -->
       <Header :class="{ 'header-visible': showHeader }" />

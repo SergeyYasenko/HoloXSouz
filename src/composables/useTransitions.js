@@ -1,5 +1,6 @@
 import { ref, nextTick } from "vue";
 import { levelTransitions, floorsConfig, levelImages } from "../config/navigation.js";
+import { getCachedVideo } from "./usePreloader.js";
 
 /**
  * Composable for managing video transitions between levels
@@ -7,6 +8,7 @@ import { levelTransitions, floorsConfig, levelImages } from "../config/navigatio
 export function useTransitions(currentLevel, levelHistory) {
    const isTransitioning = ref(false);
    const transitionVideoSrc = ref("");
+   const originalVideoPath = ref(""); // Store original path for comparison
    const transitionVideo = ref(null);
    const loadedVideos = ref(new Set());
    const isReverseTransition = ref(false);
@@ -54,6 +56,7 @@ export function useTransitions(currentLevel, levelHistory) {
          requestAnimationFrame(() => {
             isTransitioning.value = false;
             transitionVideoSrc.value = "";
+            originalVideoPath.value = "";
             isReverseTransition.value = false;
             reverseTransitionTarget.value = null;
             preloadImage.value = null;
@@ -127,7 +130,8 @@ export function useTransitions(currentLevel, levelHistory) {
 
    // Handle transition end
    const handleTransitionEnd = () => {
-      const currentVideoSrc = transitionVideoSrc.value;
+      // Use original path for comparison (blob URLs won't match)
+      const currentVideoPath = originalVideoPath.value;
 
       if (isReverseTransition.value && reverseTransitionTarget.value) {
          handleLevelTransitionEnd(reverseTransitionTarget.value);
@@ -135,26 +139,26 @@ export function useTransitions(currentLevel, levelHistory) {
       }
 
       // Check transitions
-      if (currentVideoSrc === levelTransitions["map-to-2-projects"]) {
+      if (currentVideoPath === levelTransitions["map-to-2-projects"]) {
          handleLevelTransitionEnd("2-projects");
          return;
       }
-      if (currentVideoSrc === levelTransitions["2-projects-to-start"]) {
+      if (currentVideoPath === levelTransitions["2-projects-to-start"]) {
          handleLevelTransitionEnd("start");
          return;
       }
-      if (currentVideoSrc === levelTransitions["start-to-facade-start"]) {
+      if (currentVideoPath === levelTransitions["start-to-facade-start"]) {
          handleLevelTransitionEnd("facade-start");
          return;
       }
-      if (currentVideoSrc === levelTransitions["start-to-facade-start-2"]) {
+      if (currentVideoPath === levelTransitions["start-to-facade-start-2"]) {
          handleLevelTransitionEnd("facade-start-2");
          return;
       }
 
       // Check floor transitions
       for (const [floorId, floor] of Object.entries(floorsConfig)) {
-         if (currentVideoSrc === floor.transitionVideo) {
+         if (currentVideoPath === floor.transitionVideo) {
             handleLevelTransitionEnd(`floor-${floorId}`);
             return;
          }
@@ -163,6 +167,7 @@ export function useTransitions(currentLevel, levelHistory) {
       // Fallback
       isTransitioning.value = false;
       transitionVideoSrc.value = "";
+      originalVideoPath.value = "";
       isReverseTransition.value = false;
       reverseTransitionTarget.value = null;
    };
@@ -198,8 +203,13 @@ export function useTransitions(currentLevel, levelHistory) {
          preloadImageLoaded.value = true;
       }
 
-      loadVideo(transitionVideoPath);
-      transitionVideoSrc.value = transitionVideoPath;
+      // Store original path for comparison later
+      originalVideoPath.value = transitionVideoPath;
+
+      // Use cached blob URL if available for faster playback
+      const cachedVideoSrc = getCachedVideo(transitionVideoPath);
+      loadVideo(cachedVideoSrc);
+      transitionVideoSrc.value = cachedVideoSrc;
 
       await nextTick();
       if (transitionVideo.value) {

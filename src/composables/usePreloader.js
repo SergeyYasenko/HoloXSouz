@@ -1,4 +1,4 @@
-import { ref, computed } from "vue";
+import { ref, computed, reactive } from "vue";
 
 // Import all assets from navigation config
 import mapImage from "../assets/video/Map.png";
@@ -56,18 +56,47 @@ const IMAGES_TO_PRELOAD = [
    marasiDriveTable,
 ];
 
-// All videos to preload
+// All videos to preload (will be fully loaded into memory)
 const VIDEOS_TO_PRELOAD = [
-   internetCityVideo,
-   theRoyalYachtVideo,
-   facadeStartVideo,
-   facadeStart2Video,
-   floor1Video,
-   floor2Video,
-   floor3Video,
-   floor4Video,
-   floorGVideo,
+   { key: "internetCity", src: internetCityVideo },
+   { key: "theRoyalYacht", src: theRoyalYachtVideo },
+   { key: "facadeStart", src: facadeStartVideo },
+   { key: "facadeStart2", src: facadeStart2Video },
+   { key: "floor1", src: floor1Video },
+   { key: "floor2", src: floor2Video },
+   { key: "floor3", src: floor3Video },
+   { key: "floor4", src: floor4Video },
+   { key: "floorG", src: floorGVideo },
 ];
+
+// Global cache for loaded assets (blob URLs for videos)
+const assetCache = reactive({
+   videos: {},
+   images: {},
+   isReady: false,
+});
+
+/**
+ * Get cached video blob URL or original URL
+ */
+export function getCachedVideo(originalSrc) {
+   // Find the video in cache by original src
+   for (const [key, blobUrl] of Object.entries(assetCache.videos)) {
+      // Match by key or by original src
+      const videoEntry = VIDEOS_TO_PRELOAD.find(v => v.key === key);
+      if (videoEntry && videoEntry.src === originalSrc) {
+         return blobUrl;
+      }
+   }
+   return originalSrc;
+}
+
+/**
+ * Check if assets are ready
+ */
+export function areAssetsReady() {
+   return assetCache.isReady;
+}
 
 /**
  * Composable for preloading all assets
@@ -77,19 +106,34 @@ export function usePreloader() {
    const totalCount = ref(IMAGES_TO_PRELOAD.length + VIDEOS_TO_PRELOAD.length);
    const isLoading = ref(true);
    const errors = ref([]);
+   const currentAsset = ref("");
 
    const progress = computed(() => {
       if (totalCount.value === 0) return 100;
       return Math.round((loadedCount.value / totalCount.value) * 100);
    });
 
-   // Preload a single image
+   // Preload a single image (decode it into memory)
    const preloadImage = (src) => {
       return new Promise((resolve) => {
          const img = new Image();
          img.onload = () => {
-            loadedCount.value++;
-            resolve({ src, success: true });
+            // Decode image to ensure it's in memory
+            if (img.decode) {
+               img.decode().then(() => {
+                  loadedCount.value++;
+                  assetCache.images[src] = true;
+                  resolve({ src, success: true });
+               }).catch(() => {
+                  loadedCount.value++;
+                  assetCache.images[src] = true;
+                  resolve({ src, success: true });
+               });
+            } else {
+               loadedCount.value++;
+               assetCache.images[src] = true;
+               resolve({ src, success: true });
+            }
          };
          img.onerror = () => {
             loadedCount.value++;
@@ -100,38 +144,63 @@ export function usePreloader() {
       });
    };
 
-   // Preload a single video (just metadata, not full video)
-   const preloadVideo = (src) => {
-      return new Promise((resolve) => {
-         const video = document.createElement("video");
-         video.preload = "auto";
+   // Preload a single video FULLY into memory as blob
+   const preloadVideo = async (videoEntry) => {
+      const { key, src } = videoEntry;
+      currentAsset.value = `Video: ${key}`;
 
-         video.oncanplaythrough = () => {
-            loadedCount.value++;
-            resolve({ src, success: true });
-         };
+      try {
+         // Fetch the entire video file
+         const response = await fetch(src);
+         if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+         }
 
-         video.onerror = () => {
-            loadedCount.value++;
-            errors.value.push({ type: "video", src });
-            resolve({ src, success: false });
-         };
+         // Get the video as a blob
+         const blob = await response.blob();
 
-         // Timeout fallback for slow connections
-         const timeout = setTimeout(() => {
-            loadedCount.value++;
-            resolve({ src, success: true, timeout: true });
-         }, 10000); // 10 second timeout per video
+         // Create a blob URL that can be used directly
+         const blobUrl = URL.createObjectURL(blob);
 
-         video.oncanplaythrough = () => {
-            clearTimeout(timeout);
-            loadedCount.value++;
-            resolve({ src, success: true });
-         };
+         // Store in cache
+         assetCache.videos[key] = blobUrl;
 
-         video.src = src;
-         video.load();
-      });
+         // Also preload into a video element to decode frames
+         await new Promise((resolve) => {
+            const video = document.createElement("video");
+            video.preload = "auto";
+            video.muted = true;
+            video.playsInline = true;
+
+            const onReady = () => {
+               video.removeEventListener("canplaythrough", onReady);
+               video.removeEventListener("loadeddata", onReady);
+               clearTimeout(timeout);
+               resolve();
+            };
+
+            const timeout = setTimeout(() => {
+               video.removeEventListener("canplaythrough", onReady);
+               video.removeEventListener("loadeddata", onReady);
+               resolve();
+            }, 5000);
+
+            video.addEventListener("canplaythrough", onReady);
+            video.addEventListener("loadeddata", onReady);
+            video.src = blobUrl;
+            video.load();
+         });
+
+         loadedCount.value++;
+         return { key, src, success: true };
+      } catch (error) {
+         console.warn(`Failed to preload video ${key}:`, error);
+         loadedCount.value++;
+         errors.value.push({ type: "video", key, src });
+         // Store original src as fallback
+         assetCache.videos[key] = src;
+         return { key, src, success: false };
+      }
    };
 
    // Start preloading all assets
@@ -139,26 +208,40 @@ export function usePreloader() {
       isLoading.value = true;
       loadedCount.value = 0;
       errors.value = [];
+      assetCache.isReady = false;
 
       const startTime = Date.now();
 
-      // Preload images first (they're usually smaller)
-      const imagePromises = IMAGES_TO_PRELOAD.map(preloadImage);
+      currentAsset.value = "Loading images...";
 
-      // Then preload videos
-      const videoPromises = VIDEOS_TO_PRELOAD.map(preloadVideo);
+      // Preload all images in parallel
+      await Promise.all(IMAGES_TO_PRELOAD.map(preloadImage));
 
-      // Wait for all to complete
-      await Promise.all([...imagePromises, ...videoPromises]);
+      currentAsset.value = "Loading videos...";
 
-      // Ensure minimum loading time for smooth UX (at least 800ms)
-      const elapsed = Date.now() - startTime;
-      const minLoadTime = 800;
-      if (elapsed < minLoadTime) {
-         await new Promise(resolve => setTimeout(resolve, minLoadTime - elapsed));
+      // Preload videos sequentially to avoid overwhelming the network
+      // This is better for mobile devices with limited bandwidth
+      for (const videoEntry of VIDEOS_TO_PRELOAD) {
+         await preloadVideo(videoEntry);
       }
 
+      // Mark cache as ready
+      assetCache.isReady = true;
+
+      // Ensure minimum loading time for smooth UX (at least 500ms)
+      const elapsed = Date.now() - startTime;
+      const minLoadTime = 500;
+      if (elapsed < minLoadTime) {
+         await new Promise((resolve) => setTimeout(resolve, minLoadTime - elapsed));
+      }
+
+      currentAsset.value = "";
       isLoading.value = false;
+
+      console.log("Assets preloaded:", {
+         images: Object.keys(assetCache.images).length,
+         videos: Object.keys(assetCache.videos).length,
+      });
 
       return {
          success: errors.value.length === 0,
@@ -172,7 +255,11 @@ export function usePreloader() {
       loadedCount,
       totalCount,
       errors,
+      currentAsset,
       startPreload,
+      assetCache,
    };
 }
 
+// Export the cache for use in other components
+export { assetCache, VIDEOS_TO_PRELOAD };

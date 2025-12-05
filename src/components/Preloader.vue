@@ -13,7 +13,9 @@
             </div>
             <div class="preloader-progress-text">
                <span class="preloader-progress-value">{{ progress }}%</span>
-               <span class="preloader-progress-label">Loading assets...</span>
+               <span class="preloader-progress-label">{{
+                  currentAsset || "Loading assets..."
+               }}</span>
             </div>
          </div>
       </div>
@@ -32,6 +34,10 @@ defineProps({
    isLoading: {
       type: Boolean,
       default: true,
+   },
+   currentAsset: {
+      type: String,
+      default: "",
    },
 });
 </script>
