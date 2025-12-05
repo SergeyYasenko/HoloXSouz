@@ -850,15 +850,6 @@ watch(scale, (newScale) => {
 
 @media (max-width: 1024px) {
    .map-info-panel {
-      top: 40px;
-      right: 40px;
-      max-width: 300px;
-      padding: 24px;
-   }
-}
-
-@media (max-width: 768px) {
-   .map-info-panel {
       top: 20px;
       right: auto;
       left: auto;
