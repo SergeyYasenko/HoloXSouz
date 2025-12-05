@@ -1,6 +1,7 @@
 <template>
    <div class="home">
       <div
+         ref="imageWrapperRef"
          class="home-image-wrapper"
          :class="{
             'home-swipe-enabled':
@@ -8,13 +9,13 @@
                currentLevel === 'facade-start' ||
                currentLevel === 'facade-start-2',
          }"
-         @touchstart="handleTouchStart"
-         @touchmove="handleTouchMove"
-         @touchend="handleTouchEnd"
-         @mousedown="handleMouseDown"
-         @mousemove="handleMouseMove"
-         @mouseup="handleMouseUp"
-         @mouseleave="handleMouseUp"
+         @touchstart="handleImageTouchStart"
+         @touchmove="handleImageTouchMove"
+         @touchend="handleImageTouchEnd"
+         @mousedown="handleImageMouseDown"
+         @mousemove="handleImageMouseMove"
+         @mouseup="handleImageMouseUp"
+         @mouseleave="handleImageMouseUp"
       >
          <!-- Preload image for seamless transition -->
          <img
@@ -26,10 +27,12 @@
          />
          <!-- Static image (Map, Start, etc.) -->
          <img
+            ref="homeImageRef"
             v-if="currentStaticImage"
             :key="`${currentLevel}-${currentStaticImage}`"
             :src="currentStaticImage"
             class="home-image"
+            :style="imageDrag.imageStyle"
             alt=""
          />
          <!-- Transition video -->
@@ -316,6 +319,7 @@ import { useLevelStorage } from "../composables/useLevelStorage.js";
 import { useSwipe } from "../composables/useSwipe.js";
 import { useNavigation } from "../composables/useNavigation.js";
 import { useTransitions } from "../composables/useTransitions.js";
+import { useImageDrag } from "../composables/useImageDrag.js";
 
 // Level system for navigation hierarchy
 // Levels: 'map' -> '2-projects' -> 'start' -> 'video-sides' (1, 2, 3, 4)
@@ -325,6 +329,18 @@ const showHeader = inject("showHeader", ref(false));
 
 // Use level storage composable
 const { currentLevel, levelHistory } = useLevelStorage();
+
+// Refs for image drag
+const imageWrapperRef = ref(null);
+const homeImageRef = ref(null);
+
+// Use image drag composable (scale = 1 for Home, no zoom)
+const imageDrag = useImageDrag(imageWrapperRef, homeImageRef, ref(1));
+
+// Reset image position when level changes
+watch(currentLevel, () => {
+   imageDrag.resetPosition();
+});
 
 // Use masks composable
 const {
@@ -408,6 +424,135 @@ const {
    hideSwipeHint,
 } = swipeHandlers;
 
+// Image drag handlers (separate from swipe)
+const swipeableLevels = ["start", "facade-start", "facade-start-2"];
+
+const handleImageTouchStart = (event) => {
+   const isSwipeable = swipeableLevels.includes(currentLevel.value);
+
+   // Check if image exists (computed property)
+   if (!currentStaticImage.value || !homeImageRef.value) {
+      if (isSwipeable) {
+         handleTouchStart(event);
+      }
+      return;
+   }
+
+   // Check if touch is on interactive element
+   const target = event.target;
+   if (
+      target &&
+      (target.closest(".home-content-wrapper") ||
+         target.closest("button") ||
+         target.closest("a") ||
+         target.closest(".house-outline"))
+   ) {
+      // If swipeable level, still allow swipe
+      if (isSwipeable) {
+         handleTouchStart(event);
+      }
+      return;
+   }
+
+   // On non-swipeable levels, use drag
+   if (!isSwipeable && event.touches.length === 1) {
+      event.stopPropagation();
+      imageDrag.handleTouchStart(event);
+   } else if (isSwipeable) {
+      // On swipeable levels, use swipe handler
+      handleTouchStart(event);
+   }
+};
+
+const handleImageTouchMove = (event) => {
+   const isSwipeable = swipeableLevels.includes(currentLevel.value);
+
+   // If dragging, use drag handler
+   if (imageDrag.isDragging.value && event.touches.length === 1) {
+      event.preventDefault();
+      event.stopPropagation();
+      imageDrag.handleTouchMove(event);
+      return;
+   }
+
+   // Use swipe handler for swipeable levels
+   if (isSwipeable) {
+      handleTouchMove(event);
+   }
+};
+
+const handleImageTouchEnd = (event) => {
+   const isSwipeable = swipeableLevels.includes(currentLevel.value);
+
+   if (imageDrag.isDragging.value) {
+      event.stopPropagation();
+      imageDrag.handleTouchEnd(event);
+   } else if (isSwipeable) {
+      handleTouchEnd(event);
+   }
+};
+
+const handleImageMouseDown = (event) => {
+   const isSwipeable = swipeableLevels.includes(currentLevel.value);
+
+   // Check if image exists (computed property)
+   if (!currentStaticImage.value || !homeImageRef.value) {
+      if (isSwipeable) {
+         handleMouseDown(event);
+      }
+      return;
+   }
+
+   // Check if click is on interactive element
+   const target = event.target;
+   if (
+      target &&
+      (target.closest(".home-content-wrapper") ||
+         target.closest("button") ||
+         target.closest("a") ||
+         target.closest(".house-outline"))
+   ) {
+      // If swipeable level, still allow swipe
+      if (isSwipeable) {
+         handleMouseDown(event);
+      }
+      return;
+   }
+
+   // On non-swipeable levels, use drag
+   if (!isSwipeable && event.button === 0) {
+      event.stopPropagation();
+      imageDrag.handleMouseDown(event);
+   } else if (isSwipeable) {
+      handleMouseDown(event);
+   }
+};
+
+const handleImageMouseMove = (event) => {
+   const isSwipeable = swipeableLevels.includes(currentLevel.value);
+
+   if (imageDrag.isDragging.value) {
+      event.stopPropagation();
+      imageDrag.handleMouseMove(event);
+      return;
+   }
+
+   if (isSwipeable) {
+      handleMouseMove(event);
+   }
+};
+
+const handleImageMouseUp = (event) => {
+   const isSwipeable = swipeableLevels.includes(currentLevel.value);
+
+   if (imageDrag.isDragging.value) {
+      if (event) event.stopPropagation();
+      imageDrag.handleMouseUp();
+   } else if (isSwipeable) {
+      handleMouseUp();
+   }
+};
+
 onMounted(() => {
    // Уровень уже восстановлен из localStorage при инициализации ref
 });
@@ -434,6 +579,12 @@ onUnmounted(() => {
    -webkit-user-select: none;
    -moz-user-select: none;
    -ms-user-select: none;
+   cursor: grab;
+   touch-action: pan-y;
+}
+
+.home-image-wrapper:active {
+   cursor: grabbing;
 }
 
 .home-video,
@@ -455,6 +606,7 @@ onUnmounted(() => {
    -moz-user-select: none;
    -ms-user-select: none;
    pointer-events: none; /* Позволяем событиям проходить через картинку к wrapper */
+   will-change: transform;
 }
 
 .home-image-preload {

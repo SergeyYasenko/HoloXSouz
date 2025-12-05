@@ -152,6 +152,7 @@ import dubaiMarinaImage from "../assets/img/dubai-marina.png";
 import marasiDriveTableImage from "../assets/img/marasi-drive-table.png";
 import downtownTableImage from "../assets/img/downtown-table.png";
 import dubaiMarinaTableImage from "../assets/img/dubai-marina-table.png";
+import { useImageDrag } from "../composables/useImageDrag.js";
 
 // Map interaction logic
 const mapContainer = ref(null);
@@ -183,18 +184,131 @@ const minZoom = ref(0.5);
 const initialZoom = computed(() => minZoom.value);
 
 const scale = ref(0.5);
-const position = ref({ x: 0, y: 0 });
-const isDragging = ref(false);
-const dragStart = ref({ x: 0, y: 0 });
-const lastPosition = ref({ x: 0, y: 0 });
 const showModal = ref(true);
+const lastPosition = ref({ x: 0, y: 0 });
 
-const mapStyle = computed(() => {
-   return {
-      transform: `translate(${position.value.x}px, ${position.value.y}px) scale(${scale.value})`,
-      transformOrigin: "0 0",
-   };
+// Use image drag composable
+const imageDrag = useImageDrag(mapContainer, mapImageRef, scale, () => {
+   // Hide modal on drag start
+   if (showModal.value) {
+      hideModal();
+   }
 });
+
+const position = imageDrag.position;
+const isDragging = imageDrag.isDragging;
+
+// Override constrainPosition with Map-specific logic
+const originalConstrainPosition = imageDrag.constrainPosition;
+imageDrag.constrainPosition = (newPosition, currentScale = scale.value) => {
+   if (!mapContainer.value || !mapImageRef.value) return newPosition;
+
+   const containerRect = mapContainer.value.getBoundingClientRect();
+   const containerWidth = containerRect.width;
+   const containerHeight = containerRect.height;
+
+   const imageWidth =
+      mapImageRef.value.naturalWidth ||
+      mapImageRef.value.offsetWidth ||
+      mapImageRef.value.width ||
+      containerWidth;
+   const imageHeight =
+      mapImageRef.value.naturalHeight ||
+      mapImageRef.value.offsetHeight ||
+      mapImageRef.value.height ||
+      containerHeight;
+
+   const scaledWidth = imageWidth * currentScale;
+   const scaledHeight = imageHeight * currentScale;
+
+   const minX = containerWidth - scaledWidth;
+   const maxX = 0;
+   const minY = containerHeight - scaledHeight;
+   const maxY = 0;
+
+   const currentMinZoom = calculateMinZoom();
+   const isAtMinZoom = Math.abs(currentScale - currentMinZoom) < 0.01;
+
+   if (isAtMinZoom && scaledHeight >= containerHeight) {
+      const constrainedY = Math.max(minY, Math.min(maxY, newPosition.y));
+      if (scaledWidth > containerWidth) {
+         return {
+            x: Math.max(minX, Math.min(maxX, newPosition.x)),
+            y: constrainedY,
+         };
+      } else {
+         const centerX = (containerWidth - scaledWidth) / 2;
+         return {
+            x: centerX,
+            y: constrainedY,
+         };
+      }
+   }
+
+   if (scaledWidth <= containerWidth) {
+      const centerX = (containerWidth - scaledWidth) / 2;
+      return {
+         x: Math.max(
+            minX,
+            Math.min(maxX, newPosition.x !== 0 ? newPosition.x : centerX)
+         ),
+         y: newPosition.y,
+      };
+   }
+   if (scaledHeight <= containerHeight) {
+      const centerY = (containerHeight - scaledHeight) / 2;
+      return {
+         x: newPosition.x,
+         y: Math.max(
+            minY,
+            Math.min(maxY, newPosition.y !== 0 ? newPosition.y : centerY)
+         ),
+      };
+   }
+
+   return {
+      x: Math.max(minX, Math.min(maxX, newPosition.x)),
+      y: Math.max(minY, Math.min(maxY, newPosition.y)),
+   };
+};
+
+// Override handleMouseMove and handleTouchMove to use custom constrainPosition
+const originalHandleMouseMove = imageDrag.handleMouseMove;
+imageDrag.handleMouseMove = (event) => {
+   if (isDragging.value) {
+      const newPosition = {
+         x: event.clientX - imageDrag.dragStart.value.x,
+         y: event.clientY - imageDrag.dragStart.value.y,
+      };
+      position.value = imageDrag.constrainPosition(newPosition, scale.value);
+      lastPosition.value = { ...position.value };
+   }
+};
+
+const originalHandleTouchMove = imageDrag.handleTouchMove;
+imageDrag.handleTouchMove = (event) => {
+   if (isDragging.value && event.touches.length === 1) {
+      event.preventDefault();
+      const touch = event.touches[0];
+      const newPosition = {
+         x: touch.clientX - imageDrag.dragStart.value.x,
+         y: touch.clientY - imageDrag.dragStart.value.y,
+      };
+      position.value = imageDrag.constrainPosition(newPosition, scale.value);
+      lastPosition.value = { ...position.value };
+   }
+};
+
+// Watch position changes to update lastPosition
+watch(
+   position,
+   (newPos) => {
+      lastPosition.value = { ...newPos };
+   },
+   { deep: true }
+);
+
+const mapStyle = imageDrag.imageStyle;
 
 // Calculate table image size proportionally to main image size
 // Table images should scale proportionally with main images
@@ -288,94 +402,7 @@ const getCenterPosition = (newScale) => {
    return { x: centerX, y: centerY };
 };
 
-// Constrain position to keep map within bounds
-const constrainPosition = (newPosition, newScale) => {
-   if (!mapContainer.value || !mapImageRef.value) return newPosition;
-
-   const containerRect = mapContainer.value.getBoundingClientRect();
-   const containerWidth = containerRect.width;
-   const containerHeight = containerRect.height;
-
-   // Get actual image dimensions (use naturalWidth for real size, fallback to displayed size)
-   const imageWidth =
-      mapImageRef.value.naturalWidth ||
-      mapImageRef.value.offsetWidth ||
-      mapImageRef.value.width ||
-      containerWidth;
-   const imageHeight =
-      mapImageRef.value.naturalHeight ||
-      mapImageRef.value.offsetHeight ||
-      mapImageRef.value.height ||
-      containerHeight;
-
-   // Calculate scaled dimensions
-   const scaledWidth = imageWidth * newScale;
-   const scaledHeight = imageHeight * newScale;
-
-   // Calculate bounds - allow movement within the scaled image bounds
-   // minX/Y: when right/bottom edge of scaled image touches container edge
-   // maxX/Y: when left/top edge of scaled image touches container edge
-   const minX = containerWidth - scaledWidth;
-   const maxX = 0;
-   const minY = containerHeight - scaledHeight;
-   const maxY = 0;
-
-   // Check if at minimum zoom (image fills container height)
-   const currentMinZoom = calculateMinZoom();
-   const isAtMinZoom = Math.abs(newScale - currentMinZoom) < 0.01;
-
-   // At minimum zoom, allow Y dragging but constrain to prevent black bars
-   // But allow full horizontal dragging if image is wider than container
-   if (isAtMinZoom && scaledHeight >= containerHeight) {
-      // Constrain Y position to prevent black bars, but allow dragging within bounds
-      const constrainedY = Math.max(minY, Math.min(maxY, newPosition.y));
-
-      // Allow full horizontal dragging if image is wider than container
-      if (scaledWidth > containerWidth) {
-         return {
-            x: Math.max(minX, Math.min(maxX, newPosition.x)),
-            y: constrainedY,
-         };
-      } else {
-         // If image fits in width, center it
-         const centerX = (containerWidth - scaledWidth) / 2;
-         return {
-            x: centerX,
-            y: constrainedY,
-         };
-      }
-   }
-
-   // If scaled image is smaller than container, allow centering but don't force it
-   if (scaledWidth <= containerWidth) {
-      // Allow horizontal centering, but constrain to prevent going beyond edges
-      const centerX = (containerWidth - scaledWidth) / 2;
-      return {
-         x: Math.max(
-            minX,
-            Math.min(maxX, newPosition.x !== 0 ? newPosition.x : centerX)
-         ),
-         y: newPosition.y,
-      };
-   }
-   if (scaledHeight <= containerHeight) {
-      // Allow vertical centering, but constrain to prevent going beyond edges
-      const centerY = (containerHeight - scaledHeight) / 2;
-      return {
-         x: newPosition.x,
-         y: Math.max(
-            minY,
-            Math.min(maxY, newPosition.y !== 0 ? newPosition.y : centerY)
-         ),
-      };
-   }
-
-   // Constrain position - prevent showing areas outside image
-   return {
-      x: Math.max(minX, Math.min(maxX, newPosition.x)),
-      y: Math.max(minY, Math.min(maxY, newPosition.y)),
-   };
-};
+// constrainPosition is now defined in imageDrag composable and overridden above
 
 const handleWheel = (event) => {
    event.preventDefault();
@@ -407,8 +434,8 @@ const handleWheel = (event) => {
       y: mouseY - mapY * newScale,
    };
 
-   // Constrain position to bounds
-   position.value = constrainPosition(newPosition, newScale);
+   // Constrain position to bounds using custom function
+   position.value = imageDrag.constrainPosition(newPosition, newScale);
    lastPosition.value = { ...position.value };
 };
 
@@ -423,84 +450,20 @@ const handleContainerClick = (event) => {
    }
 };
 
-const handleMouseDown = (event) => {
-   if (event.button === 0) {
-      // Left mouse button - allow dragging at any zoom level
-      isDragging.value = true;
-      dragStart.value = {
-         x: event.clientX - position.value.x,
-         y: event.clientY - position.value.y,
-      };
-      if (mapContainer.value) {
-         mapContainer.value.style.cursor = "grabbing";
-      }
-      // Hide modal on drag start
-      if (showModal.value) {
-         hideModal();
-      }
-   }
-};
-
-const handleMouseMove = (event) => {
-   if (isDragging.value) {
-      const newPosition = {
-         x: event.clientX - dragStart.value.x,
-         y: event.clientY - dragStart.value.y,
-      };
-      // Constrain position to bounds
-      position.value = constrainPosition(newPosition, scale.value);
-      lastPosition.value = { ...position.value };
-   }
-};
-
-const handleMouseUp = () => {
-   isDragging.value = false;
-   if (mapContainer.value) {
-      mapContainer.value.style.cursor = "grab";
-   }
-};
-
-// Touch handlers for mobile
-const handleTouchStart = (event) => {
-   if (event.touches.length === 1) {
-      // Single touch - allow dragging
-      isDragging.value = true;
-      const touch = event.touches[0];
-      dragStart.value = {
-         x: touch.clientX - position.value.x,
-         y: touch.clientY - position.value.y,
-      };
-      // Hide modal on drag start
-      if (showModal.value) {
-         hideModal();
-      }
-   }
-};
-
-const handleTouchMove = (event) => {
-   if (isDragging.value && event.touches.length === 1) {
-      event.preventDefault(); // Prevent scrolling
-      const touch = event.touches[0];
-      const newPosition = {
-         x: touch.clientX - dragStart.value.x,
-         y: touch.clientY - dragStart.value.y,
-      };
-      // Constrain position to bounds
-      position.value = constrainPosition(newPosition, scale.value);
-      lastPosition.value = { ...position.value };
-   }
-};
-
-const handleTouchEnd = () => {
-   isDragging.value = false;
-};
+// Use handlers from composable
+const handleMouseDown = imageDrag.handleMouseDown;
+const handleMouseMove = imageDrag.handleMouseMove;
+const handleMouseUp = imageDrag.handleMouseUp;
+const handleTouchStart = imageDrag.handleTouchStart;
+const handleTouchMove = imageDrag.handleTouchMove;
+const handleTouchEnd = imageDrag.handleTouchEnd;
 
 const resetMap = () => {
    const currentMinZoom = calculateMinZoom();
    scale.value = currentMinZoom;
    // Reset to center position
    const centerPos = getCenterPosition(currentMinZoom);
-   position.value = constrainPosition(centerPos, currentMinZoom);
+   position.value = imageDrag.constrainPosition(centerPos, currentMinZoom);
    lastPosition.value = { ...position.value };
 };
 
@@ -528,7 +491,10 @@ const initializeMap = () => {
       if (mapImageRef.value.complete) {
          scale.value = calculatedMinZoom;
          const centerPos = getCenterPosition(calculatedMinZoom);
-         position.value = constrainPosition(centerPos, calculatedMinZoom);
+         position.value = imageDrag.constrainPosition(
+            centerPos,
+            calculatedMinZoom
+         );
          lastPosition.value = { ...position.value };
       } else {
          mapImageRef.value.onload = () => {
@@ -536,7 +502,10 @@ const initializeMap = () => {
             minZoom.value = calculatedMinZoom;
             scale.value = calculatedMinZoom;
             const centerPos = getCenterPosition(calculatedMinZoom);
-            position.value = constrainPosition(centerPos, calculatedMinZoom);
+            position.value = imageDrag.constrainPosition(
+               centerPos,
+               calculatedMinZoom
+            );
             lastPosition.value = { ...position.value };
          };
       }
@@ -554,7 +523,7 @@ const handleResize = () => {
    }
 
    // Recalculate position
-   position.value = constrainPosition(position.value, scale.value);
+   position.value = imageDrag.constrainPosition(position.value, scale.value);
    lastPosition.value = { ...position.value };
 };
 
@@ -583,7 +552,7 @@ watch(scale, (newScale) => {
       return;
    }
    // Constrain position when scale changes
-   position.value = constrainPosition(position.value, newScale);
+   position.value = imageDrag.constrainPosition(position.value, newScale);
    lastPosition.value = { ...position.value };
 });
 </script>
