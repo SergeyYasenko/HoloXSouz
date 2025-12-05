@@ -533,12 +533,29 @@ const handleArrowNavigation = (direction) => {
    handleSwipe(direction === "left");
 };
 
-// Image drag handlers - always use drag (no swipe logic)
+// Check if target is a mask hit area
+const isMaskElement = (target) => {
+   return (
+      target &&
+      (target.closest(".house-outline-hit-area") ||
+         target.closest(".house-outline-wrapper"))
+   );
+};
+
+// Image drag handlers - skip if touching a mask
 const handleImageTouchStart = (event) => {
+   // Don't start drag if touching a mask
+   if (isMaskElement(event.target)) {
+      return;
+   }
    imageDrag.handleTouchStart(event);
 };
 
 const handleImageTouchMove = (event) => {
+   // Don't handle move if we didn't start dragging (was on mask)
+   if (!imageDrag.isDragging.value) {
+      return;
+   }
    imageDrag.handleTouchMove(event);
 };
 
@@ -547,6 +564,10 @@ const handleImageTouchEnd = (event) => {
 };
 
 const handleImageMouseDown = (event) => {
+   // Don't start drag if clicking on a mask
+   if (isMaskElement(event.target)) {
+      return;
+   }
    imageDrag.handleMouseDown(event);
 };
 

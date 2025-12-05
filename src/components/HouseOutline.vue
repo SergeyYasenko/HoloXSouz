@@ -21,7 +21,9 @@
          @mousemove="handleMouseMove"
          @mouseenter="handleMouseEnter"
          @mouseleave="handleMouseLeave"
-         @click="handleClick"
+         @click.stop="handleClick"
+         @touchstart.stop="handleTouchStart"
+         @touchend.stop="handleTouchEnd"
       ></div>
    </div>
 </template>
@@ -568,7 +570,66 @@ const handleGlobalClick = (event) => {
 
 // Обработчик клика на hit-area (для дополнительной надежности)
 const handleClick = (event) => {
-   handleGlobalClick(event);
+   // If the click is directly on the hit area (via clip-path),
+   // we know it's within the mask shape, so skip the position check
+   event.preventDefault();
+   event.stopPropagation();
+
+   // Call the click handler directly
+   if (props.onClick && typeof props.onClick === "function") {
+      props.onClick(event);
+   } else {
+      window.location.reload();
+   }
+};
+
+// Touch handling for mobile devices
+const touchStartPos = ref({ x: 0, y: 0 });
+const touchStartTime = ref(0);
+
+const handleTouchStart = (event) => {
+   if (event.touches.length === 1) {
+      const touch = event.touches[0];
+      touchStartPos.value = { x: touch.clientX, y: touch.clientY };
+      touchStartTime.value = Date.now();
+
+      // Show mask on touch
+      if (checkMousePosition(touch.clientX, touch.clientY)) {
+         isCursorInside.value = true;
+         if (!isVisible.value) {
+            isVisible.value = true;
+            updateCanvas();
+            if (props.animated) {
+               startAnimation();
+            }
+         }
+      }
+   }
+};
+
+const handleTouchEnd = (event) => {
+   const touch = event.changedTouches[0];
+   if (!touch) return;
+
+   const deltaX = Math.abs(touch.clientX - touchStartPos.value.x);
+   const deltaY = Math.abs(touch.clientY - touchStartPos.value.y);
+   const deltaTime = Date.now() - touchStartTime.value;
+
+   // Only trigger click if it's a tap (not a drag)
+   // Max 20px movement and less than 400ms (more forgiving on mobile)
+   if (deltaX < 20 && deltaY < 20 && deltaTime < 400) {
+      // Prevent the event from bubbling to drag handlers
+      event.preventDefault();
+      event.stopPropagation();
+
+      // Call the click handler (we already know we're within hit area since touchstart was on this element)
+      if (props.onClick) {
+         props.onClick();
+      }
+   }
+
+   // Hide mask after touch
+   isCursorInside.value = false;
 };
 
 // Анимационный цикл
@@ -744,9 +805,21 @@ onUnmounted(() => {
    cursor: pointer;
    background: transparent;
    z-index: 6;
+   /* Enable touch on mobile */
+   touch-action: manipulation;
+   -webkit-tap-highlight-color: transparent;
 }
 
 .house-outline-hit-area-pointer {
    cursor: pointer;
+}
+
+/* Better touch feedback on mobile */
+@media (hover: none) and (pointer: coarse) {
+   .house-outline-hit-area {
+      /* Increase touch area slightly on mobile */
+      min-width: 44px;
+      min-height: 44px;
+   }
 }
 </style>
