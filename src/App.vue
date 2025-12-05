@@ -2,10 +2,8 @@
 import { ref, onMounted, onUnmounted, provide } from "vue";
 import Header from "./components/Header.vue";
 import Preloader from "./components/Preloader.vue";
-import { useFullscreen } from "./composables/useFullscreen.js";
 import { usePreloader } from "./composables/usePreloader.js";
 
-const { autoEnterFullscreen, setupFullscreenOnInteraction } = useFullscreen();
 const { progress, isLoading, currentAsset, startPreload } = usePreloader();
 
 const showHeader = ref(false);
@@ -68,10 +66,6 @@ onMounted(async () => {
       console.error("Preloader error:", error);
       // Continue even if preloader fails
    }
-
-   // Setup listeners for first user interaction to enter fullscreen
-   // (browsers require user gesture for fullscreen API)
-   setupFullscreenOnInteraction();
 
    // Add mouse move listener for header visibility
    document.addEventListener("mousemove", handleMouseMove);

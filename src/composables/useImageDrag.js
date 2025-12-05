@@ -12,6 +12,12 @@ export function useImageDrag(containerRef, imageRef, scale = ref(1), onDragStart
    const isDragging = ref(false);
    const dragStart = ref({ x: 0, y: 0 });
    const lastPosition = ref({ x: 0, y: 0 });
+   // Track touch start position to detect tap vs drag
+   const touchStartPos = ref({ x: 0, y: 0 });
+   const touchStartTime = ref(0);
+   const hasMoved = ref(false);
+   const DRAG_THRESHOLD = 10; // Minimum pixels to move before starting drag
+   const TAP_TIME_THRESHOLD = 300; // Maximum time for tap (ms)
 
    // Helper to get scale value
    const getScaleValue = () => {
@@ -132,23 +138,45 @@ export function useImageDrag(containerRef, imageRef, scale = ref(1), onDragStart
       if (!containerRef.value || !imageRef.value) return;
 
       if (event.touches.length === 1) {
-         // Single touch - allow dragging
-         isDragging.value = true;
          const touch = event.touches[0];
-         dragStart.value = {
-            x: touch.clientX - position.value.x,
-            y: touch.clientY - position.value.y,
-         };
-         if (onDragStart) {
-            onDragStart();
-         }
+         // Store initial touch position and time (don't start dragging yet)
+         touchStartPos.value = { x: touch.clientX, y: touch.clientY };
+         touchStartTime.value = Date.now();
+         hasMoved.value = false;
+         isDragging.value = false; // Don't start dragging until we detect movement
       }
    };
 
    const handleTouchMove = (event) => {
-      if (isDragging.value && event.touches.length === 1) {
+      if (!event.touches || event.touches.length !== 1) return;
+
+      const touch = event.touches[0];
+      const deltaX = Math.abs(touch.clientX - touchStartPos.value.x);
+      const deltaY = Math.abs(touch.clientY - touchStartPos.value.y);
+      const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+
+      // If we haven't started dragging yet, check if movement exceeds threshold
+      if (!isDragging.value) {
+         if (distance > DRAG_THRESHOLD) {
+            // Movement detected - start dragging
+            hasMoved.value = true;
+            isDragging.value = true;
+            dragStart.value = {
+               x: touch.clientX - position.value.x,
+               y: touch.clientY - position.value.y,
+            };
+            if (onDragStart) {
+               onDragStart();
+            }
+         } else {
+            // Not enough movement yet - don't start dragging, allow tap to work
+            return;
+         }
+      }
+
+      // We're dragging - update position
+      if (isDragging.value) {
          event.preventDefault(); // Prevent scrolling
-         const touch = event.touches[0];
          const clientX = touch.clientX;
          const clientY = touch.clientY;
 
@@ -166,7 +194,11 @@ export function useImageDrag(containerRef, imageRef, scale = ref(1), onDragStart
    };
 
    const handleTouchEnd = () => {
+      // Reset all drag state
       isDragging.value = false;
+      hasMoved.value = false;
+      touchStartPos.value = { x: 0, y: 0 };
+      touchStartTime.value = 0;
    };
 
    // Reset position to center

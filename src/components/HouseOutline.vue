@@ -607,6 +607,9 @@ const handleTouchStart = (event) => {
             hitAreaRef.value &&
             checkMousePosition(touch.clientX, touch.clientY)
          ) {
+            // Stop event propagation to prevent drag from starting
+            event.stopPropagation();
+
             isCursorInside.value = true;
             if (!isVisible.value) {
                isVisible.value = true;
@@ -632,18 +635,32 @@ const handleTouchEnd = (event) => {
 
       const deltaX = Math.abs(touch.clientX - touchStartPos.value.x);
       const deltaY = Math.abs(touch.clientY - touchStartPos.value.y);
+      const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
       const deltaTime = Date.now() - touchStartTime.value;
 
       // Only trigger click if it's a tap (not a drag)
-      // Max 20px movement and less than 400ms (more forgiving on mobile)
-      if (deltaX < 20 && deltaY < 20 && deltaTime < 400) {
-         // Prevent the event from bubbling to drag handlers
-         event.preventDefault();
-         event.stopPropagation();
+      // More forgiving thresholds for mobile: 15px movement and less than 500ms
+      const TAP_DISTANCE_THRESHOLD = 15;
+      const TAP_TIME_THRESHOLD = 500;
 
-         // Call the click handler (we already know we're within hit area since touchstart was on this element)
-         if (props.onClick && typeof props.onClick === "function") {
-            props.onClick(event);
+      if (distance < TAP_DISTANCE_THRESHOLD && deltaTime < TAP_TIME_THRESHOLD) {
+         // Double-check that we're still over the mask
+         if (
+            hitAreaRef.value &&
+            checkMousePosition(touch.clientX, touch.clientY)
+         ) {
+            // Prevent the event from bubbling to drag handlers
+            event.preventDefault();
+            event.stopPropagation();
+            event.stopImmediatePropagation();
+
+            // Small delay to ensure drag handlers have finished
+            setTimeout(() => {
+               // Call the click handler
+               if (props.onClick && typeof props.onClick === "function") {
+                  props.onClick(event);
+               }
+            }, 10);
          }
       }
 

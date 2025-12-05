@@ -533,23 +533,49 @@ const handleArrowNavigation = (direction) => {
    handleSwipe(direction === "left");
 };
 
-// Check if target is a mask hit area
+// Check if target is a mask hit area (works with both mouse and touch events)
 const isMaskElement = (target) => {
-   return (
-      target &&
-      (target.closest(".house-outline-hit-area") ||
-         target.closest(".house-outline-wrapper"))
-   );
+   if (!target) return false;
+
+   // Check if target or any parent is a mask element
+   const hitArea = target.closest(".house-outline-hit-area");
+   const wrapper = target.closest(".house-outline-wrapper");
+
+   if (hitArea || wrapper) {
+      return true;
+   }
+
+   // Also check by elementFromPoint for touch events
+   return false;
+};
+
+// Check if touch point is over a mask
+const isTouchOverMask = (clientX, clientY) => {
+   try {
+      const element = document.elementFromPoint(clientX, clientY);
+      return isMaskElement(element);
+   } catch (error) {
+      return false;
+   }
 };
 
 // Image drag handlers - skip if touching a mask
 const handleImageTouchStart = (event) => {
    try {
-      if (!event || !event.target) return;
-      // Don't start drag if touching a mask
-      if (isMaskElement(event.target)) {
+      if (!event || !event.touches || event.touches.length === 0) return;
+
+      const touch = event.touches[0];
+
+      // Check if touch is over a mask element
+      if (
+         isMaskElement(event.target) ||
+         isTouchOverMask(touch.clientX, touch.clientY)
+      ) {
+         // Don't start drag if touching a mask - let mask handle the touch
          return;
       }
+
+      // Not on mask - allow drag to start (but it won't actually start until movement detected)
       imageDrag.handleTouchStart(event);
    } catch (error) {
       console.error("Error in handleImageTouchStart:", error);
@@ -558,11 +584,22 @@ const handleImageTouchStart = (event) => {
 
 const handleImageTouchMove = (event) => {
    try {
-      if (!event) return;
+      if (!event || !event.touches || event.touches.length === 0) return;
+
+      const touch = event.touches[0];
+
+      // If we're moving over a mask, stop dragging
+      if (isTouchOverMask(touch.clientX, touch.clientY)) {
+         // Cancel drag if we move over a mask
+         imageDrag.handleTouchEnd();
+         return;
+      }
+
       // Don't handle move if we didn't start dragging (was on mask)
       if (!imageDrag.isDragging.value) {
          return;
       }
+
       imageDrag.handleTouchMove(event);
    } catch (error) {
       console.error("Error in handleImageTouchMove:", error);
@@ -614,7 +651,6 @@ const handleImageWheel = (event) => {
 };
 
 onMounted(() => {
-   // Уровень уже восстановлен из localStorage при инициализации ref
    // Set cursor for drag (like Map.vue)
    if (imageWrapperRef.value) {
       imageWrapperRef.value.style.cursor = "grab";
