@@ -75,8 +75,8 @@ const VIDEOS_TO_PRELOAD = [
  */
 export function usePreloader() {
    const loadedCount = ref(0);
-   // Only count critical images + videos for initial loading
-   const totalCount = ref(CRITICAL_IMAGES.length + VIDEOS_TO_PRELOAD.length);
+   // Only count critical images for initial loading (videos load in background)
+   const totalCount = ref(CRITICAL_IMAGES.length);
    const isLoading = ref(true);
    const errors = ref([]);
    const currentAsset = ref("");
@@ -86,43 +86,58 @@ export function usePreloader() {
       return Math.round((loadedCount.value / totalCount.value) * 100);
    });
 
-   // Preload a single image
+   // Preload a single image with decoding for faster rendering
    const preloadImage = (src) => {
       return new Promise((resolve) => {
          const img = new Image();
+
          img.onload = () => {
-            loadedCount.value++;
-            resolve({ src, success: true });
+            // Image loaded, decode it for faster rendering (if supported)
+            if (img.decode) {
+               img.decode()
+                  .then(() => {
+                     loadedCount.value++;
+                     resolve({ src, success: true });
+                  })
+                  .catch(() => {
+                     // Decode failed, but image is loaded - still count as success
+                     loadedCount.value++;
+                     resolve({ src, success: true });
+                  });
+            } else {
+               // decode() not supported, image is still loaded
+               loadedCount.value++;
+               resolve({ src, success: true });
+            }
          };
+
          img.onerror = () => {
             loadedCount.value++;
             errors.value.push({ type: "image", src });
             resolve({ src, success: false });
          };
+
          img.src = src;
       });
    };
 
-   // Lightweight video preload - just buffer initial frames
+   // Aggressive video preload - load enough data for smooth playback
    const preloadVideo = (videoEntry) => {
       return new Promise((resolve) => {
          try {
             const { key, src } = videoEntry;
             if (!src) {
-               loadedCount.value++;
                resolve({ key, src, success: false });
                return;
             }
-
-            currentAsset.value = `Video: ${key}`;
 
             const video = document.createElement("video");
             if (!video) {
-               loadedCount.value++;
                resolve({ key, src, success: false });
                return;
             }
 
+            // Use "auto" to load video data, but don't wait for full load
             video.preload = "auto";
             video.muted = true;
             video.playsInline = true;
@@ -137,13 +152,21 @@ export function usePreloader() {
                   clearTimeout(timeout);
                   timeout = null;
                }
-               loadedCount.value++;
                resolve({ key, src, success });
             };
 
-            // Success when we can play through
-            video.oncanplaythrough = () => done(true);
-            video.onloadeddata = () => done(true);
+            // Success when enough data is loaded for smooth playback
+            // loadeddata fires when first frame is available (faster than canplaythrough)
+            video.onloadeddata = () => {
+               // Video has enough data to start playing smoothly
+               done(true);
+            };
+
+            // Fallback: if loadeddata doesn't fire, use loadedmetadata
+            video.onloadedmetadata = () => {
+               // At least metadata is loaded, video can start loading
+               done(true);
+            };
 
             // Handle errors gracefully
             video.onerror = () => {
@@ -151,14 +174,17 @@ export function usePreloader() {
                done(false);
             };
 
-            // Timeout fallback (3 seconds max per video)
-            timeout = setTimeout(() => done(true), 3000);
+            // Short timeout (1.5 seconds) - don't block preloader too long
+            // Video will continue loading in background after preloader is hidden
+            timeout = setTimeout(() => done(true), 1500);
 
             video.src = src;
             video.load();
+
+            // Start loading video data (non-blocking)
+            // Video will continue loading even after promise resolves
          } catch (error) {
             console.error(`Error preloading video ${videoEntry?.key}:`, error);
-            loadedCount.value++;
             resolve({ key: videoEntry?.key, src: videoEntry?.src, success: false });
          }
       });
@@ -179,9 +205,7 @@ export function usePreloader() {
          loadedCount.value = 0;
          errors.value = [];
 
-         const startTime = Date.now();
-
-         // 1. Load critical images first (shown immediately)
+         // 1. Load critical images first (shown immediately) - this blocks preloader
          currentAsset.value = "Loading images...";
          try {
             await Promise.all(CRITICAL_IMAGES.map(preloadImage));
@@ -196,30 +220,18 @@ export function usePreloader() {
             console.error("Error loading secondary images:", error);
          }
 
-         // 3. Preload videos (lightweight - just buffer)
-         currentAsset.value = "Preparing videos...";
-
+         // 3. Preload videos in background (non-blocking, doesn't affect preloader progress)
+         // Videos will continue loading after preloader is hidden
          try {
-            // Load videos in parallel but with limit
-            const videoChunks = [];
-            for (let i = 0; i < VIDEOS_TO_PRELOAD.length; i += 3) {
-               videoChunks.push(VIDEOS_TO_PRELOAD.slice(i, i + 3));
-            }
-
-            for (const chunk of videoChunks) {
-               await Promise.all(chunk.map(preloadVideo));
-            }
+            // Load all videos in parallel (non-blocking)
+            Promise.all(VIDEOS_TO_PRELOAD.map(preloadVideo)).catch((error) => {
+               console.error("Error loading videos in background:", error);
+            });
          } catch (error) {
-            console.error("Error loading videos:", error);
+            console.error("Error starting video preload:", error);
          }
 
-         // Ensure minimum loading time for smooth UX
-         const elapsed = Date.now() - startTime;
-         const minLoadTime = 300;
-         if (elapsed < minLoadTime) {
-            await new Promise((resolve) => setTimeout(resolve, minLoadTime - elapsed));
-         }
-
+         // Preloader is done - hide it immediately after images are loaded
          currentAsset.value = "";
          isLoading.value = false;
 

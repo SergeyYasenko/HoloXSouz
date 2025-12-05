@@ -3,8 +3,10 @@ import { ref, onMounted, onUnmounted, provide } from "vue";
 import Header from "./components/Header.vue";
 import Preloader from "./components/Preloader.vue";
 import { usePreloader } from "./composables/usePreloader.js";
+import { useScreenOrientation } from "./composables/useScreenOrientation.js";
 
 const { progress, isLoading, currentAsset, startPreload } = usePreloader();
+const { setupOrientationLock } = useScreenOrientation();
 
 const showHeader = ref(false);
 let headerHoverTimeout = null;
@@ -66,6 +68,9 @@ onMounted(async () => {
       console.error("Preloader error:", error);
       // Continue even if preloader fails
    }
+
+   // Setup screen orientation lock for mobile devices
+   setupOrientationLock();
 
    // Add mouse move listener for header visibility
    document.addEventListener("mousemove", handleMouseMove);
