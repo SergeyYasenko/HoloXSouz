@@ -148,9 +148,19 @@ export function useImageDrag(containerRef, imageRef, scale = ref(1), onDragStart
    };
 
    const handleTouchMove = (event) => {
-      if (!event.touches || event.touches.length !== 1) return;
+      if (!event || !event.touches || event.touches.length !== 1) return;
+      if (!containerRef.value || !imageRef.value) return;
 
       const touch = event.touches[0];
+
+      // Check if we have a valid start position (touchStartTime should be set in handleTouchStart)
+      if (touchStartTime.value === 0) {
+         // Touch start wasn't called or was reset - initialize now
+         touchStartPos.value = { x: touch.clientX, y: touch.clientY };
+         touchStartTime.value = Date.now();
+         return;
+      }
+
       const deltaX = Math.abs(touch.clientX - touchStartPos.value.x);
       const deltaY = Math.abs(touch.clientY - touchStartPos.value.y);
       const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
@@ -159,6 +169,7 @@ export function useImageDrag(containerRef, imageRef, scale = ref(1), onDragStart
       if (!isDragging.value) {
          if (distance > DRAG_THRESHOLD) {
             // Movement detected - start dragging
+            event.preventDefault(); // Prevent scrolling immediately
             hasMoved.value = true;
             isDragging.value = true;
             dragStart.value = {

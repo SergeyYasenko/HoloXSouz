@@ -564,13 +564,9 @@ const handleImageTouchStart = (event) => {
    try {
       if (!event || !event.touches || event.touches.length === 0) return;
 
-      const touch = event.touches[0];
-
-      // Check if touch is over a mask element
-      if (
-         isMaskElement(event.target) ||
-         isTouchOverMask(touch.clientX, touch.clientY)
-      ) {
+      // Check if touch target is a mask element (simpler check - only check event.target)
+      // This is more reliable than elementFromPoint which can return parent elements
+      if (isMaskElement(event.target)) {
          // Don't start drag if touching a mask - let mask handle the touch
          return;
       }
@@ -586,20 +582,10 @@ const handleImageTouchMove = (event) => {
    try {
       if (!event || !event.touches || event.touches.length === 0) return;
 
-      const touch = event.touches[0];
-
-      // If we're moving over a mask, stop dragging
-      if (isTouchOverMask(touch.clientX, touch.clientY)) {
-         // Cancel drag if we move over a mask
-         imageDrag.handleTouchEnd();
-         return;
-      }
-
-      // Don't handle move if we didn't start dragging (was on mask)
-      if (!imageDrag.isDragging.value) {
-         return;
-      }
-
+      // Always pass touch move to drag handler
+      // The drag handler will check movement threshold to determine if drag should start
+      // We already checked for mask in handleImageTouchStart, so if we get here,
+      // the user is not on a mask (or drag has already started)
       imageDrag.handleTouchMove(event);
    } catch (error) {
       console.error("Error in handleImageTouchMove:", error);
