@@ -61,8 +61,13 @@ const handleMouseLeave = () => {
 provide("showHeader", showHeader);
 
 onMounted(async () => {
-   // Start preloading all assets
-   await startPreload();
+   // Start preloading all assets (with error handling)
+   try {
+      await startPreload();
+   } catch (error) {
+      console.error("Preloader error:", error);
+      // Continue even if preloader fails
+   }
 
    // Setup listeners for first user interaction to enter fullscreen
    // (browsers require user gesture for fullscreen API)

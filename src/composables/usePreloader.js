@@ -106,37 +106,61 @@ export function usePreloader() {
    // Lightweight video preload - just buffer initial frames
    const preloadVideo = (videoEntry) => {
       return new Promise((resolve) => {
-         const { key, src } = videoEntry;
-         currentAsset.value = `Video: ${key}`;
+         try {
+            const { key, src } = videoEntry;
+            if (!src) {
+               loadedCount.value++;
+               resolve({ key, src, success: false });
+               return;
+            }
 
-         const video = document.createElement("video");
-         video.preload = "auto";
-         video.muted = true;
-         video.playsInline = true;
+            currentAsset.value = `Video: ${key}`;
 
-         let resolved = false;
-         const done = (success = true) => {
-            if (resolved) return;
-            resolved = true;
+            const video = document.createElement("video");
+            if (!video) {
+               loadedCount.value++;
+               resolve({ key, src, success: false });
+               return;
+            }
+
+            video.preload = "auto";
+            video.muted = true;
+            video.playsInline = true;
+
+            let resolved = false;
+            let timeout = null;
+
+            const done = (success = true) => {
+               if (resolved) return;
+               resolved = true;
+               if (timeout) {
+                  clearTimeout(timeout);
+                  timeout = null;
+               }
+               loadedCount.value++;
+               resolve({ key, src, success });
+            };
+
+            // Success when we can play through
+            video.oncanplaythrough = () => done(true);
+            video.onloadeddata = () => done(true);
+
+            // Handle errors gracefully
+            video.onerror = () => {
+               errors.value.push({ type: "video", key, src });
+               done(false);
+            };
+
+            // Timeout fallback (3 seconds max per video)
+            timeout = setTimeout(() => done(true), 3000);
+
+            video.src = src;
+            video.load();
+         } catch (error) {
+            console.error(`Error preloading video ${videoEntry?.key}:`, error);
             loadedCount.value++;
-            resolve({ key, src, success });
-         };
-
-         // Success when we can play through
-         video.oncanplaythrough = () => done(true);
-         video.onloadeddata = () => done(true);
-
-         // Handle errors gracefully
-         video.onerror = () => {
-            errors.value.push({ type: "video", key, src });
-            done(false);
-         };
-
-         // Timeout fallback (3 seconds max per video)
-         setTimeout(() => done(true), 3000);
-
-         video.src = src;
-         video.load();
+            resolve({ key: videoEntry?.key, src: videoEntry?.src, success: false });
+         }
       });
    };
 
@@ -150,46 +174,69 @@ export function usePreloader() {
 
    // Start preloading
    const startPreload = async () => {
-      isLoading.value = true;
-      loadedCount.value = 0;
-      errors.value = [];
+      try {
+         isLoading.value = true;
+         loadedCount.value = 0;
+         errors.value = [];
 
-      const startTime = Date.now();
+         const startTime = Date.now();
 
-      // 1. Load critical images first (shown immediately)
-      currentAsset.value = "Loading images...";
-      await Promise.all(CRITICAL_IMAGES.map(preloadImage));
+         // 1. Load critical images first (shown immediately)
+         currentAsset.value = "Loading images...";
+         try {
+            await Promise.all(CRITICAL_IMAGES.map(preloadImage));
+         } catch (error) {
+            console.error("Error loading critical images:", error);
+         }
 
-      // 2. Start loading secondary images in background (non-blocking)
-      preloadSecondaryImages();
+         // 2. Start loading secondary images in background (non-blocking)
+         try {
+            preloadSecondaryImages();
+         } catch (error) {
+            console.error("Error loading secondary images:", error);
+         }
 
-      // 3. Preload videos (lightweight - just buffer)
-      currentAsset.value = "Preparing videos...";
+         // 3. Preload videos (lightweight - just buffer)
+         currentAsset.value = "Preparing videos...";
 
-      // Load videos in parallel but with limit
-      const videoChunks = [];
-      for (let i = 0; i < VIDEOS_TO_PRELOAD.length; i += 3) {
-         videoChunks.push(VIDEOS_TO_PRELOAD.slice(i, i + 3));
+         try {
+            // Load videos in parallel but with limit
+            const videoChunks = [];
+            for (let i = 0; i < VIDEOS_TO_PRELOAD.length; i += 3) {
+               videoChunks.push(VIDEOS_TO_PRELOAD.slice(i, i + 3));
+            }
+
+            for (const chunk of videoChunks) {
+               await Promise.all(chunk.map(preloadVideo));
+            }
+         } catch (error) {
+            console.error("Error loading videos:", error);
+         }
+
+         // Ensure minimum loading time for smooth UX
+         const elapsed = Date.now() - startTime;
+         const minLoadTime = 300;
+         if (elapsed < minLoadTime) {
+            await new Promise((resolve) => setTimeout(resolve, minLoadTime - elapsed));
+         }
+
+         currentAsset.value = "";
+         isLoading.value = false;
+
+         return {
+            success: errors.value.length === 0,
+            errors: errors.value,
+         };
+      } catch (error) {
+         console.error("Fatal preloader error:", error);
+         // Always hide preloader even on error
+         isLoading.value = false;
+         currentAsset.value = "";
+         return {
+            success: false,
+            errors: [{ type: "fatal", error: error.message }],
+         };
       }
-
-      for (const chunk of videoChunks) {
-         await Promise.all(chunk.map(preloadVideo));
-      }
-
-      // Ensure minimum loading time for smooth UX
-      const elapsed = Date.now() - startTime;
-      const minLoadTime = 300;
-      if (elapsed < minLoadTime) {
-         await new Promise((resolve) => setTimeout(resolve, minLoadTime - elapsed));
-      }
-
-      currentAsset.value = "";
-      isLoading.value = false;
-
-      return {
-         success: errors.value.length === 0,
-         errors: errors.value,
-      };
    };
 
    return {

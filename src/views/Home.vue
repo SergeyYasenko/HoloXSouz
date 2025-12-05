@@ -544,39 +544,68 @@ const isMaskElement = (target) => {
 
 // Image drag handlers - skip if touching a mask
 const handleImageTouchStart = (event) => {
-   // Don't start drag if touching a mask
-   if (isMaskElement(event.target)) {
-      return;
+   try {
+      if (!event || !event.target) return;
+      // Don't start drag if touching a mask
+      if (isMaskElement(event.target)) {
+         return;
+      }
+      imageDrag.handleTouchStart(event);
+   } catch (error) {
+      console.error("Error in handleImageTouchStart:", error);
    }
-   imageDrag.handleTouchStart(event);
 };
 
 const handleImageTouchMove = (event) => {
-   // Don't handle move if we didn't start dragging (was on mask)
-   if (!imageDrag.isDragging.value) {
-      return;
+   try {
+      if (!event) return;
+      // Don't handle move if we didn't start dragging (was on mask)
+      if (!imageDrag.isDragging.value) {
+         return;
+      }
+      imageDrag.handleTouchMove(event);
+   } catch (error) {
+      console.error("Error in handleImageTouchMove:", error);
    }
-   imageDrag.handleTouchMove(event);
 };
 
 const handleImageTouchEnd = (event) => {
-   imageDrag.handleTouchEnd(event);
+   try {
+      if (!event) return;
+      imageDrag.handleTouchEnd(event);
+   } catch (error) {
+      console.error("Error in handleImageTouchEnd:", error);
+   }
 };
 
 const handleImageMouseDown = (event) => {
-   // Don't start drag if clicking on a mask
-   if (isMaskElement(event.target)) {
-      return;
+   try {
+      if (!event || !event.target) return;
+      // Don't start drag if clicking on a mask
+      if (isMaskElement(event.target)) {
+         return;
+      }
+      imageDrag.handleMouseDown(event);
+   } catch (error) {
+      console.error("Error in handleImageMouseDown:", error);
    }
-   imageDrag.handleMouseDown(event);
 };
 
 const handleImageMouseMove = (event) => {
-   imageDrag.handleMouseMove(event);
+   try {
+      if (!event) return;
+      imageDrag.handleMouseMove(event);
+   } catch (error) {
+      console.error("Error in handleImageMouseMove:", error);
+   }
 };
 
 const handleImageMouseUp = (event) => {
-   imageDrag.handleMouseUp();
+   try {
+      imageDrag.handleMouseUp();
+   } catch (error) {
+      console.error("Error in handleImageMouseUp:", error);
+   }
 };
 
 // Handle wheel for drag (prevent default scroll behavior)

@@ -570,16 +570,22 @@ const handleGlobalClick = (event) => {
 
 // Обработчик клика на hit-area (для дополнительной надежности)
 const handleClick = (event) => {
-   // If the click is directly on the hit area (via clip-path),
-   // we know it's within the mask shape, so skip the position check
-   event.preventDefault();
-   event.stopPropagation();
+   try {
+      if (!event) return;
 
-   // Call the click handler directly
-   if (props.onClick && typeof props.onClick === "function") {
-      props.onClick(event);
-   } else {
-      window.location.reload();
+      // If the click is directly on the hit area (via clip-path),
+      // we know it's within the mask shape, so skip the position check
+      event.preventDefault();
+      event.stopPropagation();
+
+      // Call the click handler directly
+      if (props.onClick && typeof props.onClick === "function") {
+         props.onClick(event);
+      } else {
+         window.location.reload();
+      }
+   } catch (error) {
+      console.error("Error in handleClick:", error);
    }
 };
 
@@ -588,48 +594,64 @@ const touchStartPos = ref({ x: 0, y: 0 });
 const touchStartTime = ref(0);
 
 const handleTouchStart = (event) => {
-   if (event.touches.length === 1) {
-      const touch = event.touches[0];
-      touchStartPos.value = { x: touch.clientX, y: touch.clientY };
-      touchStartTime.value = Date.now();
+   try {
+      if (!event || !event.touches || event.touches.length === 0) return;
 
-      // Show mask on touch
-      if (checkMousePosition(touch.clientX, touch.clientY)) {
-         isCursorInside.value = true;
-         if (!isVisible.value) {
-            isVisible.value = true;
-            updateCanvas();
-            if (props.animated) {
-               startAnimation();
+      if (event.touches.length === 1) {
+         const touch = event.touches[0];
+         touchStartPos.value = { x: touch.clientX, y: touch.clientY };
+         touchStartTime.value = Date.now();
+
+         // Show mask on touch
+         if (
+            hitAreaRef.value &&
+            checkMousePosition(touch.clientX, touch.clientY)
+         ) {
+            isCursorInside.value = true;
+            if (!isVisible.value) {
+               isVisible.value = true;
+               updateCanvas();
+               if (props.animated) {
+                  startAnimation();
+               }
             }
          }
       }
+   } catch (error) {
+      console.error("Error in handleTouchStart:", error);
    }
 };
 
 const handleTouchEnd = (event) => {
-   const touch = event.changedTouches[0];
-   if (!touch) return;
+   try {
+      if (!event || !event.changedTouches || event.changedTouches.length === 0)
+         return;
 
-   const deltaX = Math.abs(touch.clientX - touchStartPos.value.x);
-   const deltaY = Math.abs(touch.clientY - touchStartPos.value.y);
-   const deltaTime = Date.now() - touchStartTime.value;
+      const touch = event.changedTouches[0];
+      if (!touch) return;
 
-   // Only trigger click if it's a tap (not a drag)
-   // Max 20px movement and less than 400ms (more forgiving on mobile)
-   if (deltaX < 20 && deltaY < 20 && deltaTime < 400) {
-      // Prevent the event from bubbling to drag handlers
-      event.preventDefault();
-      event.stopPropagation();
+      const deltaX = Math.abs(touch.clientX - touchStartPos.value.x);
+      const deltaY = Math.abs(touch.clientY - touchStartPos.value.y);
+      const deltaTime = Date.now() - touchStartTime.value;
 
-      // Call the click handler (we already know we're within hit area since touchstart was on this element)
-      if (props.onClick) {
-         props.onClick();
+      // Only trigger click if it's a tap (not a drag)
+      // Max 20px movement and less than 400ms (more forgiving on mobile)
+      if (deltaX < 20 && deltaY < 20 && deltaTime < 400) {
+         // Prevent the event from bubbling to drag handlers
+         event.preventDefault();
+         event.stopPropagation();
+
+         // Call the click handler (we already know we're within hit area since touchstart was on this element)
+         if (props.onClick && typeof props.onClick === "function") {
+            props.onClick(event);
+         }
       }
-   }
 
-   // Hide mask after touch
-   isCursorInside.value = false;
+      // Hide mask after touch
+      isCursorInside.value = false;
+   } catch (error) {
+      console.error("Error in handleTouchEnd:", error);
+   }
 };
 
 // Анимационный цикл
