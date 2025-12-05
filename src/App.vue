@@ -6,10 +6,11 @@ import { usePreloader } from "./composables/usePreloader.js";
 import { useScreenOrientation } from "./composables/useScreenOrientation.js";
 
 const { progress, isLoading, currentAsset, startPreload } = usePreloader();
-const { setupOrientationLock } = useScreenOrientation();
+const { setupOrientationLock, lockToLandscape } = useScreenOrientation();
 
 const showHeader = ref(false);
 let headerHoverTimeout = null;
+let orientationCleanup = null;
 
 // Hover zone height (top of screen)
 const HOVER_ZONE_HEIGHT = 40; // pixels from top
@@ -70,7 +71,14 @@ onMounted(async () => {
    }
 
    // Setup screen orientation lock for mobile devices
-   setupOrientationLock();
+   orientationCleanup = setupOrientationLock();
+
+   // Also try to lock immediately after preloader (user has interacted)
+   if (!isLoading.value) {
+      setTimeout(() => {
+         lockToLandscape();
+      }, 500);
+   }
 
    // Add mouse move listener for header visibility
    document.addEventListener("mousemove", handleMouseMove);
@@ -82,6 +90,10 @@ onUnmounted(() => {
    document.removeEventListener("mouseleave", handleMouseLeave);
    if (headerHoverTimeout) {
       clearTimeout(headerHoverTimeout);
+   }
+   // Cleanup orientation lock if needed
+   if (orientationCleanup && typeof orientationCleanup === "function") {
+      orientationCleanup();
    }
 });
 </script>
