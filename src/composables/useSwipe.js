@@ -130,6 +130,12 @@ export function useSwipe(currentLevel, isTransitioning, handlers) {
          return;
       }
 
+      // Check if event exists and has clientX property
+      if (!event || typeof event.clientX === 'undefined') {
+         isSwiping.value = false;
+         return;
+      }
+
       const deltaX = event.clientX - swipeStartX.value;
       const deltaY = event.clientY - swipeStartY.value;
       const absDeltaX = Math.abs(deltaX);

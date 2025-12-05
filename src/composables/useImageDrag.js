@@ -21,7 +21,7 @@ export function useImageDrag(containerRef, imageRef, scale = ref(1), onDragStart
       return typeof scale === 'number' ? scale : 1;
    };
 
-   // Constrain position to keep image within bounds
+   // Constrain position to keep image within bounds (no black background)
    const constrainPosition = (newPosition, currentScale = null) => {
       // Use provided scale or get from ref
       const scaleValue = currentScale !== null ? currentScale : getScaleValue();
@@ -31,65 +31,53 @@ export function useImageDrag(containerRef, imageRef, scale = ref(1), onDragStart
       const containerWidth = containerRect.width;
       const containerHeight = containerRect.height;
 
-      // Get actual image dimensions
-      const imageWidth =
-         imageRef.value.naturalWidth ||
-         imageRef.value.offsetWidth ||
-         imageRef.value.width ||
-         containerWidth;
-      const imageHeight =
-         imageRef.value.naturalHeight ||
-         imageRef.value.offsetHeight ||
-         imageRef.value.height ||
-         containerHeight;
+      // Get DISPLAYED image dimensions (how the image is actually rendered)
+      // Use offsetWidth/Height for rendered size, or naturalWidth/Height as fallback
+      const imageWidth = imageRef.value.offsetWidth || imageRef.value.naturalWidth || containerWidth;
+      const imageHeight = imageRef.value.offsetHeight || imageRef.value.naturalHeight || containerHeight;
 
       // Calculate scaled dimensions
       const scaledWidth = imageWidth * scaleValue;
       const scaledHeight = imageHeight * scaleValue;
 
-      // Calculate bounds
-      const minX = containerWidth - scaledWidth;
+      // Calculate bounds - prevent showing black areas outside the image
+      // minX/minY are the maximum negative offsets (right/bottom edges of image at container edges)
+      // maxX/maxY are 0 (left/top edges of image at container edges)
+      const minX = Math.min(0, containerWidth - scaledWidth);
       const maxX = 0;
-      const minY = containerHeight - scaledHeight;
+      const minY = Math.min(0, containerHeight - scaledHeight);
       const maxY = 0;
 
-      // If scaled image is smaller than container, allow centering
+      // If image is smaller than container in a dimension, center it and don't allow movement
+      let constrainedX = newPosition.x;
+      let constrainedY = newPosition.y;
+
       if (scaledWidth <= containerWidth) {
-         const centerX = (containerWidth - scaledWidth) / 2;
-         return {
-            x: Math.max(
-               minX,
-               Math.min(maxX, newPosition.x !== 0 ? newPosition.x : centerX)
-            ),
-            y: newPosition.y,
-         };
-      }
-      if (scaledHeight <= containerHeight) {
-         const centerY = (containerHeight - scaledHeight) / 2;
-         return {
-            x: newPosition.x,
-            y: Math.max(
-               minY,
-               Math.min(maxY, newPosition.y !== 0 ? newPosition.y : centerY)
-            ),
-         };
+         // Image is narrower than container - center it horizontally
+         constrainedX = (containerWidth - scaledWidth) / 2;
+      } else {
+         // Image is wider than container - constrain to bounds
+         constrainedX = Math.max(minX, Math.min(maxX, newPosition.x));
       }
 
-      // Constrain position - prevent showing areas outside image
-      return {
-         x: Math.max(minX, Math.min(maxX, newPosition.x)),
-         y: Math.max(minY, Math.min(maxY, newPosition.y)),
-      };
+      if (scaledHeight <= containerHeight) {
+         // Image is shorter than container - center it vertically
+         constrainedY = (containerHeight - scaledHeight) / 2;
+      } else {
+         // Image is taller than container - constrain to bounds
+         constrainedY = Math.max(minY, Math.min(maxY, newPosition.y));
+      }
+
+      return { x: constrainedX, y: constrainedY };
    };
 
-   // Image style for drag and drop
+   // Image style for drag and drop (applied to container, not image)
    const imageStyle = computed(() => {
       const scaleValue = getScaleValue();
       return {
          transform: `translate(${position.value.x}px, ${position.value.y}px) scale(${scaleValue})`,
          transformOrigin: "0 0",
          transition: isDragging.value ? "none" : "transform 0.1s ease-out",
-         willChange: "transform",
       };
    });
 
@@ -168,10 +156,46 @@ export function useImageDrag(containerRef, imageRef, scale = ref(1), onDragStart
       isDragging.value = false;
    };
 
-   // Reset position
+   // Reset position to center
    const resetPosition = () => {
       position.value = { x: 0, y: 0 };
       lastPosition.value = { x: 0, y: 0 };
+   };
+
+   // Center position - calculates centered position for the image
+   const centerPosition = () => {
+      if (!containerRef.value || !imageRef.value) {
+         position.value = { x: 0, y: 0 };
+         return;
+      }
+
+      const containerRect = containerRef.value.getBoundingClientRect();
+      const containerWidth = containerRect.width;
+      const containerHeight = containerRect.height;
+
+      const imageWidth = imageRef.value.offsetWidth || imageRef.value.naturalWidth || containerWidth;
+      const imageHeight = imageRef.value.offsetHeight || imageRef.value.naturalHeight || containerHeight;
+
+      const scaleValue = getScaleValue();
+      const scaledWidth = imageWidth * scaleValue;
+      const scaledHeight = imageHeight * scaleValue;
+
+      // Center the image
+      let centeredX = 0;
+      let centeredY = 0;
+
+      if (scaledWidth > containerWidth) {
+         // Image is wider than container - center horizontally
+         centeredX = (containerWidth - scaledWidth) / 2;
+      }
+
+      if (scaledHeight > containerHeight) {
+         // Image is taller than container - center vertically
+         centeredY = (containerHeight - scaledHeight) / 2;
+      }
+
+      position.value = { x: centeredX, y: centeredY };
+      lastPosition.value = { ...position.value };
    };
 
    return {
@@ -186,6 +210,7 @@ export function useImageDrag(containerRef, imageRef, scale = ref(1), onDragStart
       handleTouchMove,
       handleTouchEnd,
       resetPosition,
+      centerPosition,
       constrainPosition,
    };
 }

@@ -57,12 +57,8 @@ const handleMouseLeave = () => {
 provide("showHeader", showHeader);
 
 onMounted(() => {
-   // Try to enter fullscreen automatically
-   // If browser requires user interaction, setup listeners for first interaction
-   autoEnterFullscreen();
-
-   // Also setup listeners for first user interaction as fallback
-   // (some browsers require user gesture for fullscreen)
+   // Setup listeners for first user interaction to enter fullscreen
+   // (browsers require user gesture for fullscreen API)
    setupFullscreenOnInteraction();
 
    // Add mouse move listener for header visibility

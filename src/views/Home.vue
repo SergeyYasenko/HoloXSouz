@@ -3,19 +3,15 @@
       <div
          ref="imageWrapperRef"
          class="home-image-wrapper"
-         :class="{
-            'home-swipe-enabled':
-               currentLevel === 'start' ||
-               currentLevel === 'facade-start' ||
-               currentLevel === 'facade-start-2',
-         }"
          @touchstart="handleImageTouchStart"
          @touchmove="handleImageTouchMove"
          @touchend="handleImageTouchEnd"
+         @touchcancel="handleImageTouchEnd"
          @mousedown="handleImageMouseDown"
          @mousemove="handleImageMouseMove"
          @mouseup="handleImageMouseUp"
          @mouseleave="handleImageMouseUp"
+         @wheel.prevent="handleImageWheel"
       >
          <!-- Preload image for seamless transition -->
          <img
@@ -25,33 +21,117 @@
             alt=""
             @load="onPreloadImageLoaded"
          />
-         <!-- Static image (Map, Start, etc.) -->
-         <img
-            ref="homeImageRef"
-            v-if="currentStaticImage"
-            :key="`${currentLevel}-${currentStaticImage}`"
-            :src="currentStaticImage"
-            class="home-image"
-            :style="imageDrag.imageStyle"
-            alt=""
-         />
-         <!-- Transition video -->
-         <video
-            v-if="isTransitioning && transitionVideoSrc"
-            ref="transitionVideo"
-            :src="transitionVideoSrc"
-            class="home-video home-video-transition"
-            muted
-            playsinline
-            @ended="handleTransitionEnd"
-            @loadedmetadata="handleVideoLoaded"
-         ></video>
-         <!-- Edit Mode: Show all masks for all levels simultaneously -->
-         <template v-if="editMode">
-            <!-- Map level masks -->
-            <template v-if="currentLevel === 'map'">
-               <!-- Red territory mask -->
+         <!-- Drag container (similar to map-content in Map.vue) -->
+         <div
+            ref="homeImageContentRef"
+            class="home-image-content"
+            :style="homeImageStyle"
+         >
+            <!-- Static image (Map, Start, etc.) -->
+            <img
+               ref="homeImageRef"
+               v-if="currentStaticImage"
+               :key="`${currentLevel}-${currentStaticImage}`"
+               :src="currentStaticImage"
+               class="home-image"
+               :style="homeImageSizeStyle"
+               alt=""
+               @load="onImageLoad"
+            />
+            <!-- Masks inside drag container - they move with the image -->
+            <!-- Edit Mode: Show all masks for all levels simultaneously -->
+            <template v-if="editMode">
+               <!-- Map level masks -->
+               <template v-if="currentLevel === 'map'">
+                  <!-- Red territory mask -->
+                  <HouseOutline
+                     :points="mapMaskConfig.territory.points"
+                     :path="mapMaskConfig.territory.path"
+                     :stroke-width="mapMaskConfig.territory.strokeWidth"
+                     :glow-color="mapMaskConfig.territory.glowColor"
+                     :glow-blur="mapMaskConfig.territory.glowBlur"
+                     :animated="mapMaskConfig.territory.animated"
+                     :always-visible="mapMaskConfig.territory.alwaysVisible"
+                     :on-click="() => {}"
+                     class="home-disclaimer-mask"
+                  />
+                  <!-- House 1 -->
+                  <HouseOutline
+                     :points="mapMaskConfig.house1.points"
+                     :path="mapMaskConfig.house1.path"
+                     :stroke-width="mapMaskConfig.house1.strokeWidth"
+                     :glow-color="mapMaskConfig.house1.glowColor"
+                     :glow-blur="mapMaskConfig.house1.glowBlur"
+                     :animated="mapMaskConfig.house1.animated"
+                     :always-visible="mapMaskConfig.house1.alwaysVisible"
+                     :on-click="handleHouse1Click"
+                  />
+                  <!-- House 2 -->
+                  <HouseOutline
+                     :points="mapMaskConfig.house2.points"
+                     :path="mapMaskConfig.house2.path"
+                     :stroke-width="mapMaskConfig.house2.strokeWidth"
+                     :glow-color="mapMaskConfig.house2.glowColor"
+                     :glow-blur="mapMaskConfig.house2.glowBlur"
+                     :animated="mapMaskConfig.house2.animated"
+                     :always-visible="mapMaskConfig.house2.alwaysVisible"
+                     :on-click="handleHouse2Click"
+                  />
+               </template>
+               <!-- 2-projects level masks -->
+               <template v-if="currentLevel === '2-projects'">
+                  <HouseOutline
+                     :points="twoProjectsMaskConfig.project1.points"
+                     :path="twoProjectsMaskConfig.project1.path"
+                     :stroke-width="twoProjectsMaskConfig.project1.strokeWidth"
+                     :glow-color="twoProjectsMaskConfig.project1.glowColor"
+                     :glow-blur="twoProjectsMaskConfig.project1.glowBlur"
+                     :animated="twoProjectsMaskConfig.project1.animated"
+                     :always-visible="
+                        twoProjectsMaskConfig.project1.alwaysVisible
+                     "
+                     :on-click="handleProject1Click"
+                  />
+                  <HouseOutline
+                     :points="twoProjectsMaskConfig.project2.points"
+                     :path="twoProjectsMaskConfig.project2.path"
+                     :stroke-width="twoProjectsMaskConfig.project2.strokeWidth"
+                     :glow-color="twoProjectsMaskConfig.project2.glowColor"
+                     :glow-blur="twoProjectsMaskConfig.project2.glowBlur"
+                     :animated="twoProjectsMaskConfig.project2.animated"
+                     :always-visible="
+                        twoProjectsMaskConfig.project2.alwaysVisible
+                     "
+                     :on-click="handleProject2Click"
+                  />
+               </template>
+               <!-- Start level masks (all floors) -->
+               <template v-if="currentLevel === 'start'">
+                  <template
+                     v-for="floorId in ['g', '1', '2', '3', '4', '5']"
+                     :key="floorId"
+                  >
+                     <HouseOutline
+                        v-if="getFloorMaskConfig(floorId)"
+                        :points="getFloorMaskConfig(floorId).points"
+                        :path="getFloorMaskConfig(floorId).path"
+                        :stroke-width="getFloorMaskConfig(floorId).strokeWidth"
+                        :glow-color="getFloorMaskConfig(floorId).glowColor"
+                        :glow-blur="getFloorMaskConfig(floorId).glowBlur"
+                        :animated="getFloorMaskConfig(floorId).animated"
+                        :always-visible="
+                           getFloorMaskConfig(floorId).alwaysVisible
+                        "
+                        :on-click="() => handleFloorClick(floorId)"
+                     />
+                  </template>
+               </template>
+            </template>
+            <!-- Normal Mode: Show masks only for current level -->
+            <template v-else>
+               <!-- Red territory mask for disclaimer mode (non-clickable) -->
                <HouseOutline
+                  v-if="currentLevel === 'map' && showDisclaimerMode"
                   :points="mapMaskConfig.territory.points"
                   :path="mapMaskConfig.territory.path"
                   :stroke-width="mapMaskConfig.territory.strokeWidth"
@@ -62,8 +142,9 @@
                   :on-click="() => {}"
                   class="home-disclaimer-mask"
                />
-               <!-- House 1 -->
+               <!-- House outline overlays for Map level -->
                <HouseOutline
+                  v-if="currentLevel === 'map' && showHouseOutline1"
                   :points="mapMaskConfig.house1.points"
                   :path="mapMaskConfig.house1.path"
                   :stroke-width="mapMaskConfig.house1.strokeWidth"
@@ -73,8 +154,8 @@
                   :always-visible="mapMaskConfig.house1.alwaysVisible"
                   :on-click="handleHouse1Click"
                />
-               <!-- House 2 -->
                <HouseOutline
+                  v-if="currentLevel === 'map' && showHouseOutline2"
                   :points="mapMaskConfig.house2.points"
                   :path="mapMaskConfig.house2.path"
                   :stroke-width="mapMaskConfig.house2.strokeWidth"
@@ -84,10 +165,9 @@
                   :always-visible="mapMaskConfig.house2.alwaysVisible"
                   :on-click="handleHouse2Click"
                />
-            </template>
-            <!-- 2-projects level masks -->
-            <template v-if="currentLevel === '2-projects'">
+               <!-- House outline overlays for 2-projects level -->
                <HouseOutline
+                  v-if="currentLevel === '2-projects' && showHouseOutline1"
                   :points="twoProjectsMaskConfig.project1.points"
                   :path="twoProjectsMaskConfig.project1.path"
                   :stroke-width="twoProjectsMaskConfig.project1.strokeWidth"
@@ -98,6 +178,7 @@
                   :on-click="handleProject1Click"
                />
                <HouseOutline
+                  v-if="currentLevel === '2-projects' && showHouseOutline2"
                   :points="twoProjectsMaskConfig.project2.points"
                   :path="twoProjectsMaskConfig.project2.path"
                   :stroke-width="twoProjectsMaskConfig.project2.strokeWidth"
@@ -107,15 +188,15 @@
                   :always-visible="twoProjectsMaskConfig.project2.alwaysVisible"
                   :on-click="handleProject2Click"
                />
-            </template>
-            <!-- Start level masks (all floors) -->
-            <template v-if="currentLevel === 'start'">
+               <!-- House outline overlays for Start level (6 floors) -->
                <template
                   v-for="floorId in ['g', '1', '2', '3', '4', '5']"
                   :key="floorId"
                >
                   <HouseOutline
-                     v-if="getFloorMaskConfig(floorId)"
+                     v-if="
+                        currentLevel === 'start' && getFloorMaskConfig(floorId)
+                     "
                      :points="getFloorMaskConfig(floorId).points"
                      :path="getFloorMaskConfig(floorId).path"
                      :stroke-width="getFloorMaskConfig(floorId).strokeWidth"
@@ -127,86 +208,18 @@
                   />
                </template>
             </template>
-         </template>
-         <!-- Normal Mode: Show masks only for current level -->
-         <template v-else>
-            <!-- Red territory mask for disclaimer mode (non-clickable) -->
-            <HouseOutline
-               v-if="currentLevel === 'map' && showDisclaimerMode"
-               :points="mapMaskConfig.territory.points"
-               :path="mapMaskConfig.territory.path"
-               :stroke-width="mapMaskConfig.territory.strokeWidth"
-               :glow-color="mapMaskConfig.territory.glowColor"
-               :glow-blur="mapMaskConfig.territory.glowBlur"
-               :animated="mapMaskConfig.territory.animated"
-               :always-visible="mapMaskConfig.territory.alwaysVisible"
-               :on-click="() => {}"
-               class="home-disclaimer-mask"
-            />
-            <!-- House outline overlays for Map level -->
-            <HouseOutline
-               v-if="currentLevel === 'map' && showHouseOutline1"
-               :points="mapMaskConfig.house1.points"
-               :path="mapMaskConfig.house1.path"
-               :stroke-width="mapMaskConfig.house1.strokeWidth"
-               :glow-color="mapMaskConfig.house1.glowColor"
-               :glow-blur="mapMaskConfig.house1.glowBlur"
-               :animated="mapMaskConfig.house1.animated"
-               :always-visible="mapMaskConfig.house1.alwaysVisible"
-               :on-click="handleHouse1Click"
-            />
-            <HouseOutline
-               v-if="currentLevel === 'map' && showHouseOutline2"
-               :points="mapMaskConfig.house2.points"
-               :path="mapMaskConfig.house2.path"
-               :stroke-width="mapMaskConfig.house2.strokeWidth"
-               :glow-color="mapMaskConfig.house2.glowColor"
-               :glow-blur="mapMaskConfig.house2.glowBlur"
-               :animated="mapMaskConfig.house2.animated"
-               :always-visible="mapMaskConfig.house2.alwaysVisible"
-               :on-click="handleHouse2Click"
-            />
-            <!-- House outline overlays for 2-projects level -->
-            <HouseOutline
-               v-if="currentLevel === '2-projects' && showHouseOutline1"
-               :points="twoProjectsMaskConfig.project1.points"
-               :path="twoProjectsMaskConfig.project1.path"
-               :stroke-width="twoProjectsMaskConfig.project1.strokeWidth"
-               :glow-color="twoProjectsMaskConfig.project1.glowColor"
-               :glow-blur="twoProjectsMaskConfig.project1.glowBlur"
-               :animated="twoProjectsMaskConfig.project1.animated"
-               :always-visible="twoProjectsMaskConfig.project1.alwaysVisible"
-               :on-click="handleProject1Click"
-            />
-            <HouseOutline
-               v-if="currentLevel === '2-projects' && showHouseOutline2"
-               :points="twoProjectsMaskConfig.project2.points"
-               :path="twoProjectsMaskConfig.project2.path"
-               :stroke-width="twoProjectsMaskConfig.project2.strokeWidth"
-               :glow-color="twoProjectsMaskConfig.project2.glowColor"
-               :glow-blur="twoProjectsMaskConfig.project2.glowBlur"
-               :animated="twoProjectsMaskConfig.project2.animated"
-               :always-visible="twoProjectsMaskConfig.project2.alwaysVisible"
-               :on-click="handleProject2Click"
-            />
-            <!-- House outline overlays for Start level (6 floors) -->
-            <template
-               v-for="floorId in ['g', '1', '2', '3', '4', '5']"
-               :key="floorId"
-            >
-               <HouseOutline
-                  v-if="currentLevel === 'start' && getFloorMaskConfig(floorId)"
-                  :points="getFloorMaskConfig(floorId).points"
-                  :path="getFloorMaskConfig(floorId).path"
-                  :stroke-width="getFloorMaskConfig(floorId).strokeWidth"
-                  :glow-color="getFloorMaskConfig(floorId).glowColor"
-                  :glow-blur="getFloorMaskConfig(floorId).glowBlur"
-                  :animated="getFloorMaskConfig(floorId).animated"
-                  :always-visible="getFloorMaskConfig(floorId).alwaysVisible"
-                  :on-click="() => handleFloorClick(floorId)"
-               />
-            </template>
-         </template>
+         </div>
+         <!-- Transition video -->
+         <video
+            v-if="isTransitioning && transitionVideoSrc"
+            ref="transitionVideo"
+            :src="transitionVideoSrc"
+            class="home-video home-video-transition"
+            muted
+            playsinline
+            @ended="handleTransitionEnd"
+            @loadedmetadata="handleVideoLoaded"
+         ></video>
          <!-- House outline overlay for other levels (if needed in future) -->
          <div class="home-content-wrapper">
             <div class="home-content-top home-content">
@@ -257,33 +270,36 @@
                   </div>
                </div>
             </div>
-            <!-- Swipe hint modal for start level -->
-            <transition name="modal-fade">
-               <div
-                  v-if="currentLevel === 'start' && showSwipeHint"
-                  class="home-swipe-hint"
-                  @click="hideSwipeHint"
+            <!-- Navigation arrows for levels with left/right navigation -->
+            <div v-if="hasNavigationArrows" class="home-navigation-arrows">
+               <button
+                  class="home-nav-arrow home-nav-arrow-left"
+                  :class="{
+                     'home-nav-arrow-disabled':
+                        disabledArrowLeft || isTransitioning,
+                  }"
+                  :disabled="disabledArrowLeft || isTransitioning"
+                  @click="handleArrowNavigation('left')"
                >
-                  <div class="home-swipe-hint-content">
-                     <div class="home-swipe-hint-icons">
-                        <div class="home-swipe-hint-icon">
-                           <Icon name="arrow" :size="54" color="currentColor" />
-                        </div>
-                        <div class="home-swipe-hint-icon">
-                           <Icon
-                              name="arrow"
-                              :size="54"
-                              color="currentColor"
-                              style="transform: rotate(180deg)"
-                           />
-                        </div>
-                     </div>
-                     <div class="home-swipe-hint-text">
-                        <p>Swipe left or right to explore</p>
-                     </div>
-                  </div>
-               </div>
-            </transition>
+                  <Icon name="arrow" :size="32" color="currentColor" />
+               </button>
+               <button
+                  class="home-nav-arrow home-nav-arrow-right"
+                  :class="{
+                     'home-nav-arrow-disabled':
+                        disabledArrowRight || isTransitioning,
+                  }"
+                  :disabled="disabledArrowRight || isTransitioning"
+                  @click="handleArrowNavigation('right')"
+               >
+                  <Icon
+                     name="arrow"
+                     :size="32"
+                     color="currentColor"
+                     style="transform: rotate(180deg)"
+                  />
+               </button>
+            </div>
             <div class="home-content-bottom home-content">
                <BottomActions :show-labels="true" :disabled="isTransitioning" />
             </div>
@@ -316,7 +332,6 @@ import {
 // Import composables
 import { useMasks } from "../composables/useMasks.js";
 import { useLevelStorage } from "../composables/useLevelStorage.js";
-import { useSwipe } from "../composables/useSwipe.js";
 import { useNavigation } from "../composables/useNavigation.js";
 import { useTransitions } from "../composables/useTransitions.js";
 import { useImageDrag } from "../composables/useImageDrag.js";
@@ -337,10 +352,102 @@ const homeImageRef = ref(null);
 // Use image drag composable (scale = 1 for Home, no zoom)
 const imageDrag = useImageDrag(imageWrapperRef, homeImageRef, ref(1));
 
-// Reset image position when level changes
-watch(currentLevel, () => {
-   imageDrag.resetPosition();
+// Create local reference to imageStyle (like Map.vue does with mapStyle)
+// Combines drag transform with content size based on image dimensions
+const homeImageStyle = computed(() => {
+   const dragStyle = imageDrag.imageStyle.value;
+
+   // Add dimensions to the style if available
+   if (imageDimensions.value.width > 0 && imageDimensions.value.height > 0) {
+      return {
+         ...dragStyle,
+         width: `${imageDimensions.value.width}px`,
+         height: `${imageDimensions.value.height}px`,
+      };
+   }
+
+   return dragStyle;
 });
+
+// Center image position when level changes
+watch(currentLevel, () => {
+   // Wait for next tick to ensure image is loaded
+   nextTick(() => {
+      if (homeImageRef.value?.complete) {
+         imageDrag.centerPosition();
+      } else {
+         imageDrag.resetPosition();
+      }
+   });
+});
+
+// Image dimensions for proper sizing (to allow drag without black background)
+const imageDimensions = ref({ width: 0, height: 0 });
+
+// Handle image load to ensure refs are ready and calculate dimensions
+const onImageLoad = () => {
+   // Image is loaded, ensure cursor is set
+   if (imageWrapperRef.value) {
+      imageWrapperRef.value.style.cursor = "grab";
+   }
+
+   // Calculate image dimensions to fill container while maintaining aspect ratio
+   if (homeImageRef.value && imageWrapperRef.value) {
+      const containerWidth = imageWrapperRef.value.offsetWidth;
+      const containerHeight = imageWrapperRef.value.offsetHeight;
+      const naturalWidth = homeImageRef.value.naturalWidth;
+      const naturalHeight = homeImageRef.value.naturalHeight;
+
+      if (naturalWidth && naturalHeight) {
+         const aspectRatio = naturalWidth / naturalHeight;
+         const containerAspectRatio = containerWidth / containerHeight;
+
+         // Cover: image should fill container, maintaining aspect ratio
+         // If image is wider (relative to container), fit by height
+         // If image is taller (relative to container), fit by width
+         if (aspectRatio > containerAspectRatio) {
+            // Image is wider - fit by height, width will overflow
+            imageDimensions.value = {
+               width: containerHeight * aspectRatio,
+               height: containerHeight,
+            };
+         } else {
+            // Image is taller - fit by width, height will overflow
+            imageDimensions.value = {
+               width: containerWidth,
+               height: containerWidth / aspectRatio,
+            };
+         }
+
+         // Center the image after dimensions are calculated
+         nextTick(() => {
+            imageDrag.centerPosition();
+         });
+      }
+   }
+};
+
+// Computed style for the image (to set its actual size)
+const homeImageSizeStyle = computed(() => {
+   if (imageDimensions.value.width > 0 && imageDimensions.value.height > 0) {
+      return {
+         width: `${imageDimensions.value.width}px`,
+         height: `${imageDimensions.value.height}px`,
+      };
+   }
+   return {
+      width: "100%",
+      height: "100%",
+      objectFit: "cover",
+   };
+});
+
+// Recalculate dimensions on window resize
+const handleResize = () => {
+   if (homeImageRef.value?.complete) {
+      onImageLoad();
+   }
+};
 
 // Use masks composable
 const {
@@ -408,157 +515,64 @@ const {
    handleSwipe,
 } = navigation;
 
-// Use swipe composable (after navigation is defined)
-const swipeHandlers = useSwipe(currentLevel, isTransitioning, {
-   onSwipe: handleSwipe,
-});
+// Levels that have left/right navigation arrows
+const arrowLevels = ["start", "facade-start", "facade-start-2"];
 
-const {
-   showSwipeHint,
-   handleTouchStart,
-   handleTouchMove,
-   handleTouchEnd,
-   handleMouseDown,
-   handleMouseMove,
-   handleMouseUp,
-   hideSwipeHint,
-} = swipeHandlers;
+// Check if current level has navigation arrows
+const hasNavigationArrows = computed(() =>
+   arrowLevels.includes(currentLevel.value)
+);
 
-// Image drag handlers (separate from swipe)
-const swipeableLevels = ["start", "facade-start", "facade-start-2"];
+// Handle arrow navigation (replaces swipe)
+const handleArrowNavigation = (direction) => {
+   if (isTransitioning.value) return;
+   // direction: 'left' means swipe right (go back), 'right' means swipe left (go forward)
+   handleSwipe(direction === "left");
+};
 
+// Image drag handlers - always use drag (no swipe logic)
 const handleImageTouchStart = (event) => {
-   const isSwipeable = swipeableLevels.includes(currentLevel.value);
-
-   // Check if image exists (computed property)
-   if (!currentStaticImage.value || !homeImageRef.value) {
-      if (isSwipeable) {
-         handleTouchStart(event);
-      }
-      return;
-   }
-
-   // Check if touch is on interactive element
-   const target = event.target;
-   if (
-      target &&
-      (target.closest(".home-content-wrapper") ||
-         target.closest("button") ||
-         target.closest("a") ||
-         target.closest(".house-outline"))
-   ) {
-      // If swipeable level, still allow swipe
-      if (isSwipeable) {
-         handleTouchStart(event);
-      }
-      return;
-   }
-
-   // On non-swipeable levels, use drag
-   if (!isSwipeable && event.touches.length === 1) {
-      event.stopPropagation();
-      imageDrag.handleTouchStart(event);
-   } else if (isSwipeable) {
-      // On swipeable levels, use swipe handler
-      handleTouchStart(event);
-   }
+   imageDrag.handleTouchStart(event);
 };
 
 const handleImageTouchMove = (event) => {
-   const isSwipeable = swipeableLevels.includes(currentLevel.value);
-
-   // If dragging, use drag handler
-   if (imageDrag.isDragging.value && event.touches.length === 1) {
-      event.preventDefault();
-      event.stopPropagation();
-      imageDrag.handleTouchMove(event);
-      return;
-   }
-
-   // Use swipe handler for swipeable levels
-   if (isSwipeable) {
-      handleTouchMove(event);
-   }
+   imageDrag.handleTouchMove(event);
 };
 
 const handleImageTouchEnd = (event) => {
-   const isSwipeable = swipeableLevels.includes(currentLevel.value);
-
-   if (imageDrag.isDragging.value) {
-      event.stopPropagation();
-      imageDrag.handleTouchEnd(event);
-   } else if (isSwipeable) {
-      handleTouchEnd(event);
-   }
+   imageDrag.handleTouchEnd(event);
 };
 
 const handleImageMouseDown = (event) => {
-   const isSwipeable = swipeableLevels.includes(currentLevel.value);
-
-   // Check if image exists (computed property)
-   if (!currentStaticImage.value || !homeImageRef.value) {
-      if (isSwipeable) {
-         handleMouseDown(event);
-      }
-      return;
-   }
-
-   // Check if click is on interactive element
-   const target = event.target;
-   if (
-      target &&
-      (target.closest(".home-content-wrapper") ||
-         target.closest("button") ||
-         target.closest("a") ||
-         target.closest(".house-outline"))
-   ) {
-      // If swipeable level, still allow swipe
-      if (isSwipeable) {
-         handleMouseDown(event);
-      }
-      return;
-   }
-
-   // On non-swipeable levels, use drag
-   if (!isSwipeable && event.button === 0) {
-      event.stopPropagation();
-      imageDrag.handleMouseDown(event);
-   } else if (isSwipeable) {
-      handleMouseDown(event);
-   }
+   imageDrag.handleMouseDown(event);
 };
 
 const handleImageMouseMove = (event) => {
-   const isSwipeable = swipeableLevels.includes(currentLevel.value);
-
-   if (imageDrag.isDragging.value) {
-      event.stopPropagation();
-      imageDrag.handleMouseMove(event);
-      return;
-   }
-
-   if (isSwipeable) {
-      handleMouseMove(event);
-   }
+   imageDrag.handleMouseMove(event);
 };
 
 const handleImageMouseUp = (event) => {
-   const isSwipeable = swipeableLevels.includes(currentLevel.value);
+   imageDrag.handleMouseUp();
+};
 
-   if (imageDrag.isDragging.value) {
-      if (event) event.stopPropagation();
-      imageDrag.handleMouseUp();
-   } else if (isSwipeable) {
-      handleMouseUp();
-   }
+// Handle wheel for drag (prevent default scroll behavior)
+const handleImageWheel = (event) => {
+   event.preventDefault();
 };
 
 onMounted(() => {
    // Уровень уже восстановлен из localStorage при инициализации ref
+   // Set cursor for drag (like Map.vue)
+   if (imageWrapperRef.value) {
+      imageWrapperRef.value.style.cursor = "grab";
+   }
+   // Add resize listener for image dimensions
+   window.addEventListener("resize", handleResize);
 });
 
 onUnmounted(() => {
    transitions.cleanup();
+   window.removeEventListener("resize", handleResize);
 });
 </script>
 
@@ -579,16 +593,46 @@ onUnmounted(() => {
    -webkit-user-select: none;
    -moz-user-select: none;
    -ms-user-select: none;
+}
+
+/* Wrapper для drag (аналогично Map.vue) */
+.home-image-wrapper {
+   touch-action: none;
    cursor: grab;
-   touch-action: pan-y;
 }
 
 .home-image-wrapper:active {
    cursor: grabbing;
 }
 
-.home-video,
-.home-image {
+.home-image-content {
+   position: absolute;
+   top: 0;
+   left: 0;
+   will-change: transform;
+   cursor: grab;
+   touch-action: none;
+   -webkit-touch-callout: none;
+   -webkit-user-select: none;
+   user-select: none;
+}
+
+.home-image-content:active {
+   cursor: grabbing;
+}
+
+/* На мобильных устройствах убираем курсор */
+@media (hover: none) and (pointer: coarse) {
+   .home-image-content {
+      cursor: default;
+   }
+
+   .home-image-content:active {
+      cursor: default;
+   }
+}
+
+.home-video {
    width: 100%;
    height: 100%;
    object-fit: cover;
@@ -599,14 +643,15 @@ onUnmounted(() => {
 }
 
 .home-image {
+   /* Изображение НЕ использует object-fit: cover, чтобы можно было прокручивать обрезанные части */
+   display: block;
+   /* Размер определяется в JS на основе соотношения сторон */
    z-index: 1;
-   /* Убираем transition для мгновенного переключения при смене уровня */
    user-select: none;
    -webkit-user-select: none;
    -moz-user-select: none;
    -ms-user-select: none;
    pointer-events: none; /* Позволяем событиям проходить через картинку к wrapper */
-   will-change: transform;
 }
 
 .home-image-preload {
@@ -814,76 +859,61 @@ onUnmounted(() => {
    cursor: default;
 }
 
-/* Swipe hint modal */
-.home-swipe-hint {
+/* Navigation arrows */
+.home-navigation-arrows {
    position: absolute;
-   top: 50%;
-   left: 50%;
-   transform: translate(-50%, -50%);
-   background-color: rgba(14, 14, 14, 0.5);
-   backdrop-filter: blur(5px);
-   color: #fff;
-   padding: 1rem;
-   border-radius: 1rem;
-   font-size: 1.2rem;
-   z-index: 20;
-   text-align: center;
-   cursor: pointer;
-}
-
-.home-swipe-hint-content {
-   max-width: 200px;
+   top: 0;
+   left: 0;
    width: 100%;
+   height: 100%;
    display: flex;
-   flex-direction: column;
    align-items: center;
-   justify-content: center;
-   gap: 1rem;
+   justify-content: space-between;
+   padding: 0 1rem;
+   pointer-events: none;
+   z-index: 15;
 }
 
-.home-swipe-hint-icons {
+.home-nav-arrow {
    display: flex;
    align-items: center;
    justify-content: center;
-   gap: 1rem;
+   width: 56px;
+   height: 56px;
+   background-color: rgba(14, 14, 14, 0.6);
+   backdrop-filter: blur(8px);
+   border: 1px solid rgba(255, 255, 255, 0.2);
+   border-radius: 50%;
    color: #fff;
+   cursor: pointer;
+   pointer-events: all;
+   transition: all 0.2s ease;
 }
 
-.home-swipe-hint-icon {
-   display: flex;
-   align-items: center;
-   justify-content: center;
+.home-nav-arrow:hover {
+   background-color: rgba(14, 14, 14, 0.8);
+   border-color: rgba(255, 255, 255, 0.4);
+   transform: scale(1.05);
 }
 
-.home-swipe-hint-text {
-   color: #fff;
+.home-nav-arrow:active {
+   transform: scale(0.95);
 }
 
-/* Enable swipe on start level */
-.home-swipe-enabled {
-   touch-action: pan-y; /* Разрешаем вертикальный скролл, но обрабатываем горизонтальные свайпы */
-   user-select: none;
+.home-nav-arrow-disabled {
+   opacity: 0.3;
+   cursor: not-allowed;
+   pointer-events: none;
 }
 
-/* Modal fade animation */
-.modal-fade-enter-active,
-.modal-fade-leave-active {
-   transition: opacity 0.3s ease, transform 0.3s ease;
-}
+@media (max-width: 768px) {
+   .home-navigation-arrows {
+      padding: 0 0.5rem;
+   }
 
-.modal-fade-enter-from {
-   opacity: 0;
-   transform: translate(-50%, -50%) scale(0.9);
-}
-
-.modal-fade-leave-to {
-   opacity: 0;
-   transform: translate(-50%, -50%) scale(0.9);
-}
-
-.modal-fade-enter-to,
-.modal-fade-leave-from {
-   opacity: 1;
-   transform: translate(-50%, -50%) scale(1);
+   .home-nav-arrow {
+      width: 44px;
+      height: 44px;
+   }
 }
 </style>
