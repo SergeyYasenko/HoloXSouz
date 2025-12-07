@@ -15,9 +15,9 @@
       >
          <!-- Preload image for seamless transition -->
          <img
-            v-if="preloadImage"
+            v-show="preloadImage"
             :src="preloadImage"
-            class="home-image-preload"
+            :class="['home-image-preload', { 'element-hidden': !preloadImage }]"
             alt=""
             @load="onPreloadImageLoaded"
          />
@@ -30,10 +30,13 @@
             <!-- Static image (Map, Start, etc.) -->
             <img
                ref="homeImageRef"
-               v-if="currentStaticImage"
+               v-show="currentStaticImage"
                :key="`${currentLevel}-${currentStaticImage}`"
                :src="currentStaticImage"
-               class="home-image"
+               :class="[
+                  'home-image',
+                  { 'element-hidden': !currentStaticImage },
+               ]"
                :style="homeImageSizeStyle"
                alt=""
                @load="onImageLoad"
@@ -112,7 +115,7 @@
                      :key="floorId"
                   >
                      <HouseOutline
-                        v-if="getFloorMaskConfig(floorId)"
+                        v-show="getFloorMaskConfig(floorId)"
                         :points="getFloorMaskConfig(floorId).points"
                         :path="getFloorMaskConfig(floorId).path"
                         :stroke-width="getFloorMaskConfig(floorId).strokeWidth"
@@ -131,7 +134,7 @@
             <template v-else>
                <!-- Red territory mask for disclaimer mode (non-clickable) -->
                <HouseOutline
-                  v-if="currentLevel === 'map' && showDisclaimerMode"
+                  v-show="currentLevel === 'map' && showDisclaimerMode"
                   :points="mapMaskConfig.territory.points"
                   :path="mapMaskConfig.territory.path"
                   :stroke-width="mapMaskConfig.territory.strokeWidth"
@@ -144,7 +147,7 @@
                />
                <!-- House outline overlays for Map level -->
                <HouseOutline
-                  v-if="currentLevel === 'map' && showHouseOutline1"
+                  v-show="currentLevel === 'map' && showHouseOutline1"
                   :points="mapMaskConfig.house1.points"
                   :path="mapMaskConfig.house1.path"
                   :stroke-width="mapMaskConfig.house1.strokeWidth"
@@ -155,7 +158,7 @@
                   :on-click="handleHouse1Click"
                />
                <HouseOutline
-                  v-if="currentLevel === 'map' && showHouseOutline2"
+                  v-show="currentLevel === 'map' && showHouseOutline2"
                   :points="mapMaskConfig.house2.points"
                   :path="mapMaskConfig.house2.path"
                   :stroke-width="mapMaskConfig.house2.strokeWidth"
@@ -167,7 +170,7 @@
                />
                <!-- House outline overlays for 2-projects level -->
                <HouseOutline
-                  v-if="currentLevel === '2-projects' && showHouseOutline1"
+                  v-show="currentLevel === '2-projects' && showHouseOutline1"
                   :points="twoProjectsMaskConfig.project1.points"
                   :path="twoProjectsMaskConfig.project1.path"
                   :stroke-width="twoProjectsMaskConfig.project1.strokeWidth"
@@ -178,7 +181,7 @@
                   :on-click="handleProject1Click"
                />
                <HouseOutline
-                  v-if="currentLevel === '2-projects' && showHouseOutline2"
+                  v-show="currentLevel === '2-projects' && showHouseOutline2"
                   :points="twoProjectsMaskConfig.project2.points"
                   :path="twoProjectsMaskConfig.project2.path"
                   :stroke-width="twoProjectsMaskConfig.project2.strokeWidth"
@@ -194,7 +197,7 @@
                   :key="floorId"
                >
                   <HouseOutline
-                     v-if="
+                     v-show="
                         currentLevel === 'start' && getFloorMaskConfig(floorId)
                      "
                      :points="getFloorMaskConfig(floorId).points"
@@ -211,10 +214,14 @@
          </div>
          <!-- Transition video -->
          <video
-            v-if="isTransitioning && transitionVideoSrc"
+            v-show="isTransitioning && transitionVideoSrc"
             ref="transitionVideo"
             :src="transitionVideoSrc"
-            class="home-video home-video-transition"
+            :class="[
+               'home-video',
+               'home-video-transition',
+               { 'element-hidden': !(isTransitioning && transitionVideoSrc) },
+            ]"
             muted
             playsinline
             preload="auto"
@@ -995,13 +1002,22 @@ onUnmounted(() => {
 
 .home-image-preload {
    position: absolute;
-   top: -9999px;
-   left: -9999px;
-   width: 1px;
-   height: 1px;
-   opacity: 0;
+   top: 0;
+   left: 0;
+   width: 100%;
+   height: 100%;
+   object-fit: cover;
+   z-index: 0;
    pointer-events: none;
-   z-index: -1;
+}
+
+/* Скрытые элементы должны иметь самый низкий z-index и не мешать работе */
+.element-hidden {
+   z-index: -10 !important;
+   pointer-events: none !important;
+   opacity: 0 !important;
+   visibility: hidden !important;
+   /* Элементы остаются в DOM, но полностью скрыты и не интерактивны */
 }
 
 .home-video-transition {
@@ -1016,6 +1032,22 @@ onUnmounted(() => {
    contain: layout style paint;
    /* Optimize for mobile */
    -webkit-tap-highlight-color: transparent;
+}
+
+/* Когда видео скрыто, оно не должно мешать */
+.home-video-transition.element-hidden {
+   z-index: -10 !important;
+   pointer-events: none !important;
+   opacity: 0 !important;
+   visibility: hidden !important;
+}
+
+/* Когда видео скрыто, оно не должно мешать */
+.home-video-transition.element-hidden {
+   z-index: -10 !important;
+   pointer-events: none !important;
+   opacity: 0 !important;
+   visibility: hidden !important;
 }
 
 .home-content-wrapper {
@@ -1195,16 +1227,19 @@ onUnmounted(() => {
 
 /* Red disclaimer masks (non-clickable) */
 .home-disclaimer-mask :deep(.house-outline-wrapper) {
-   z-index: 5; /* Под обычными масками (z-index: 6) */
+   z-index: 13 !important; /* Под обычными масками (z-index: 14), но выше остальных элементов */
+   pointer-events: none !important;
 }
 
 .home-disclaimer-mask :deep(.house-outline-canvas) {
-   mix-blend-mode: normal; /* Убираем screen blend mode для красного цвета */
+   mix-blend-mode: normal !important; /* Убираем screen blend mode для красного цвета */
+   z-index: 13 !important;
 }
 
 .home-disclaimer-mask :deep(.house-outline-hit-area) {
-   pointer-events: none;
-   cursor: default;
+   pointer-events: none !important;
+   cursor: default !important;
+   z-index: 13 !important;
 }
 
 /* Navigation arrows */
