@@ -256,7 +256,7 @@ export function useTransitions(currentLevel, levelHistory) {
                      handleTransitionEnd();
                   }
                }
-            }, 2000);
+            }, 10);
          }
       }
    };
@@ -398,7 +398,7 @@ export function useTransitions(currentLevel, levelHistory) {
                      setTimeout(() => {
                         video.removeEventListener("canplay", onCanPlay);
                         resolve();
-                     }, 500);
+                     }, 10);
                   });
                }
 
