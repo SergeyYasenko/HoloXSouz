@@ -17,6 +17,12 @@
          <img
             v-show="preloadImage"
             :src="preloadImage"
+            :loading="
+               energySaving.getImageAttributes(!!preloadImage, false).loading
+            "
+            :decoding="
+               energySaving.getImageAttributes(!!preloadImage, false).decoding
+            "
             :class="['home-image-preload', { 'element-hidden': !preloadImage }]"
             alt=""
             @load="onPreloadImageLoaded"
@@ -33,6 +39,18 @@
                v-show="currentStaticImage"
                :key="`${currentLevel}-${currentStaticImage}`"
                :src="currentStaticImage"
+               :loading="
+                  energySaving.getImageAttributes(
+                     !!currentStaticImage,
+                     !!currentStaticImage
+                  ).loading
+               "
+               :decoding="
+                  energySaving.getImageAttributes(
+                     !!currentStaticImage,
+                     !!currentStaticImage
+                  ).decoding
+               "
                :class="[
                   'home-image',
                   { 'element-hidden': !currentStaticImage },
@@ -217,6 +235,12 @@
             v-show="isTransitioning && transitionVideoSrc"
             ref="transitionVideo"
             :src="transitionVideoSrc"
+            :preload="
+               energySaving.getVideoAttributes(
+                  !!(isTransitioning && transitionVideoSrc),
+                  !!(isTransitioning && transitionVideoSrc)
+               ).preload
+            "
             :class="[
                'home-video',
                'home-video-transition',
@@ -224,7 +248,6 @@
             ]"
             muted
             playsinline
-            preload="auto"
             webkit-playsinline
             x5-playsinline
             x5-video-player-type="h5"
@@ -354,6 +377,7 @@ import { useLevelStorage } from "../composables/useLevelStorage.js";
 import { useNavigation } from "../composables/useNavigation.js";
 import { useTransitions } from "../composables/useTransitions.js";
 import { useImageDrag } from "../composables/useImageDrag.js";
+import { useEnergySaving } from "../composables/useEnergySaving.js";
 
 // Level system for navigation hierarchy
 // Levels: 'map' -> '2-projects' -> 'start' -> 'video-sides' (1, 2, 3, 4)
@@ -426,6 +450,15 @@ const onImageLoad = () => {
    // Image is loaded, ensure cursor is set
    if (imageWrapperRef.value) {
       imageWrapperRef.value.style.cursor = "grab";
+   }
+
+   // Оптимизируем изображение для энергосбережения
+   if (homeImageRef.value) {
+      energySaving.optimizeImage(
+         homeImageRef.value,
+         !!currentStaticImage.value,
+         !!currentStaticImage.value
+      );
    }
 
    // Update masks after image loads (they need to recalculate positions)
@@ -548,6 +581,9 @@ const {
 
 const disabledArrowLeft = ref(false);
 const disabledArrowRight = ref(false);
+
+// Use energy saving composable
+const energySaving = useEnergySaving();
 
 // Use transitions composable
 const transitions = useTransitions(currentLevel, levelHistory);
@@ -675,6 +711,17 @@ const {
 // Use debounce to prevent excessive updates
 let maskUpdateTimeout = null;
 watch(currentStaticImage, () => {
+   // Оптимизируем изображение при изменении
+   nextTick(() => {
+      if (homeImageRef.value) {
+         energySaving.optimizeImage(
+            homeImageRef.value,
+            !!currentStaticImage.value,
+            !!currentStaticImage.value
+         );
+      }
+   });
+
    // Clear previous timeout
    if (maskUpdateTimeout) {
       clearTimeout(maskUpdateTimeout);
@@ -827,11 +874,69 @@ const handleImageWheel = (event) => {
    event.preventDefault();
 };
 
+// Watch для оптимизации видео при изменении видимости
+watch(
+   [() => isTransitioning.value, () => transitionVideoSrc.value],
+   ([isTransitioning, videoSrc]) => {
+      nextTick(() => {
+         if (transitionVideo.value) {
+            const isVisible = isTransitioning && !!videoSrc;
+            energySaving.optimizeVideo(
+               transitionVideo.value,
+               isVisible,
+               isVisible
+            );
+         }
+      });
+   }
+);
+
+// Watch для оптимизации preload изображения
+watch(
+   () => preloadImage.value,
+   (newPreloadImage) => {
+      nextTick(() => {
+         const preloadImg = document.querySelector(".home-image-preload");
+         if (preloadImg) {
+            energySaving.optimizeImage(
+               preloadImg,
+               !!newPreloadImage,
+               false // preload изображение не активно
+            );
+         }
+      });
+   }
+);
+
 onMounted(() => {
    // Set cursor for drag (like Map.vue)
    if (imageWrapperRef.value) {
       imageWrapperRef.value.style.cursor = "grab";
    }
+
+   // Оптимизируем изображения и видео при монтировании
+   nextTick(() => {
+      if (homeImageRef.value) {
+         energySaving.optimizeImage(
+            homeImageRef.value,
+            !!currentStaticImage.value,
+            !!currentStaticImage.value
+         );
+      }
+
+      const preloadImg = document.querySelector(".home-image-preload");
+      if (preloadImg) {
+         energySaving.optimizeImage(preloadImg, !!preloadImage.value, false);
+      }
+
+      if (transitionVideo.value) {
+         energySaving.optimizeVideo(
+            transitionVideo.value,
+            !!(isTransitioning.value && transitionVideoSrc.value),
+            !!(isTransitioning.value && transitionVideoSrc.value)
+         );
+      }
+   });
 
    // Center image on initial load if it's already loaded
    nextTick(() => {
@@ -1017,6 +1122,11 @@ onUnmounted(() => {
    pointer-events: none !important;
    opacity: 0 !important;
    visibility: hidden !important;
+   /* Энергосберегающая оптимизация для скрытых элементов */
+   will-change: auto !important;
+   /* content-visibility: auto - современный способ оптимизации для скрытых элементов */
+   content-visibility: auto;
+   contain-intrinsic-size: 0 0;
    /* Элементы остаются в DOM, но полностью скрыты и не интерактивны */
 }
 

@@ -398,7 +398,7 @@ export function useTransitions(currentLevel, levelHistory) {
                      setTimeout(() => {
                         video.removeEventListener("canplay", onCanPlay);
                         resolve();
-                     }, 10);
+                     }, 1000);
                   });
                }
 
@@ -409,15 +409,28 @@ export function useTransitions(currentLevel, levelHistory) {
                         await video.play();
                         resolve();
                      } catch (error) {
-                        console.error("Error playing transition video:", error);
-                        handleLevelTransitionEnd(targetLevel);
+                        // AbortError is not critical - it just means the play was interrupted
+                        // Only log and handle if it's not an AbortError
+                        if (error.name !== "AbortError") {
+                           console.error("Error playing transition video:", error);
+                           // Only handle error if we're still transitioning
+                           if (isTransitioning.value) {
+                              handleLevelTransitionEnd(targetLevel);
+                           }
+                        }
                         resolve();
                      }
                   });
                });
             } catch (error) {
-               console.error("Error in playVideo:", error);
-               handleLevelTransitionEnd(targetLevel);
+               // AbortError is not critical - it just means the play was interrupted
+               if (error.name !== "AbortError") {
+                  console.error("Error in playVideo:", error);
+                  // Only handle error if we're still transitioning
+                  if (isTransitioning.value) {
+                     handleLevelTransitionEnd(targetLevel);
+                  }
+               }
             }
          };
 
