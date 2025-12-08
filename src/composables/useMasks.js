@@ -1,15 +1,9 @@
 import { ref, computed } from "vue";
 import { mapMasks, twoProjectsMasks, floorsConfig } from "../config/navigation.js";
 
-/**
- * Composable for managing house outline masks and disclaimer mode
- */
 export function useMasks() {
-   // Edit mode - shows all masks always visible for editing
-   // По умолчанию отключен, можно включить через ?edit=true
    let defaultEditMode = false;
 
-   // Check URL for edit mode (можно отключить через ?edit=false)
    if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search);
       const urlEditParam = urlParams.get('edit');
@@ -19,30 +13,19 @@ export function useMasks() {
    }
 
    const editMode = ref(defaultEditMode);
-
-   // Disclaimer mode - shows red overlay and always-visible masks
    const showDisclaimerMode = ref(false);
+   const showHouseOutline1 = ref(true);
+   const showHouseOutline2 = ref(true);
+   const houseOutlineAnimatedMap = ref(false);
+   const houseOutlineWidth = ref(3);
+   const houseOutlineGlow = ref("rgba(0, 255, 255, 0.7)");
+   const houseOutlineGlowBlur = ref(25);
+   const houseOutlineAnimated = ref(false);
 
-   // House outline configuration for Map level
-   const showHouseOutline1 = ref(true); // Первая маска на Map
-   const showHouseOutline2 = ref(true); // Вторая маска на Map
-   const houseOutlineColor = ref("#00ffff"); // Цвет обводки
-   const houseOutlineAnimatedMap = ref(false); // Анимация для масок на Map
-
-   // House outline configuration for other levels
-   const showHouseOutline = ref(true); // Включить/выключить подсветку
-   const houseOutlineWidth = ref(3); // Толщина обводки
-   const houseOutlineGlow = ref("rgba(0, 255, 255, 0.7)"); // Цвет подсветки
-   const houseOutlineGlowBlur = ref(25); // Интенсивность свечения
-   const houseOutlineAnimated = ref(false); // Анимация пульсации
-
-   // Toggle disclaimer mode
    const toggleDisclaimerMode = () => {
       showDisclaimerMode.value = !showDisclaimerMode.value;
-      console.log("Disclaimer mode:", showDisclaimerMode.value ? "ON" : "OFF");
    };
 
-   // Computed properties for mask configurations
    const mapMaskConfig = computed(() => ({
       house1: {
          points: mapMasks.house1.points,
@@ -111,26 +94,13 @@ export function useMasks() {
    };
 
    return {
-      // State
       editMode,
       showDisclaimerMode,
       showHouseOutline1,
       showHouseOutline2,
-      houseOutlineColor,
-      houseOutlineAnimatedMap,
-      showHouseOutline,
-      houseOutlineWidth,
-      houseOutlineGlow,
-      houseOutlineGlowBlur,
-      houseOutlineAnimated,
-
-      // Methods
       toggleDisclaimerMode,
-
-      // Computed
       mapMaskConfig,
       twoProjectsMaskConfig,
       getFloorMaskConfig,
    };
 }
-

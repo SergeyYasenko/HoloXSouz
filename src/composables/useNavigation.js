@@ -1,9 +1,6 @@
 import { computed } from "vue";
 import { levelImages, levelTransitions, floorsConfig } from "../config/navigation.js";
 
-/**
- * Composable for navigation logic and handlers
- */
 export function useNavigation(
    currentLevel,
    levelHistory,
@@ -13,45 +10,35 @@ export function useNavigation(
    startLevelTransition,
    goBackToLevel,
    isReverseTransition = null,
-   reverseSourceLevel = null
+   reverseSourceLevel = null,
+   forwardSourceLevel = null
 ) {
-   // Get level image
    const getLevelImage = (level) => {
-      if (level === "map") return levelImages.map;
-      if (level === "2-projects") return levelImages["2-projects"];
-      if (level === "start") return levelImages.start;
-      if (level === "facade-start") return levelImages["facade-start"];
-      if (level === "facade-start-2") return levelImages["facade-start-2"];
-      if (level && level.startsWith("floor-")) {
+      if (levelImages[level]) return levelImages[level];
+
+      if (level?.startsWith("floor-")) {
          const floorId = level.replace("floor-", "");
-         const floor = floorsConfig[floorId];
-         return floor?.image || levelImages.start;
+         return floorsConfig[floorId]?.image || levelImages.start;
       }
       return null;
    };
 
-   // During reverse transition, show the source level's image (old image)
-   // to keep it visible for 1 second while reverse video plays
-   // During normal transition, hide image to prevent flicker before video starts
    const currentStaticImage = computed(() => {
-      // If transitioning in reverse, show old image (needed for reverse transitions)
       if (isReverseTransition?.value && reverseSourceLevel?.value) {
          return getLevelImage(reverseSourceLevel.value);
       }
 
-      // If transitioning normally, hide image to prevent new image from appearing
-      // before video starts playing (this prevents flicker)
+      if (isTransitioning?.value && forwardSourceLevel?.value) {
+         return getLevelImage(forwardSourceLevel.value);
+      }
+
       if (isTransitioning?.value) {
-         // Return null to hide image - video will be visible instead
-         // This prevents new image from flickering before video starts
          return null;
       }
 
-      // Normal case: show current level's image
       return getLevelImage(currentLevel.value);
    });
 
-   // Navigation handlers
    const handleHouse1Click = () => {
       if (isTransitioning.value) return;
       levelHistory.value.push(currentLevel.value);
@@ -76,11 +63,7 @@ export function useNavigation(
 
    const handleFacadeStartClick = () => {
       if (isTransitioning.value) return;
-      if (!disabledArrowRight.value) {
-         disabledArrowRight.value = true;
-      } else {
-         disabledArrowRight.value = false;
-      }
+      disabledArrowRight.value = !disabledArrowRight.value;
       startLevelTransition(
          levelTransitions["start-to-facade-start"],
          "facade-start"
@@ -89,11 +72,7 @@ export function useNavigation(
 
    const handleFacadeStart2Click = () => {
       if (isTransitioning.value) return;
-      if (!disabledArrowLeft.value) {
-         disabledArrowLeft.value = true;
-      } else {
-         disabledArrowLeft.value = false;
-      }
+      disabledArrowLeft.value = !disabledArrowLeft.value;
       startLevelTransition(
          levelTransitions["start-to-facade-start-2"],
          "facade-start-2"
@@ -157,27 +136,15 @@ export function useNavigation(
       goBackToLevel(previousLevel);
    };
 
-   // Swipe handler
-   const handleSwipe = (swipeRight) => {
+   const handleBackFromFacade = (isStepToRight) => {
       const level = currentLevel.value;
 
-      if (level === "start") {
-         // Инвертированная логика для центрального отображения:
-         // Свайп слева направо (swipeRight = true) = свайп влево → facade-start-2
-         // Свайп справа налево (swipeRight = false) = свайп вправо → facade-start
-         if (swipeRight) {
-            // Свайп слева направо = свайп влево → facade-start-2
-            handleFacadeStart2Click();
-         } else {
-            // Свайп справа налево = свайп вправо → facade-start
-            handleFacadeStartClick();
-         }
-      } else if (level === "facade-start") {
-         if (swipeRight) {
+      if (level === "facade-start") {
+         if (isStepToRight) {
             handleBackToStartFromFacade();
          }
       } else if (level === "facade-start-2") {
-         if (!swipeRight) {
+         if (!isStepToRight) {
             handleBackToStartFromFacade2();
          }
       }
@@ -195,7 +162,6 @@ export function useNavigation(
       handleBackToStartFromFacade2,
       handleFloorClick,
       handleBackClick,
-      handleSwipe,
+      handleBackFromFacade,
    };
 }
-

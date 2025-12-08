@@ -13,7 +13,6 @@
          @mouseleave="handleImageMouseUp"
          @wheel.prevent="handleImageWheel"
       >
-         <!-- Preload image for seamless transition -->
          <img
             v-show="preloadImage"
             :src="preloadImage"
@@ -27,13 +26,11 @@
             alt=""
             @load="onPreloadImageLoaded"
          />
-         <!-- Drag container (similar to map-content in Map.vue) -->
          <div
             ref="homeImageContentRef"
             class="home-image-content"
             :style="homeImageStyle"
          >
-            <!-- Static image (Map, Start, etc.) -->
             <img
                ref="homeImageRef"
                v-show="currentStaticImage"
@@ -59,12 +56,8 @@
                alt=""
                @load="onImageLoad"
             />
-            <!-- Masks inside drag container - they move with the image -->
-            <!-- Edit Mode: Show all masks for all levels simultaneously -->
             <template v-if="editMode">
-               <!-- Map level masks -->
                <template v-if="currentLevel === 'map'">
-                  <!-- Red territory mask -->
                   <HouseOutline
                      :points="mapMaskConfig.territory.points"
                      :path="mapMaskConfig.territory.path"
@@ -76,7 +69,6 @@
                      :on-click="() => {}"
                      class="home-disclaimer-mask"
                   />
-                  <!-- House 1 -->
                   <HouseOutline
                      :points="mapMaskConfig.house1.points"
                      :path="mapMaskConfig.house1.path"
@@ -87,7 +79,6 @@
                      :always-visible="mapMaskConfig.house1.alwaysVisible"
                      :on-click="handleHouse1Click"
                   />
-                  <!-- House 2 -->
                   <HouseOutline
                      :points="mapMaskConfig.house2.points"
                      :path="mapMaskConfig.house2.path"
@@ -99,7 +90,6 @@
                      :on-click="handleHouse2Click"
                   />
                </template>
-               <!-- 2-projects level masks -->
                <template v-if="currentLevel === '2-projects'">
                   <HouseOutline
                      :points="twoProjectsMaskConfig.project1.points"
@@ -126,7 +116,6 @@
                      :on-click="handleProject2Click"
                   />
                </template>
-               <!-- Start level masks (all floors) -->
                <template v-if="currentLevel === 'start'">
                   <template
                      v-for="floorId in ['g', '1', '2', '3', '4', '5']"
@@ -148,9 +137,7 @@
                   </template>
                </template>
             </template>
-            <!-- Normal Mode: Show masks only for current level -->
             <template v-else>
-               <!-- Red territory mask for disclaimer mode (non-clickable) -->
                <HouseOutline
                   v-show="currentLevel === 'map' && showDisclaimerMode"
                   :points="mapMaskConfig.territory.points"
@@ -163,7 +150,6 @@
                   :on-click="() => {}"
                   class="home-disclaimer-mask"
                />
-               <!-- House outline overlays for Map level -->
                <HouseOutline
                   v-show="currentLevel === 'map' && showHouseOutline1"
                   :points="mapMaskConfig.house1.points"
@@ -186,7 +172,6 @@
                   :always-visible="mapMaskConfig.house2.alwaysVisible"
                   :on-click="handleHouse2Click"
                />
-               <!-- House outline overlays for 2-projects level -->
                <HouseOutline
                   v-show="currentLevel === '2-projects' && showHouseOutline1"
                   :points="twoProjectsMaskConfig.project1.points"
@@ -209,7 +194,6 @@
                   :always-visible="twoProjectsMaskConfig.project2.alwaysVisible"
                   :on-click="handleProject2Click"
                />
-               <!-- House outline overlays for Start level (6 floors) -->
                <template
                   v-for="floorId in ['g', '1', '2', '3', '4', '5']"
                   :key="floorId"
@@ -230,7 +214,6 @@
                </template>
             </template>
          </div>
-         <!-- Transition video -->
          <video
             v-show="isTransitioning && transitionVideoSrc"
             ref="transitionVideo"
@@ -262,7 +245,6 @@
             @waiting="handleVideoWaiting"
             @playing="handleVideoPlaying"
          ></video>
-         <!-- House outline overlay for other levels (if needed in future) -->
          <div class="home-content-wrapper">
             <div class="home-content-top home-content">
                <div v-if="currentLevel === 'map'" class="home-content-top-back">
@@ -293,9 +275,6 @@
                      <p>Back</p>
                   </div>
                </div>
-               <!-- <div class="home-content-top-title">
-                  <p>ROVE Home Marasi Drive</p>
-               </div> -->
                <div class="home-content-top-actions">
                   <div
                      v-if="currentLevel === 'map'"
@@ -305,14 +284,12 @@
                      <Icon name="attention" :size="24" color="currentColor" />
                      <p>About</p>
                   </div>
-                  <!-- Edit mode indicator -->
                   <div v-if="editMode" class="home-content-top-edit-mode">
                      <Icon name="help" :size="24" color="currentColor" />
                      <p>Edit Mode</p>
                   </div>
                </div>
             </div>
-            <!-- Navigation arrows for levels with left/right navigation -->
             <div v-if="hasNavigationArrows" class="home-navigation-arrows">
                <button
                   class="home-nav-arrow home-nav-arrow-left"
@@ -363,15 +340,11 @@ import {
 import Icon from "../components/Icon.vue";
 import BottomActions from "../components/BottomActions.vue";
 import HouseOutline from "../components/HouseOutline.vue";
-
-// Import configuration
 import {
    floorsConfig,
    levelImages,
    levelTransitions,
 } from "../config/navigation.js";
-
-// Import composables
 import { useMasks } from "../composables/useMasks.js";
 import { useLevelStorage } from "../composables/useLevelStorage.js";
 import { useNavigation } from "../composables/useNavigation.js";
@@ -379,28 +352,15 @@ import { useTransitions } from "../composables/useTransitions.js";
 import { useImageDrag } from "../composables/useImageDrag.js";
 import { useEnergySaving } from "../composables/useEnergySaving.js";
 
-// Level system for navigation hierarchy
-// Levels: 'map' -> '2-projects' -> 'start' -> 'video-sides' (1, 2, 3, 4)
-
-// Inject header visibility state
 const showHeader = inject("showHeader", ref(false));
-
-// Use level storage composable
 const { currentLevel, levelHistory } = useLevelStorage();
 
-// Refs for image drag
 const imageWrapperRef = ref(null);
 const homeImageRef = ref(null);
-
-// Use image drag composable (scale = 1 for Home, no zoom)
 const imageDrag = useImageDrag(imageWrapperRef, homeImageRef, ref(1));
 
-// Create local reference to imageStyle (like Map.vue does with mapStyle)
-// Combines drag transform with content size based on image dimensions
 const homeImageStyle = computed(() => {
    const dragStyle = imageDrag.imageStyle.value;
-
-   // Add dimensions to the style if available
    if (imageDimensions.value.width > 0 && imageDimensions.value.height > 0) {
       return {
          ...dragStyle,
@@ -408,51 +368,61 @@ const homeImageStyle = computed(() => {
          height: `${imageDimensions.value.height}px`,
       };
    }
-
    return dragStyle;
 });
 
-// Center image position when level changes and update masks
-watch(currentLevel, () => {
-   // Set flag to center image when it loads (if not already loaded)
-   shouldCenterOnLoad.value = true;
+const calculateImageDimensions = () => {
+   if (!homeImageRef.value || !imageWrapperRef.value) return;
 
-   // Wait for next tick to ensure image is loaded
+   const containerWidth = imageWrapperRef.value.offsetWidth;
+   const containerHeight = imageWrapperRef.value.offsetHeight;
+   const naturalWidth = homeImageRef.value.naturalWidth;
+   const naturalHeight = homeImageRef.value.naturalHeight;
+
+   if (!naturalWidth || !naturalHeight || !containerWidth || !containerHeight)
+      return;
+
+   const aspectRatio = naturalWidth / naturalHeight;
+   const containerAspectRatio = containerWidth / containerHeight;
+
+   if (aspectRatio > containerAspectRatio) {
+      imageDimensions.value = {
+         width: containerHeight * aspectRatio,
+         height: containerHeight,
+      };
+   } else {
+      imageDimensions.value = {
+         width: containerWidth,
+         height: containerWidth / aspectRatio,
+      };
+   }
+};
+
+const imageDimensions = ref({ width: 0, height: 0 });
+const shouldCenterOnLoad = ref(true);
+
+watch(currentLevel, () => {
+   shouldCenterOnLoad.value = true;
    nextTick(() => {
       if (homeImageRef.value?.complete) {
-         // Image already loaded, center immediately
          setTimeout(() => {
             imageDrag.centerPosition();
-            shouldCenterOnLoad.value = false; // Reset flag
-         }, 50); // Small delay to ensure dimensions are calculated
+            shouldCenterOnLoad.value = false;
+         }, 50);
       } else {
-         // Image not loaded yet, will center in onImageLoad
          imageDrag.resetPosition();
       }
-
-      // Update masks after level change (they need to recalculate positions)
-      // Use a small delay to ensure image is fully rendered
       setTimeout(() => {
-         // Trigger mask update by dispatching a custom event
          window.dispatchEvent(new CustomEvent("mask-update"));
       }, 100);
    });
 });
 
-// Image dimensions for proper sizing (to allow drag without black background)
-const imageDimensions = ref({ width: 0, height: 0 });
-
-// Track if we should center on image load (only on level change)
-const shouldCenterOnLoad = ref(true); // Start with true to center on initial load
-
-// Handle image load to ensure refs are ready and calculate dimensions
 const onImageLoad = () => {
-   // Image is loaded, ensure cursor is set
    if (imageWrapperRef.value) {
       imageWrapperRef.value.style.cursor = "grab";
    }
 
-   // Оптимизируем изображение для энергосбережения
    if (homeImageRef.value) {
       energySaving.optimizeImage(
          homeImageRef.value,
@@ -461,57 +431,26 @@ const onImageLoad = () => {
       );
    }
 
-   // Update masks after image loads (they need to recalculate positions)
    nextTick(() => {
       setTimeout(() => {
          window.dispatchEvent(new CustomEvent("mask-update"));
       }, 50);
    });
 
-   // Calculate image dimensions to fill container while maintaining aspect ratio
-   if (homeImageRef.value && imageWrapperRef.value) {
-      const containerWidth = imageWrapperRef.value.offsetWidth;
-      const containerHeight = imageWrapperRef.value.offsetHeight;
-      const naturalWidth = homeImageRef.value.naturalWidth;
-      const naturalHeight = homeImageRef.value.naturalHeight;
+   calculateImageDimensions();
 
-      if (naturalWidth && naturalHeight) {
-         const aspectRatio = naturalWidth / naturalHeight;
-         const containerAspectRatio = containerWidth / containerHeight;
-
-         // Cover: image should fill container, maintaining aspect ratio
-         // If image is wider (relative to container), fit by height
-         // If image is taller (relative to container), fit by width
-         if (aspectRatio > containerAspectRatio) {
-            // Image is wider - fit by height, width will overflow
-            imageDimensions.value = {
-               width: containerHeight * aspectRatio,
-               height: containerHeight,
-            };
-         } else {
-            // Image is taller - fit by width, height will overflow
-            imageDimensions.value = {
-               width: containerWidth,
-               height: containerWidth / aspectRatio,
-            };
-         }
-
-         // Center image after dimensions are calculated
-         // This ensures proper centering on initial load and level changes
-         // Use a small delay to ensure dimensions are applied to DOM
-         nextTick(() => {
-            setTimeout(() => {
-               imageDrag.centerPosition();
-               if (shouldCenterOnLoad.value) {
-                  shouldCenterOnLoad.value = false; // Reset flag
-               }
-            }, 50); // Small delay to ensure dimensions are applied
-         });
-      }
+   if (imageDimensions.value.width > 0 && imageDimensions.value.height > 0) {
+      nextTick(() => {
+         setTimeout(() => {
+            imageDrag.centerPosition();
+            if (shouldCenterOnLoad.value) {
+               shouldCenterOnLoad.value = false;
+            }
+         }, 50);
+      });
    }
 };
 
-// Computed style for the image (to set its actual size)
 const homeImageSizeStyle = computed(() => {
    if (imageDimensions.value.width > 0 && imageDimensions.value.height > 0) {
       return {
@@ -526,53 +465,21 @@ const homeImageSizeStyle = computed(() => {
    };
 });
 
-// Recalculate dimensions on window resize (but don't reset position)
 const handleResize = (event) => {
-   // Only handle real window resize events, not our custom mask update events
-   if (event && event.type === "resize" && event.target === window) {
-      if (homeImageRef.value?.complete) {
-         // Recalculate dimensions without resetting position
-         const containerWidth = imageWrapperRef.value?.offsetWidth;
-         const containerHeight = imageWrapperRef.value?.offsetHeight;
-         const naturalWidth = homeImageRef.value.naturalWidth;
-         const naturalHeight = homeImageRef.value.naturalHeight;
-
-         if (
-            naturalWidth &&
-            naturalHeight &&
-            containerWidth &&
-            containerHeight
-         ) {
-            const aspectRatio = naturalWidth / naturalHeight;
-            const containerAspectRatio = containerWidth / containerHeight;
-
-            if (aspectRatio > containerAspectRatio) {
-               imageDimensions.value = {
-                  width: containerHeight * aspectRatio,
-                  height: containerHeight,
-               };
-            } else {
-               imageDimensions.value = {
-                  width: containerWidth,
-                  height: containerWidth / aspectRatio,
-               };
-            }
-         }
-      }
+   if (
+      event?.type === "resize" &&
+      event.target === window &&
+      homeImageRef.value?.complete
+   ) {
+      calculateImageDimensions();
    }
 };
 
-// Use masks composable
 const {
    editMode,
    showDisclaimerMode,
    showHouseOutline1,
    showHouseOutline2,
-   houseOutlineWidth,
-   houseOutlineGlow,
-   houseOutlineGlowBlur,
-   houseOutlineAnimatedMap,
-   houseOutlineAnimated,
    toggleDisclaimerMode,
    mapMaskConfig,
    twoProjectsMaskConfig,
@@ -581,11 +488,8 @@ const {
 
 const disabledArrowLeft = ref(false);
 const disabledArrowRight = ref(false);
-
-// Use energy saving composable
 const energySaving = useEnergySaving();
 
-// Use transitions composable
 const transitions = useTransitions(currentLevel, levelHistory);
 const {
    isTransitioning,
@@ -595,6 +499,7 @@ const {
    preloadImageLoaded,
    isReverseTransition,
    reverseSourceLevel,
+   forwardSourceLevel,
    handleVideoLoaded,
    handleTransitionEnd: originalHandleTransitionEnd,
    startLevelTransition,
@@ -602,10 +507,8 @@ const {
    onPreloadImageLoaded,
 } = transitions;
 
-// Wrap handleTransitionEnd to update masks after transition
 const handleTransitionEnd = () => {
    originalHandleTransitionEnd();
-   // Update masks after transition completes
    nextTick(() => {
       setTimeout(() => {
          window.dispatchEvent(new CustomEvent("mask-update"));
@@ -613,11 +516,8 @@ const handleTransitionEnd = () => {
    });
 };
 
-// Video event handlers for optimization
 const handleVideoCanPlay = () => {
-   // Video can start playing - ensure it's ready
    if (transitionVideo.value && isTransitioning.value) {
-      // Video is ready, ensure it's on GPU layer
       requestAnimationFrame(() => {
          if (transitionVideo.value) {
             transitionVideo.value.style.willChange =
@@ -628,9 +528,7 @@ const handleVideoCanPlay = () => {
 };
 
 const handleVideoCanPlayThrough = () => {
-   // Video can play through without buffering - fully loaded
    if (transitionVideo.value && isTransitioning.value) {
-      // Ensure smooth playback
       requestAnimationFrame(() => {
          if (transitionVideo.value) {
             transitionVideo.value.style.willChange =
@@ -641,31 +539,23 @@ const handleVideoCanPlayThrough = () => {
 };
 
 const handleVideoWaiting = () => {
-   // Video is buffering - try to preload more
    if (transitionVideo.value && isTransitioning.value) {
-      // Increase buffer if possible
       try {
          if (transitionVideo.value.buffered.length > 0) {
             const bufferedEnd = transitionVideo.value.buffered.end(0);
             const currentTime = transitionVideo.value.currentTime;
-            // If buffer is close to current time, try to load more
             if (bufferedEnd - currentTime < 1) {
                transitionVideo.value.load();
             }
          }
-      } catch (e) {
-         // Ignore errors
-      }
+      } catch (e) {}
    }
 };
 
 const handleVideoPlaying = () => {
-   // Video started playing - ensure optimal performance
    if (transitionVideo.value && isTransitioning.value) {
-      // Promote to GPU layer for smooth playback
       requestAnimationFrame(() => {
          if (transitionVideo.value) {
-            // Force GPU acceleration
             transitionVideo.value.style.transform = "translate3d(0, 0, 0)";
             transitionVideo.value.style.willChange =
                "transform, opacity, contents";
@@ -674,12 +564,10 @@ const handleVideoPlaying = () => {
    }
 };
 
-// Wrapper for goBackToLevel with disabled arrows
 const goBackToLevel = (targetLevel) => {
    goBackToLevelTransition(targetLevel, disabledArrowLeft, disabledArrowRight);
 };
 
-// Use navigation composable (must be after goBackToLevel and startLevelTransition are defined)
 const navigation = useNavigation(
    currentLevel,
    levelHistory,
@@ -689,7 +577,8 @@ const navigation = useNavigation(
    startLevelTransition,
    goBackToLevel,
    isReverseTransition,
-   reverseSourceLevel
+   reverseSourceLevel,
+   forwardSourceLevel
 );
 
 const {
@@ -704,14 +593,11 @@ const {
    handleBackToStartFromFacade2,
    handleFloorClick,
    handleBackClick,
-   handleSwipe,
+   handleBackFromFacade,
 } = navigation;
 
-// Watch for image changes to update masks (must be after currentStaticImage is defined)
-// Use debounce to prevent excessive updates
 let maskUpdateTimeout = null;
 watch(currentStaticImage, () => {
-   // Оптимизируем изображение при изменении
    nextTick(() => {
       if (homeImageRef.value) {
          energySaving.optimizeImage(
@@ -722,28 +608,20 @@ watch(currentStaticImage, () => {
       }
    });
 
-   // Clear previous timeout
-   if (maskUpdateTimeout) {
-      clearTimeout(maskUpdateTimeout);
-   }
+   if (maskUpdateTimeout) clearTimeout(maskUpdateTimeout);
 
-   // When image changes, update masks after it loads
    nextTick(() => {
       if (homeImageRef.value) {
          if (homeImageRef.value.complete) {
-            // Image already loaded, update masks with debounce
             maskUpdateTimeout = setTimeout(() => {
                window.dispatchEvent(new CustomEvent("mask-update"));
                maskUpdateTimeout = null;
             }, 100);
          } else {
-            // Wait for image to load
             homeImageRef.value.addEventListener(
                "load",
                () => {
-                  if (maskUpdateTimeout) {
-                     clearTimeout(maskUpdateTimeout);
-                  }
+                  if (maskUpdateTimeout) clearTimeout(maskUpdateTimeout);
                   maskUpdateTimeout = setTimeout(() => {
                      window.dispatchEvent(new CustomEvent("mask-update"));
                      maskUpdateTimeout = null;
@@ -756,125 +634,66 @@ watch(currentStaticImage, () => {
    });
 });
 
-// Levels that have left/right navigation arrows
 const arrowLevels = ["start", "facade-start", "facade-start-2"];
-
-// Check if current level has navigation arrows
 const hasNavigationArrows = computed(() =>
    arrowLevels.includes(currentLevel.value)
 );
 
-// Handle arrow navigation (replaces swipe)
 const handleArrowNavigation = (direction) => {
    if (isTransitioning.value) return;
-   // direction: 'left' means swipe right (go back), 'right' means swipe left (go forward)
-   handleSwipe(direction === "left");
+
+   if (currentLevel.value === "start") {
+      if (direction === "left") {
+         handleFacadeStart2Click();
+      } else {
+         handleFacadeStartClick();
+      }
+   } else {
+      handleBackFromFacade(direction === "left");
+   }
 };
 
-// Check if target is a mask hit area (works with both mouse and touch events)
 const isMaskElement = (target) => {
    if (!target) return false;
-
-   // Check if target or any parent is a mask element
    const hitArea = target.closest(".house-outline-hit-area");
    const wrapper = target.closest(".house-outline-wrapper");
-
-   if (hitArea || wrapper) {
-      return true;
-   }
-
-   // Also check by elementFromPoint for touch events
-   return false;
+   return !!(hitArea || wrapper);
 };
 
-// Check if touch point is over a mask
-const isTouchOverMask = (clientX, clientY) => {
-   try {
-      const element = document.elementFromPoint(clientX, clientY);
-      return isMaskElement(element);
-   } catch (error) {
-      return false;
-   }
-};
-
-// Image drag handlers - skip if touching a mask
 const handleImageTouchStart = (event) => {
-   try {
-      if (!event || !event.touches || event.touches.length === 0) return;
-
-      // Check if touch target is a mask element (simpler check - only check event.target)
-      // This is more reliable than elementFromPoint which can return parent elements
-      if (isMaskElement(event.target)) {
-         // Don't start drag if touching a mask - let mask handle the touch
-         return;
-      }
-
-      // Not on mask - allow drag to start (but it won't actually start until movement detected)
-      imageDrag.handleTouchStart(event);
-   } catch (error) {
-      console.error("Error in handleImageTouchStart:", error);
-   }
+   if (!event?.touches || event.touches.length === 0) return;
+   if (isMaskElement(event.target)) return;
+   imageDrag.handleTouchStart(event);
 };
 
 const handleImageTouchMove = (event) => {
-   try {
-      if (!event || !event.touches || event.touches.length === 0) return;
-
-      // Always pass touch move to drag handler
-      // The drag handler will check movement threshold to determine if drag should start
-      // We already checked for mask in handleImageTouchStart, so if we get here,
-      // the user is not on a mask (or drag has already started)
-      imageDrag.handleTouchMove(event);
-   } catch (error) {
-      console.error("Error in handleImageTouchMove:", error);
-   }
+   if (!event?.touches || event.touches.length === 0) return;
+   imageDrag.handleTouchMove(event);
 };
 
 const handleImageTouchEnd = (event) => {
-   try {
-      if (!event) return;
-      imageDrag.handleTouchEnd(event);
-   } catch (error) {
-      console.error("Error in handleImageTouchEnd:", error);
-   }
+   if (!event) return;
+   imageDrag.handleTouchEnd(event);
 };
 
 const handleImageMouseDown = (event) => {
-   try {
-      if (!event || !event.target) return;
-      // Don't start drag if clicking on a mask
-      if (isMaskElement(event.target)) {
-         return;
-      }
-      imageDrag.handleMouseDown(event);
-   } catch (error) {
-      console.error("Error in handleImageMouseDown:", error);
-   }
+   if (!event?.target || isMaskElement(event.target)) return;
+   imageDrag.handleMouseDown(event);
 };
 
 const handleImageMouseMove = (event) => {
-   try {
-      if (!event) return;
-      imageDrag.handleMouseMove(event);
-   } catch (error) {
-      console.error("Error in handleImageMouseMove:", error);
-   }
+   if (!event) return;
+   imageDrag.handleMouseMove(event);
 };
 
-const handleImageMouseUp = (event) => {
-   try {
-      imageDrag.handleMouseUp();
-   } catch (error) {
-      console.error("Error in handleImageMouseUp:", error);
-   }
+const handleImageMouseUp = () => {
+   imageDrag.handleMouseUp();
 };
 
-// Handle wheel for drag (prevent default scroll behavior)
 const handleImageWheel = (event) => {
    event.preventDefault();
 };
 
-// Watch для оптимизации видео при изменении видимости
 watch(
    [() => isTransitioning.value, () => transitionVideoSrc.value],
    ([isTransitioning, videoSrc]) => {
@@ -891,30 +710,23 @@ watch(
    }
 );
 
-// Watch для оптимизации preload изображения
 watch(
    () => preloadImage.value,
    (newPreloadImage) => {
       nextTick(() => {
          const preloadImg = document.querySelector(".home-image-preload");
          if (preloadImg) {
-            energySaving.optimizeImage(
-               preloadImg,
-               !!newPreloadImage,
-               false // preload изображение не активно
-            );
+            energySaving.optimizeImage(preloadImg, !!newPreloadImage, false);
          }
       });
    }
 );
 
 onMounted(() => {
-   // Set cursor for drag (like Map.vue)
    if (imageWrapperRef.value) {
       imageWrapperRef.value.style.cursor = "grab";
    }
 
-   // Оптимизируем изображения и видео при монтировании
    nextTick(() => {
       if (homeImageRef.value) {
          energySaving.optimizeImage(
@@ -938,52 +750,22 @@ onMounted(() => {
       }
    });
 
-   // Center image on initial load if it's already loaded
    nextTick(() => {
       if (homeImageRef.value?.complete && imageWrapperRef.value) {
-         // Image already loaded, wait for dimensions to be calculated
          setTimeout(() => {
-            // Recalculate dimensions if needed
             if (
                imageDimensions.value.width === 0 ||
                imageDimensions.value.height === 0
             ) {
-               const containerWidth = imageWrapperRef.value.offsetWidth;
-               const containerHeight = imageWrapperRef.value.offsetHeight;
-               const naturalWidth = homeImageRef.value.naturalWidth;
-               const naturalHeight = homeImageRef.value.naturalHeight;
-
-               if (
-                  naturalWidth &&
-                  naturalHeight &&
-                  containerWidth &&
-                  containerHeight
-               ) {
-                  const aspectRatio = naturalWidth / naturalHeight;
-                  const containerAspectRatio = containerWidth / containerHeight;
-
-                  if (aspectRatio > containerAspectRatio) {
-                     imageDimensions.value = {
-                        width: containerHeight * aspectRatio,
-                        height: containerHeight,
-                     };
-                  } else {
-                     imageDimensions.value = {
-                        width: containerWidth,
-                        height: containerWidth / aspectRatio,
-                     };
-                  }
-               }
+               calculateImageDimensions();
             }
-            // Center after dimensions are set
             setTimeout(() => {
                imageDrag.centerPosition();
             }, 50);
-         }, 100); // Small delay to ensure dimensions are calculated
+         }, 100);
       }
    });
 
-   // Add resize listener for image dimensions
    window.addEventListener("resize", handleResize);
 });
 
@@ -996,16 +778,11 @@ onUnmounted(() => {
 <style scoped>
 .home {
    width: 100%;
-   /* Use dynamic viewport height - adjusts for browser UI */
    height: 100dvh;
    overflow: hidden;
    position: relative;
-
-   /* Fallback for browsers that don't support dvh */
-   height: 100vh;
 }
 
-/* Modern browsers with dvh support */
 @supports (height: 100dvh) {
    .home {
       height: 100dvh;
@@ -1021,10 +798,6 @@ onUnmounted(() => {
    -webkit-user-select: none;
    -moz-user-select: none;
    -ms-user-select: none;
-}
-
-/* Wrapper для drag (аналогично Map.vue) */
-.home-image-wrapper {
    touch-action: none;
    cursor: grab;
 }
@@ -1049,7 +822,6 @@ onUnmounted(() => {
    cursor: grabbing;
 }
 
-/* На мобильных устройствах убираем курсор */
 @media (hover: none) and (pointer: coarse) {
    .home-image-content {
       cursor: default;
@@ -1068,7 +840,6 @@ onUnmounted(() => {
    position: absolute;
    top: 0;
    left: 0;
-   /* Maximum hardware acceleration for smoother video playback on mobile */
    transform: translate3d(0, 0, 0);
    -webkit-transform: translate3d(0, 0, 0);
    will-change: transform, opacity;
@@ -1076,29 +847,22 @@ onUnmounted(() => {
    -webkit-backface-visibility: hidden;
    perspective: 1000px;
    -webkit-perspective: 1000px;
-   /* Optimize rendering */
    image-rendering: -webkit-optimize-contrast;
    image-rendering: crisp-edges;
-   /* Prevent flickering */
    -webkit-font-smoothing: antialiased;
    -moz-osx-font-smoothing: grayscale;
-   /* GPU layer promotion */
    isolation: isolate;
-   /* Smooth video playback */
    -webkit-tap-highlight-color: transparent;
 }
 
 .home-image {
-   /* Изображение НЕ использует object-fit: cover, чтобы можно было прокручивать обрезанные части */
    display: block;
-   /* Размер определяется в JS на основе соотношения сторон */
    z-index: 1;
    user-select: none;
    -webkit-user-select: none;
    -moz-user-select: none;
    -ms-user-select: none;
    pointer-events: none;
-   /* Hardware acceleration for smoother rendering */
    transform: translateZ(0);
    -webkit-transform: translateZ(0);
    backface-visibility: hidden;
@@ -1116,43 +880,26 @@ onUnmounted(() => {
    pointer-events: none;
 }
 
-/* Скрытые элементы должны иметь самый низкий z-index и не мешать работе */
 .element-hidden {
    z-index: -10 !important;
    pointer-events: none !important;
    opacity: 0 !important;
    visibility: hidden !important;
-   /* Энергосберегающая оптимизация для скрытых элементов */
    will-change: auto !important;
-   /* content-visibility: auto - современный способ оптимизации для скрытых элементов */
    content-visibility: auto;
    contain-intrinsic-size: 0 0;
-   /* Элементы остаются в DOM, но полностью скрыты и не интерактивны */
 }
 
 .home-video-transition {
    opacity: 1;
    z-index: 10;
-   /* Maximum optimization for transition videos */
    will-change: transform, opacity, contents;
-   /* Ensure video is on its own layer for smooth playback */
    transform: translate3d(0, 0, 0);
    -webkit-transform: translate3d(0, 0, 0);
-   /* Prevent repaints during playback */
    contain: layout style paint;
-   /* Optimize for mobile */
    -webkit-tap-highlight-color: transparent;
 }
 
-/* Когда видео скрыто, оно не должно мешать */
-.home-video-transition.element-hidden {
-   z-index: -10 !important;
-   pointer-events: none !important;
-   opacity: 0 !important;
-   visibility: hidden !important;
-}
-
-/* Когда видео скрыто, оно не должно мешать */
 .home-video-transition.element-hidden {
    z-index: -10 !important;
    pointer-events: none !important;
@@ -1213,9 +960,10 @@ onUnmounted(() => {
    cursor: pointer;
    transition: all 0.3s ease;
    text-decoration: none;
-   &:hover:not(.home-content-top-back-disabled) {
-      opacity: 0.8;
-   }
+}
+
+.home-content-top-back:hover:not(.home-content-top-back-disabled) {
+   opacity: 0.8;
 }
 
 .home-content-top-back-disabled {
@@ -1239,9 +987,10 @@ onUnmounted(() => {
    border-radius: 1rem;
    cursor: pointer;
    transition: all 0.3s ease;
-   &:hover {
-      opacity: 0.8;
-   }
+}
+
+.home-content-top-about:hover {
+   opacity: 0.8;
 }
 
 .home-content-top-edit-mode {
@@ -1270,9 +1019,10 @@ onUnmounted(() => {
    padding: 0.5rem;
    cursor: pointer;
    transition: all 0.3s ease;
-   &:hover:not(.home-content-slider-arrow-disabled) {
-      background-color: rgba(14, 14, 14, 0.8);
-   }
+}
+
+.home-content-slider-arrow:hover:not(.home-content-slider-arrow-disabled) {
+   background-color: rgba(14, 14, 14, 0.8);
 }
 
 .home-content-slider-arrow-disabled {
@@ -1335,14 +1085,13 @@ onUnmounted(() => {
    transform: rotate(180deg) scale(1.1);
 }
 
-/* Red disclaimer masks (non-clickable) */
 .home-disclaimer-mask :deep(.house-outline-wrapper) {
-   z-index: 13 !important; /* Под обычными масками (z-index: 14), но выше остальных элементов */
+   z-index: 13 !important;
    pointer-events: none !important;
 }
 
 .home-disclaimer-mask :deep(.house-outline-canvas) {
-   mix-blend-mode: normal !important; /* Убираем screen blend mode для красного цвета */
+   mix-blend-mode: normal !important;
    z-index: 13 !important;
 }
 
@@ -1352,7 +1101,6 @@ onUnmounted(() => {
    z-index: 13 !important;
 }
 
-/* Navigation arrows */
 .home-navigation-arrows {
    position: absolute;
    top: 0;

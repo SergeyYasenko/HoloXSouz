@@ -1,27 +1,18 @@
-import { ref, computed, watch } from "vue";
+import { ref, computed } from "vue";
 
-/**
- * Composable for image drag and drop functionality
- * @param {Ref} containerRef - Reference to the container element
- * @param {Ref} imageRef - Reference to the image element
- * @param {Ref} scale - Scale factor (default: 1)
- * @param {Function} onDragStart - Optional callback when drag starts
- */
+const DRAG_THRESHOLD = 10;
+
 export function useImageDrag(containerRef, imageRef, scale = ref(1), onDragStart = null) {
    const position = ref({ x: 0, y: 0 });
    const isDragging = ref(false);
    const dragStart = ref({ x: 0, y: 0 });
    const lastPosition = ref({ x: 0, y: 0 });
-   // Track touch start position to detect tap vs drag
    const touchStartPos = ref({ x: 0, y: 0 });
    const touchStartTime = ref(0);
-   const hasMoved = ref(false);
-   const DRAG_THRESHOLD = 10; // Minimum pixels to move before starting drag
-   const TAP_TIME_THRESHOLD = 300; // Maximum time for tap (ms)
+
    let rafId = null;
    let touchRafId = null;
 
-   // Helper to get scale value
    const getScaleValue = () => {
       if (typeof scale === 'object' && scale !== null && 'value' in scale) {
          return scale.value;
@@ -29,9 +20,7 @@ export function useImageDrag(containerRef, imageRef, scale = ref(1), onDragStart
       return typeof scale === 'number' ? scale : 1;
    };
 
-   // Constrain position to keep image within bounds (no black background)
    const constrainPosition = (newPosition, currentScale = null) => {
-      // Use provided scale or get from ref
       const scaleValue = currentScale !== null ? currentScale : getScaleValue();
       if (!containerRef.value || !imageRef.value) return newPosition;
 
@@ -39,51 +28,35 @@ export function useImageDrag(containerRef, imageRef, scale = ref(1), onDragStart
       const containerWidth = containerRect.width;
       const containerHeight = containerRect.height;
 
-      // Get DISPLAYED image dimensions (how the image is actually rendered)
-      // Use offsetWidth/Height for rendered size, or naturalWidth/Height as fallback
       const imageWidth = imageRef.value.offsetWidth || imageRef.value.naturalWidth || containerWidth;
       const imageHeight = imageRef.value.offsetHeight || imageRef.value.naturalHeight || containerHeight;
 
-      // Calculate scaled dimensions
       const scaledWidth = imageWidth * scaleValue;
       const scaledHeight = imageHeight * scaleValue;
 
-      // Calculate bounds - prevent showing black areas outside the image
-      // minX/minY are the maximum negative offsets (right/bottom edges of image at container edges)
-      // maxX/maxY are 0 (left/top edges of image at container edges)
       const minX = Math.min(0, containerWidth - scaledWidth);
-      const maxX = 0;
       const minY = Math.min(0, containerHeight - scaledHeight);
-      const maxY = 0;
 
-      // If image is smaller than container in a dimension, center it and don't allow movement
-      let constrainedX = newPosition.x;
-      let constrainedY = newPosition.y;
+      let constrainedX, constrainedY;
 
       if (scaledWidth <= containerWidth) {
-         // Image is narrower than container - center it horizontally
          constrainedX = (containerWidth - scaledWidth) / 2;
       } else {
-         // Image is wider than container - constrain to bounds
-         constrainedX = Math.max(minX, Math.min(maxX, newPosition.x));
+         constrainedX = Math.max(minX, Math.min(0, newPosition.x));
       }
 
       if (scaledHeight <= containerHeight) {
-         // Image is shorter than container - center it vertically
          constrainedY = (containerHeight - scaledHeight) / 2;
       } else {
-         // Image is taller than container - constrain to bounds
-         constrainedY = Math.max(minY, Math.min(maxY, newPosition.y));
+         constrainedY = Math.max(minY, Math.min(0, newPosition.y));
       }
 
       return { x: constrainedX, y: constrainedY };
    };
 
-   // Image style for drag and drop (applied to container, not image)
    const imageStyle = computed(() => {
       const scaleValue = getScaleValue();
       return {
-         // Use translate3d for hardware acceleration on mobile
          transform: `translate3d(${position.value.x}px, ${position.value.y}px, 0) scale(${scaleValue})`,
          transformOrigin: "0 0",
          transition: isDragging.value ? "none" : "transform 0.15s ease-out",
@@ -93,44 +66,32 @@ export function useImageDrag(containerRef, imageRef, scale = ref(1), onDragStart
       };
    });
 
-   // Mouse handlers
    const handleMouseDown = (event) => {
-      if (!containerRef.value || !imageRef.value) return;
+      if (!containerRef.value || !imageRef.value || event.button !== 0) return;
 
-      if (event.button === 0) {
-         // Left mouse button
-         isDragging.value = true;
-         dragStart.value = {
-            x: event.clientX - position.value.x,
-            y: event.clientY - position.value.y,
-         };
-         if (containerRef.value) {
-            containerRef.value.style.cursor = "grabbing";
-         }
-         if (onDragStart) {
-            onDragStart();
-         }
-      }
+      isDragging.value = true;
+      dragStart.value = {
+         x: event.clientX - position.value.x,
+         y: event.clientY - position.value.y,
+      };
+      containerRef.value.style.cursor = "grabbing";
+      onDragStart?.();
    };
 
    const handleMouseMove = (event) => {
-      if (isDragging.value) {
-         // Cancel previous frame if exists
-         if (rafId !== null) {
-            cancelAnimationFrame(rafId);
-         }
-         // Use requestAnimationFrame for smoother updates
-         rafId = requestAnimationFrame(() => {
-            rafId = null;
-            const newPosition = {
-               x: event.clientX - dragStart.value.x,
-               y: event.clientY - dragStart.value.y,
-            };
-            // Constrain position to bounds
-            position.value = constrainPosition(newPosition, getScaleValue());
-            lastPosition.value = { ...position.value };
-         });
-      }
+      if (!isDragging.value) return;
+
+      if (rafId !== null) cancelAnimationFrame(rafId);
+
+      rafId = requestAnimationFrame(() => {
+         rafId = null;
+         const newPosition = {
+            x: event.clientX - dragStart.value.x,
+            y: event.clientY - dragStart.value.y,
+         };
+         position.value = constrainPosition(newPosition, getScaleValue());
+         lastPosition.value = { ...position.value };
+      });
    };
 
    const handleMouseUp = () => {
@@ -140,29 +101,22 @@ export function useImageDrag(containerRef, imageRef, scale = ref(1), onDragStart
       }
    };
 
-   // Touch handlers for mobile
    const handleTouchStart = (event) => {
-      if (!containerRef.value || !imageRef.value) return;
+      if (!containerRef.value || !imageRef.value || event.touches.length !== 1) return;
 
-      if (event.touches.length === 1) {
-         const touch = event.touches[0];
-         // Store initial touch position and time (don't start dragging yet)
-         touchStartPos.value = { x: touch.clientX, y: touch.clientY };
-         touchStartTime.value = Date.now();
-         hasMoved.value = false;
-         isDragging.value = false; // Don't start dragging until we detect movement
-      }
+      const touch = event.touches[0];
+      touchStartPos.value = { x: touch.clientX, y: touch.clientY };
+      touchStartTime.value = Date.now();
+      isDragging.value = false;
    };
 
    const handleTouchMove = (event) => {
-      if (!event || !event.touches || event.touches.length !== 1) return;
+      if (!event?.touches || event.touches.length !== 1) return;
       if (!containerRef.value || !imageRef.value) return;
 
       const touch = event.touches[0];
 
-      // Check if we have a valid start position (touchStartTime should be set in handleTouchStart)
       if (touchStartTime.value === 0) {
-         // Touch start wasn't called or was reset - initialize now
          touchStartPos.value = { x: touch.clientX, y: touch.clientY };
          touchStartTime.value = Date.now();
          return;
@@ -172,65 +126,45 @@ export function useImageDrag(containerRef, imageRef, scale = ref(1), onDragStart
       const deltaY = Math.abs(touch.clientY - touchStartPos.value.y);
       const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
 
-      // If we haven't started dragging yet, check if movement exceeds threshold
       if (!isDragging.value) {
          if (distance > DRAG_THRESHOLD) {
-            // Movement detected - start dragging
-            event.preventDefault(); // Prevent scrolling immediately
-            hasMoved.value = true;
+            event.preventDefault();
             isDragging.value = true;
             dragStart.value = {
                x: touch.clientX - position.value.x,
                y: touch.clientY - position.value.y,
             };
-            if (onDragStart) {
-               onDragStart();
-            }
-         } else {
-            // Not enough movement yet - don't start dragging, allow tap to work
-            return;
+            onDragStart?.();
          }
+         return;
       }
 
-      // We're dragging - update position
-      if (isDragging.value) {
-         event.preventDefault(); // Prevent scrolling
-         const clientX = touch.clientX;
-         const clientY = touch.clientY;
+      event.preventDefault();
 
-         // Cancel previous frame if exists
-         if (touchRafId !== null) {
-            cancelAnimationFrame(touchRafId);
-         }
-         // Use requestAnimationFrame for smoother updates on mobile
-         touchRafId = requestAnimationFrame(() => {
-            touchRafId = null;
-            const newPosition = {
-               x: clientX - dragStart.value.x,
-               y: clientY - dragStart.value.y,
-            };
-            // Constrain position to bounds
-            position.value = constrainPosition(newPosition, getScaleValue());
-            lastPosition.value = { ...position.value };
-         });
-      }
+      if (touchRafId !== null) cancelAnimationFrame(touchRafId);
+
+      touchRafId = requestAnimationFrame(() => {
+         touchRafId = null;
+         const newPosition = {
+            x: touch.clientX - dragStart.value.x,
+            y: touch.clientY - dragStart.value.y,
+         };
+         position.value = constrainPosition(newPosition, getScaleValue());
+         lastPosition.value = { ...position.value };
+      });
    };
 
    const handleTouchEnd = () => {
-      // Reset all drag state
       isDragging.value = false;
-      hasMoved.value = false;
       touchStartPos.value = { x: 0, y: 0 };
       touchStartTime.value = 0;
    };
 
-   // Reset position to center
    const resetPosition = () => {
       position.value = { x: 0, y: 0 };
       lastPosition.value = { x: 0, y: 0 };
    };
 
-   // Center position - calculates centered position for the image
    const centerPosition = () => {
       if (!containerRef.value || !imageRef.value) {
          position.value = { x: 0, y: 0 };
@@ -238,29 +172,15 @@ export function useImageDrag(containerRef, imageRef, scale = ref(1), onDragStart
       }
 
       const containerRect = containerRef.value.getBoundingClientRect();
-      const containerWidth = containerRect.width;
-      const containerHeight = containerRect.height;
-
-      const imageWidth = imageRef.value.offsetWidth || imageRef.value.naturalWidth || containerWidth;
-      const imageHeight = imageRef.value.offsetHeight || imageRef.value.naturalHeight || containerHeight;
+      const imageWidth = imageRef.value.offsetWidth || imageRef.value.naturalWidth || containerRect.width;
+      const imageHeight = imageRef.value.offsetHeight || imageRef.value.naturalHeight || containerRect.height;
 
       const scaleValue = getScaleValue();
       const scaledWidth = imageWidth * scaleValue;
       const scaledHeight = imageHeight * scaleValue;
 
-      // Center the image
-      let centeredX = 0;
-      let centeredY = 0;
-
-      if (scaledWidth > containerWidth) {
-         // Image is wider than container - center horizontally
-         centeredX = (containerWidth - scaledWidth) / 2;
-      }
-
-      if (scaledHeight > containerHeight) {
-         // Image is taller than container - center vertically
-         centeredY = (containerHeight - scaledHeight) / 2;
-      }
+      const centeredX = scaledWidth > containerRect.width ? (containerRect.width - scaledWidth) / 2 : 0;
+      const centeredY = scaledHeight > containerRect.height ? (containerRect.height - scaledHeight) / 2 : 0;
 
       position.value = { x: centeredX, y: centeredY };
       lastPosition.value = { ...position.value };
@@ -282,4 +202,3 @@ export function useImageDrag(containerRef, imageRef, scale = ref(1), onDragStart
       constrainPosition,
    };
 }
-

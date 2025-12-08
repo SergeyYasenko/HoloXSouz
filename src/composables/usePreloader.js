@@ -1,6 +1,5 @@
 import { ref, computed } from "vue";
 
-// Import all assets from navigation config
 import mapImage from "../assets/video/Map.png";
 import startImage from "../assets/video/Start.png";
 import twoProjectsImage from "../assets/video/2Projects.png";
@@ -12,7 +11,6 @@ import floorImage3 from "../assets/video/3.png";
 import floorImage4 from "../assets/video/4.png";
 import floorImageG from "../assets/video/G.png";
 
-// Import videos
 import internetCityVideo from "../assets/video/InternetCity.mp4";
 import theRoyalYachtVideo from "../assets/video/TheRoyalYacht.mp4";
 import facadeStartVideo from "../assets/video/FacadeStart.mp4";
@@ -23,7 +21,6 @@ import floor3Video from "../assets/video/Floor3.mp4";
 import floor4Video from "../assets/video/Floor4.mp4";
 import floorGVideo from "../assets/video/FloorG.mp4";
 
-// Import map page images
 import mapNewDesktop from "../assets/img/map-new-desktop.jpg";
 import downtown from "../assets/img/downtown.png";
 import downtownTable from "../assets/img/downtown-table.png";
@@ -32,14 +29,8 @@ import dubaiMarinaTable from "../assets/img/dubai-marina-table.png";
 import marasiDrive from "../assets/img/marasi-drive.png";
 import marasiDriveTable from "../assets/img/marasi-drive-table.png";
 
-// All images to preload (priority - these are shown immediately)
-const CRITICAL_IMAGES = [
-   mapImage,
-   startImage,
-   twoProjectsImage,
-];
+const CRITICAL_IMAGES = [mapImage, startImage, twoProjectsImage];
 
-// Secondary images (can load in background)
 const SECONDARY_IMAGES = [
    leftImage,
    rightImage,
@@ -57,7 +48,6 @@ const SECONDARY_IMAGES = [
    marasiDriveTable,
 ];
 
-// Videos to preload (lightweight - just buffer first frames)
 const VIDEOS_TO_PRELOAD = [
    { key: "internetCity", src: internetCityVideo },
    { key: "theRoyalYacht", src: theRoyalYachtVideo },
@@ -70,12 +60,8 @@ const VIDEOS_TO_PRELOAD = [
    { key: "floorG", src: floorGVideo },
 ];
 
-/**
- * Composable for preloading assets (lightweight version for mobile)
- */
 export function usePreloader() {
    const loadedCount = ref(0);
-   // Only count critical images for initial loading (videos load in background)
    const totalCount = ref(CRITICAL_IMAGES.length);
    const isLoading = ref(true);
    const errors = ref([]);
@@ -86,13 +72,11 @@ export function usePreloader() {
       return Math.round((loadedCount.value / totalCount.value) * 100);
    });
 
-   // Preload a single image with decoding for faster rendering
    const preloadImage = (src) => {
       return new Promise((resolve) => {
          const img = new Image();
 
          img.onload = () => {
-            // Image loaded, decode it for faster rendering (if supported)
             if (img.decode) {
                img.decode()
                   .then(() => {
@@ -100,12 +84,10 @@ export function usePreloader() {
                      resolve({ src, success: true });
                   })
                   .catch(() => {
-                     // Decode failed, but image is loaded - still count as success
                      loadedCount.value++;
                      resolve({ src, success: true });
                   });
             } else {
-               // decode() not supported, image is still loaded
                loadedCount.value++;
                resolve({ src, success: true });
             }
@@ -121,7 +103,6 @@ export function usePreloader() {
       });
    };
 
-   // Aggressive video preload - load enough data for smooth playback
    const preloadVideo = (videoEntry) => {
       return new Promise((resolve) => {
          try {
@@ -137,7 +118,6 @@ export function usePreloader() {
                return;
             }
 
-            // Use "auto" to load video data, but don't wait for full load
             video.preload = "auto";
             video.muted = true;
             video.playsInline = true;
@@ -155,34 +135,17 @@ export function usePreloader() {
                resolve({ key, src, success });
             };
 
-            // Success when enough data is loaded for smooth playback
-            // loadeddata fires when first frame is available (faster than canplaythrough)
-            video.onloadeddata = () => {
-               // Video has enough data to start playing smoothly
-               done(true);
-            };
-
-            // Fallback: if loadeddata doesn't fire, use loadedmetadata
-            video.onloadedmetadata = () => {
-               // At least metadata is loaded, video can start loading
-               done(true);
-            };
-
-            // Handle errors gracefully
+            video.onloadeddata = () => done(true);
+            video.onloadedmetadata = () => done(true);
             video.onerror = () => {
                errors.value.push({ type: "video", key, src });
                done(false);
             };
 
-            // Short timeout (1.5 seconds) - don't block preloader too long
-            // Video will continue loading in background after preloader is hidden
             timeout = setTimeout(() => done(true), 1500);
 
             video.src = src;
             video.load();
-
-            // Start loading video data (non-blocking)
-            // Video will continue loading even after promise resolves
          } catch (error) {
             console.error(`Error preloading video ${videoEntry?.key}:`, error);
             resolve({ key: videoEntry?.key, src: videoEntry?.src, success: false });
@@ -190,7 +153,6 @@ export function usePreloader() {
       });
    };
 
-   // Preload secondary images in background (non-blocking)
    const preloadSecondaryImages = () => {
       SECONDARY_IMAGES.forEach((src) => {
          const img = new Image();
@@ -198,14 +160,12 @@ export function usePreloader() {
       });
    };
 
-   // Start preloading
    const startPreload = async () => {
       try {
          isLoading.value = true;
          loadedCount.value = 0;
          errors.value = [];
 
-         // 1. Load critical images first (shown immediately) - this blocks preloader
          currentAsset.value = "Loading images...";
          try {
             await Promise.all(CRITICAL_IMAGES.map(preloadImage));
@@ -213,17 +173,13 @@ export function usePreloader() {
             console.error("Error loading critical images:", error);
          }
 
-         // 2. Start loading secondary images in background (non-blocking)
          try {
             preloadSecondaryImages();
          } catch (error) {
             console.error("Error loading secondary images:", error);
          }
 
-         // 3. Preload videos in background (non-blocking, doesn't affect preloader progress)
-         // Videos will continue loading after preloader is hidden
          try {
-            // Load all videos in parallel (non-blocking)
             Promise.all(VIDEOS_TO_PRELOAD.map(preloadVideo)).catch((error) => {
                console.error("Error loading videos in background:", error);
             });
@@ -231,7 +187,6 @@ export function usePreloader() {
             console.error("Error starting video preload:", error);
          }
 
-         // Preloader is done - hide it immediately after images are loaded
          currentAsset.value = "";
          isLoading.value = false;
 
@@ -241,7 +196,6 @@ export function usePreloader() {
          };
       } catch (error) {
          console.error("Fatal preloader error:", error);
-         // Always hide preloader even on error
          isLoading.value = false;
          currentAsset.value = "";
          return {
@@ -254,15 +208,7 @@ export function usePreloader() {
    return {
       progress,
       isLoading,
-      loadedCount,
-      totalCount,
-      errors,
       currentAsset,
       startPreload,
    };
-}
-
-// Dummy function for backwards compatibility
-export function getCachedVideo(originalSrc) {
-   return originalSrc;
 }
