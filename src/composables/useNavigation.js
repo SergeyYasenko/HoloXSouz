@@ -23,20 +23,37 @@ export function useNavigation(
       return null;
    };
 
-   const currentStaticImage = computed(() => {
-      if (isReverseTransition?.value && reverseSourceLevel?.value) {
-         return getLevelImage(reverseSourceLevel.value);
+   const getActiveLevel = () => {
+      if (isTransitioning?.value && isReverseTransition?.value && reverseSourceLevel?.value) {
+         return reverseSourceLevel.value;
       }
-
       if (isTransitioning?.value && forwardSourceLevel?.value) {
-         return getLevelImage(forwardSourceLevel.value);
+         return forwardSourceLevel.value;
       }
+      return currentLevel.value;
+   };
 
-      if (isTransitioning?.value) {
-         return null;
+   const allLevelImages = computed(() => {
+      const images = [];
+      for (const [level, image] of Object.entries(levelImages)) {
+         images.push({ level, image });
       }
+      for (const [floorId, floor] of Object.entries(floorsConfig)) {
+         if (floor.image) {
+            images.push({ level: `floor-${floorId}`, image: floor.image });
+         }
+      }
+      return images;
+   });
 
-      return getLevelImage(currentLevel.value);
+   const getLevelImageZIndex = (level) => {
+      const activeLevel = getActiveLevel();
+      if (level === activeLevel) return 2;
+      return 1;
+   };
+
+   const currentStaticImage = computed(() => {
+      return getLevelImage(getActiveLevel());
    });
 
    const handleHouse1Click = () => {
@@ -152,6 +169,10 @@ export function useNavigation(
 
    return {
       currentStaticImage,
+      allLevelImages,
+      getLevelImageZIndex,
+      getActiveLevel,
+      getLevelImage,
       handleHouse1Click,
       handleHouse2Click,
       handleProject1Click,

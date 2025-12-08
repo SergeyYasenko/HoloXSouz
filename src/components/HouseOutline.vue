@@ -692,7 +692,7 @@ onUnmounted(() => {
    position: absolute;
    top: 0;
    left: 0;
-   z-index: 14 !important;
+   z-index: 14;
    pointer-events: none;
    isolation: isolate;
    width: 100%;
@@ -700,11 +700,11 @@ onUnmounted(() => {
 }
 
 .house-outline-wrapper .house-outline-hit-area {
-   pointer-events: all !important;
-   z-index: 14 !important;
+   pointer-events: all;
+   z-index: 14;
 }
 
-.house-outline-canvas {
+.house-outline-wrapper .house-outline-canvas {
    position: absolute;
    top: 0;
    left: 0;
@@ -712,37 +712,37 @@ onUnmounted(() => {
    mix-blend-mode: screen;
    opacity: 0;
    transition: opacity 0.3s ease;
-   display: block !important;
-   visibility: visible !important;
-   z-index: 15 !important;
+   display: block;
+   visibility: visible;
+   z-index: 15;
    will-change: opacity;
    transform: translateZ(0);
    -webkit-transform: translateZ(0);
 }
 
-.house-outline-canvas-visible {
-   opacity: 1 !important;
-   visibility: visible !important;
-   display: block !important;
-   z-index: 15 !important;
-   pointer-events: none !important;
+.house-outline-wrapper .house-outline-canvas.house-outline-canvas-visible {
+   opacity: 1;
+   visibility: visible;
+   display: block;
+   z-index: 15;
+   pointer-events: none;
    will-change: opacity;
    transform: translateZ(0);
    -webkit-transform: translateZ(0);
 }
 
-.house-outline-canvas-instant {
-   transition: opacity 0s !important;
+.house-outline-wrapper .house-outline-canvas.house-outline-canvas-instant {
+   transition: opacity 0s;
 }
 
-.house-outline-hit-area {
+.house-outline-wrapper .house-outline-hit-area {
    position: absolute;
    top: 0;
    left: 0;
    cursor: pointer;
    background: transparent;
-   z-index: 14 !important;
-   pointer-events: all !important;
+   z-index: 14;
+   pointer-events: all;
    touch-action: manipulation;
    -webkit-tap-highlight-color: transparent;
 }

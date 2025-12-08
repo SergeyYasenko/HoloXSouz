@@ -3,6 +3,7 @@ import { levelTransitions, floorsConfig, levelImages } from "../config/navigatio
 
 const TRANSITION_END_DELAY = 100;
 const NORMAL_TRANSITION_DELAY = 100;
+const IMAGE_SWITCH_DELAY = 150;
 
 export function useTransitions(currentLevel, levelHistory) {
    const isTransitioning = ref(false);
@@ -18,6 +19,8 @@ export function useTransitions(currentLevel, levelHistory) {
    const preloadImageLoaded = ref(false);
 
    let isHandlingTransitionEnd = false;
+   let hasSwitchedLevel = false;
+   let timeUpdateHandler = null;
 
    const getLevelImage = (level) => {
       if (levelImages[level]) return levelImages[level];
@@ -44,6 +47,10 @@ export function useTransitions(currentLevel, levelHistory) {
    };
 
    const resetTransitionState = () => {
+      if (transitionVideo.value && timeUpdateHandler) {
+         transitionVideo.value.removeEventListener("timeupdate", timeUpdateHandler);
+         timeUpdateHandler = null;
+      }
       isTransitioning.value = false;
       transitionVideoSrc.value = "";
       originalVideoPath.value = "";
@@ -54,21 +61,30 @@ export function useTransitions(currentLevel, levelHistory) {
       preloadImage.value = null;
       preloadImageLoaded.value = false;
       isHandlingTransitionEnd = false;
+      hasSwitchedLevel = false;
    };
 
-   const handleLevelTransitionEnd = (targetLevel) => {
+   const handleLevelTransitionEnd = (targetLevel, immediate = false) => {
       if (!isTransitioning.value) return;
+
+      if (immediate) {
+         currentLevel.value = targetLevel;
+         return;
+      }
 
       const delay = isReverseTransition.value ? TRANSITION_END_DELAY : NORMAL_TRANSITION_DELAY;
 
       setTimeout(() => {
          if (!isTransitioning.value) return;
 
-         currentLevel.value = targetLevel;
+         setTimeout(() => {
+            if (!isTransitioning.value) return;
+            currentLevel.value = targetLevel;
 
-         nextTick(() => {
-            requestAnimationFrame(resetTransitionState);
-         });
+            nextTick(() => {
+               requestAnimationFrame(resetTransitionState);
+            });
+         }, IMAGE_SWITCH_DELAY);
       }, delay);
    };
 
@@ -76,6 +92,12 @@ export function useTransitions(currentLevel, levelHistory) {
 
    const handleTransitionEnd = () => {
       if (isHandlingTransitionEnd || !isTransitioning.value) return;
+
+      if (hasSwitchedLevel) {
+         resetTransitionState();
+         return;
+      }
+
       isHandlingTransitionEnd = true;
 
       const currentVideoPath = originalVideoPath.value;
@@ -109,10 +131,50 @@ export function useTransitions(currentLevel, levelHistory) {
       }
    };
 
+   const handleVideoTimeUpdate = (targetLevel) => {
+      if (hasSwitchedLevel || !isTransitioning.value || !transitionVideo.value) return;
+
+      const video = transitionVideo.value;
+      if (!video.duration || video.currentTime < video.duration * 0.5) return;
+
+      hasSwitchedLevel = true;
+
+      const performSwitch = () => {
+         if (!isTransitioning.value) return;
+
+         const targetImageElement = document.querySelector(
+            `.home-image-level[data-level="${targetLevel}"]`
+         );
+
+         const switchToTarget = () => {
+            requestAnimationFrame(() => {
+               requestAnimationFrame(() => {
+                  if (!isTransitioning.value) return;
+                  if (!isReverseTransition.value) {
+                     forwardSourceLevel.value = targetLevel;
+                  }
+                  currentLevel.value = targetLevel;
+               });
+            });
+         };
+
+         if (targetImageElement?.complete) {
+            switchToTarget();
+         } else if (targetImageElement) {
+            targetImageElement.addEventListener("load", switchToTarget, { once: true });
+         } else {
+            switchToTarget();
+         }
+      };
+
+      nextTick(performSwitch);
+   };
+
    const startLevelTransition = async (transitionVideoPath, targetLevel, isReverse = false) => {
       if (isTransitioning.value) return;
 
       isHandlingTransitionEnd = false;
+      hasSwitchedLevel = false;
       isTransitioning.value = true;
       isReverseTransition.value = isReverse;
 
@@ -171,6 +233,18 @@ export function useTransitions(currentLevel, levelHistory) {
             requestAnimationFrame(async () => {
                try {
                   await video.play();
+
+                  timeUpdateHandler = () => {
+                     handleVideoTimeUpdate(targetLevel);
+                  };
+                  video.addEventListener("timeupdate", timeUpdateHandler);
+
+                  video.addEventListener("ended", () => {
+                     if (timeUpdateHandler) {
+                        video.removeEventListener("timeupdate", timeUpdateHandler);
+                        timeUpdateHandler = null;
+                     }
+                  }, { once: true });
                } catch (error) {
                   if (error.name !== "AbortError" && isTransitioning.value) {
                      handleLevelTransitionEnd(targetLevel);

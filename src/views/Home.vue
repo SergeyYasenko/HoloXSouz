@@ -32,29 +32,44 @@
             :style="homeImageStyle"
          >
             <img
-               ref="homeImageRef"
-               v-show="currentStaticImage"
-               :key="`${currentLevel}-${currentStaticImage}`"
-               :src="currentStaticImage"
+               v-for="levelImage in allLevelImages"
+               :key="levelImage.level"
+               :ref="
+                  getLevelImageZIndex(levelImage.level) === 2
+                     ? (el) => {
+                          if (el && homeImageRef) {
+                             homeImageRef.value = el;
+                          }
+                       }
+                     : null
+               "
+               :src="levelImage.image"
                :loading="
                   energySaving.getImageAttributes(
-                     !!currentStaticImage,
-                     !!currentStaticImage
+                     getLevelImageZIndex(levelImage.level) === 2,
+                     getLevelImageZIndex(levelImage.level) === 2
                   ).loading
                "
                :decoding="
                   energySaving.getImageAttributes(
-                     !!currentStaticImage,
-                     !!currentStaticImage
+                     getLevelImageZIndex(levelImage.level) === 2,
+                     getLevelImageZIndex(levelImage.level) === 2
                   ).decoding
                "
                :class="[
                   'home-image',
-                  { 'element-hidden': !currentStaticImage },
+                  'home-image-level',
+                  {
+                     'home-image-active':
+                        getLevelImageZIndex(levelImage.level) === 2,
+                  },
                ]"
-               :style="homeImageSizeStyle"
+               :data-level="levelImage.level"
+               :style="getImageStyle(levelImage.level)"
                alt=""
-               @load="onImageLoad"
+               @load="
+                  levelImage.level === getActiveLevel() ? onImageLoad() : null
+               "
             />
             <template v-if="editMode">
                <template v-if="currentLevel === 'map'">
@@ -371,13 +386,22 @@ const homeImageStyle = computed(() => {
    return dragStyle;
 });
 
+let updateActiveImageRef = () => {};
+let getActiveLevel = () => currentLevel.value;
+let getLevelImageZIndex = () => 1;
+
 const calculateImageDimensions = () => {
-   if (!homeImageRef.value || !imageWrapperRef.value) return;
+   const activeLevel = getActiveLevel();
+   const activeImage =
+      document.querySelector(
+         `.home-image-level[data-level="${activeLevel}"]`
+      ) || homeImageRef.value;
+   if (!activeImage || !imageWrapperRef.value) return;
 
    const containerWidth = imageWrapperRef.value.offsetWidth;
    const containerHeight = imageWrapperRef.value.offsetHeight;
-   const naturalWidth = homeImageRef.value.naturalWidth;
-   const naturalHeight = homeImageRef.value.naturalHeight;
+   const naturalWidth = activeImage.naturalWidth;
+   const naturalHeight = activeImage.naturalHeight;
 
    if (!naturalWidth || !naturalHeight || !containerWidth || !containerHeight)
       return;
@@ -403,8 +427,14 @@ const shouldCenterOnLoad = ref(true);
 
 watch(currentLevel, () => {
    shouldCenterOnLoad.value = true;
+   updateActiveImageRef();
    nextTick(() => {
-      if (homeImageRef.value?.complete) {
+      const activeLevel = getActiveLevel();
+      const activeImage =
+         document.querySelector(
+            `.home-image-level[data-level="${activeLevel}"]`
+         ) || homeImageRef.value;
+      if (activeImage?.complete) {
          setTimeout(() => {
             imageDrag.centerPosition();
             shouldCenterOnLoad.value = false;
@@ -423,11 +453,12 @@ const onImageLoad = () => {
       imageWrapperRef.value.style.cursor = "grab";
    }
 
+   const activeLevel = getActiveLevel();
    if (homeImageRef.value) {
       energySaving.optimizeImage(
          homeImageRef.value,
-         !!currentStaticImage.value,
-         !!currentStaticImage.value
+         getLevelImageZIndex(activeLevel) === 2,
+         getLevelImageZIndex(activeLevel) === 2
       );
    }
 
@@ -465,13 +496,24 @@ const homeImageSizeStyle = computed(() => {
    };
 });
 
+let getImageStyle = (level) => {
+   const sizeStyle = homeImageSizeStyle.value;
+   return {
+      ...sizeStyle,
+      zIndex: 1,
+   };
+};
+
 const handleResize = (event) => {
-   if (
-      event?.type === "resize" &&
-      event.target === window &&
-      homeImageRef.value?.complete
-   ) {
-      calculateImageDimensions();
+   if (event?.type === "resize" && event.target === window) {
+      const activeLevel = getActiveLevel();
+      const activeImage =
+         document.querySelector(
+            `.home-image-level[data-level="${activeLevel}"]`
+         ) || homeImageRef.value;
+      if (activeImage?.complete) {
+         calculateImageDimensions();
+      }
    }
 };
 
@@ -583,6 +625,10 @@ const navigation = useNavigation(
 
 const {
    currentStaticImage,
+   allLevelImages,
+   getLevelImageZIndex: getLevelImageZIndexFn,
+   getActiveLevel: getActiveLevelFn,
+   getLevelImage,
    handleHouse1Click,
    handleHouse2Click,
    handleProject1Click,
@@ -596,43 +642,99 @@ const {
    handleBackFromFacade,
 } = navigation;
 
-let maskUpdateTimeout = null;
-watch(currentStaticImage, () => {
+getActiveLevel = getActiveLevelFn;
+getLevelImageZIndex = getLevelImageZIndexFn;
+
+updateActiveImageRef = () => {
    nextTick(() => {
-      if (homeImageRef.value) {
-         energySaving.optimizeImage(
-            homeImageRef.value,
-            !!currentStaticImage.value,
-            !!currentStaticImage.value
-         );
+      const activeLevel = getActiveLevel();
+      const activeImage = document.querySelector(
+         `.home-image-level[data-level="${activeLevel}"]`
+      );
+      if (activeImage && activeImage !== homeImageRef.value) {
+         homeImageRef.value = activeImage;
       }
    });
+};
 
-   if (maskUpdateTimeout) clearTimeout(maskUpdateTimeout);
+getImageStyle = (level) => {
+   const sizeStyle = homeImageSizeStyle.value;
+   return {
+      ...sizeStyle,
+      zIndex: getLevelImageZIndex(level),
+   };
+};
 
-   nextTick(() => {
-      if (homeImageRef.value) {
-         if (homeImageRef.value.complete) {
-            maskUpdateTimeout = setTimeout(() => {
-               window.dispatchEvent(new CustomEvent("mask-update"));
-               maskUpdateTimeout = null;
-            }, 100);
-         } else {
-            homeImageRef.value.addEventListener(
-               "load",
-               () => {
-                  if (maskUpdateTimeout) clearTimeout(maskUpdateTimeout);
-                  maskUpdateTimeout = setTimeout(() => {
-                     window.dispatchEvent(new CustomEvent("mask-update"));
-                     maskUpdateTimeout = null;
-                  }, 100);
-               },
-               { once: true }
+watch(
+   [
+      isTransitioning,
+      isReverseTransition,
+      reverseSourceLevel,
+      forwardSourceLevel,
+   ],
+   () => {
+      updateActiveImageRef();
+   }
+);
+
+let maskUpdateTimeout = null;
+watch(
+   [
+      currentLevel,
+      isTransitioning,
+      isReverseTransition,
+      reverseSourceLevel,
+      forwardSourceLevel,
+   ],
+   () => {
+      updateActiveImageRef();
+
+      nextTick(() => {
+         const activeLevel = getActiveLevel();
+         const activeImage =
+            document.querySelector(
+               `.home-image-level[data-level="${activeLevel}"]`
+            ) || homeImageRef.value;
+         if (activeImage) {
+            energySaving.optimizeImage(
+               activeImage,
+               getLevelImageZIndex(activeLevel) === 2,
+               getLevelImageZIndex(activeLevel) === 2
             );
          }
-      }
-   });
-});
+      });
+
+      if (maskUpdateTimeout) clearTimeout(maskUpdateTimeout);
+
+      nextTick(() => {
+         const activeLevel = getActiveLevel();
+         const activeImage =
+            document.querySelector(
+               `.home-image-level[data-level="${activeLevel}"]`
+            ) || homeImageRef.value;
+         if (activeImage) {
+            if (activeImage.complete) {
+               maskUpdateTimeout = setTimeout(() => {
+                  window.dispatchEvent(new CustomEvent("mask-update"));
+                  maskUpdateTimeout = null;
+               }, 150);
+            } else {
+               activeImage.addEventListener(
+                  "load",
+                  () => {
+                     if (maskUpdateTimeout) clearTimeout(maskUpdateTimeout);
+                     maskUpdateTimeout = setTimeout(() => {
+                        window.dispatchEvent(new CustomEvent("mask-update"));
+                        maskUpdateTimeout = null;
+                     }, 150);
+                  },
+                  { once: true }
+               );
+            }
+         }
+      });
+   }
+);
 
 const arrowLevels = ["start", "facade-start", "facade-start-2"];
 const hasNavigationArrows = computed(() =>
@@ -711,6 +813,35 @@ watch(
 );
 
 watch(
+   [
+      () => allLevelImages.value,
+      () => isTransitioning.value,
+      () => isReverseTransition.value,
+      () => reverseSourceLevel.value,
+      () => forwardSourceLevel.value,
+      () => currentLevel.value,
+   ],
+   () => {
+      nextTick(() => {
+         allLevelImages.value.forEach((levelImage) => {
+            const imageElement = document.querySelector(
+               `.home-image-level[data-level="${levelImage.level}"]`
+            );
+            if (imageElement) {
+               const zIndex = getLevelImageZIndex(levelImage.level);
+               energySaving.optimizeImage(
+                  imageElement,
+                  zIndex === 2,
+                  zIndex === 2
+               );
+            }
+         });
+      });
+   },
+   { immediate: true }
+);
+
+watch(
    () => preloadImage.value,
    (newPreloadImage) => {
       nextTick(() => {
@@ -727,14 +858,34 @@ onMounted(() => {
       imageWrapperRef.value.style.cursor = "grab";
    }
 
+   updateActiveImageRef();
+
    nextTick(() => {
-      if (homeImageRef.value) {
+      const activeLevel = getActiveLevel();
+      const activeImage =
+         document.querySelector(
+            `.home-image-level[data-level="${activeLevel}"]`
+         ) || homeImageRef.value;
+      if (activeImage) {
          energySaving.optimizeImage(
-            homeImageRef.value,
-            !!currentStaticImage.value,
-            !!currentStaticImage.value
+            activeImage,
+            getLevelImageZIndex(activeLevel) === 2,
+            getLevelImageZIndex(activeLevel) === 2
          );
       }
+
+      allLevelImages.value.forEach((levelImage) => {
+         const imageElement = document.querySelector(
+            `.home-image-level[data-level="${levelImage.level}"]`
+         );
+         if (imageElement && imageElement !== activeImage) {
+            energySaving.optimizeImage(
+               imageElement,
+               getLevelImageZIndex(levelImage.level) === 2,
+               getLevelImageZIndex(levelImage.level) === 2
+            );
+         }
+      });
 
       const preloadImg = document.querySelector(".home-image-preload");
       if (preloadImg) {
@@ -751,7 +902,12 @@ onMounted(() => {
    });
 
    nextTick(() => {
-      if (homeImageRef.value?.complete && imageWrapperRef.value) {
+      const activeLevel = getActiveLevel();
+      const activeImage =
+         document.querySelector(
+            `.home-image-level[data-level="${activeLevel}"]`
+         ) || homeImageRef.value;
+      if (activeImage?.complete && imageWrapperRef.value) {
          setTimeout(() => {
             if (
                imageDimensions.value.width === 0 ||
@@ -857,7 +1013,9 @@ onUnmounted(() => {
 
 .home-image {
    display: block;
-   z-index: 1;
+   position: absolute;
+   top: 0;
+   left: 0;
    user-select: none;
    -webkit-user-select: none;
    -moz-user-select: none;
@@ -867,6 +1025,20 @@ onUnmounted(() => {
    -webkit-transform: translateZ(0);
    backface-visibility: hidden;
    -webkit-backface-visibility: hidden;
+   opacity: 0;
+   visibility: hidden;
+   transition: opacity 0s, visibility 0s;
+}
+
+.home-image-level {
+   z-index: 1;
+}
+
+.home-image-active {
+   z-index: 2;
+   opacity: 1;
+   visibility: visible;
+   transition: opacity 0s, visibility 0s;
 }
 
 .home-image-preload {
@@ -880,14 +1052,24 @@ onUnmounted(() => {
    pointer-events: none;
 }
 
-.element-hidden {
-   z-index: -10 !important;
-   pointer-events: none !important;
-   opacity: 0 !important;
-   visibility: hidden !important;
-   will-change: auto !important;
+.home-image-wrapper .element-hidden,
+.home-image-wrapper .element-hidden.home-image-preload,
+.home-image-wrapper .element-hidden.home-video-transition {
+   z-index: -10;
+   pointer-events: none;
+   opacity: 0;
+   visibility: hidden;
+   will-change: auto;
    content-visibility: auto;
    contain-intrinsic-size: 0 0;
+}
+
+.home-image-wrapper .element-hidden.home-image-level {
+   z-index: 0;
+   pointer-events: none;
+   opacity: 0;
+   visibility: hidden;
+   will-change: auto;
 }
 
 .home-video-transition {
@@ -900,11 +1082,11 @@ onUnmounted(() => {
    -webkit-tap-highlight-color: transparent;
 }
 
-.home-video-transition.element-hidden {
-   z-index: -10 !important;
-   pointer-events: none !important;
-   opacity: 0 !important;
-   visibility: hidden !important;
+.home-image-wrapper .home-video-transition.element-hidden {
+   z-index: -10;
+   pointer-events: none;
+   opacity: 0;
+   visibility: hidden;
 }
 
 .home-content-wrapper {
@@ -1086,19 +1268,19 @@ onUnmounted(() => {
 }
 
 .home-disclaimer-mask :deep(.house-outline-wrapper) {
-   z-index: 13 !important;
-   pointer-events: none !important;
+   z-index: 13;
+   pointer-events: none;
 }
 
 .home-disclaimer-mask :deep(.house-outline-canvas) {
-   mix-blend-mode: normal !important;
-   z-index: 13 !important;
+   mix-blend-mode: normal;
+   z-index: 13;
 }
 
 .home-disclaimer-mask :deep(.house-outline-hit-area) {
-   pointer-events: none !important;
-   cursor: default !important;
-   z-index: 13 !important;
+   pointer-events: none;
+   cursor: default;
+   z-index: 13;
 }
 
 .home-navigation-arrows {

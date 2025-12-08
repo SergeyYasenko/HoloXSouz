@@ -153,10 +153,7 @@ watch(
    max-height: 60px;
    height: 100%;
    display: block;
-}
-
-.logo {
-   filter: brightness(0) saturate(100%) !important;
+   filter: brightness(0) saturate(100%);
 }
 
 .header-location {

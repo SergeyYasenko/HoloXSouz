@@ -115,8 +115,8 @@ const computedImageSize = computed(() => {
    transition: z-index 0s;
 }
 
-.tooltip-trigger-hovered {
-   z-index: 200 !important;
+.tooltip-wrapper .tooltip-trigger.tooltip-trigger-hovered {
+   z-index: 200;
 }
 
 .tooltip-trigger > * {
@@ -145,8 +145,8 @@ const computedImageSize = computed(() => {
    margin-right: 20px;
 }
 
-.tooltip-table-image {
-   display: block !important;
+.tooltip-table-container .tooltip-table-image {
+   display: block;
    max-width: 300px;
    width: auto;
    height: auto;
