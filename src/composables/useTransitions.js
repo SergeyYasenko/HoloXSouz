@@ -117,7 +117,7 @@ export function useTransitions(currentLevel, levelHistory) {
                   isHandlingTransitionEnd = false;
                });
             });
-         }, 100); // Small delay to ensure video is fully finished
+         }, 800); // Small delay to ensure video is fully finished
       }
    };
 
@@ -331,6 +331,8 @@ export function useTransitions(currentLevel, levelHistory) {
 
       // Reset flags
       isHandlingTransitionEnd = false;
+      // Set transitioning flag SYNCHRONOUSLY before any async operations
+      // This ensures image is hidden immediately to prevent flicker
       isTransitioning.value = true;
 
       // Determine if this is a reverse transition
@@ -371,7 +373,8 @@ export function useTransitions(currentLevel, levelHistory) {
       // Store original path for comparison later
       originalVideoPath.value = transitionVideoPath;
 
-      // Load and set video source
+      // Load and set video source SYNCHRONOUSLY
+      // This ensures video element appears immediately to cover any potential image flicker
       loadVideo(transitionVideoPath);
       transitionVideoSrc.value = transitionVideoPath;
 

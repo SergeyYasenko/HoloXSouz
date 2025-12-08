@@ -32,18 +32,19 @@ export function useNavigation(
 
    // During reverse transition, show the source level's image (old image)
    // to keep it visible for 1 second while reverse video plays
-   // During normal transition, also keep current image until transition completes
+   // During normal transition, hide image to prevent flicker before video starts
    const currentStaticImage = computed(() => {
-      // If transitioning in reverse, show old image
+      // If transitioning in reverse, show old image (needed for reverse transitions)
       if (isReverseTransition?.value && reverseSourceLevel?.value) {
          return getLevelImage(reverseSourceLevel.value);
       }
 
-      // If transitioning normally, keep current image (don't change until transition completes)
-      // This prevents image from changing before video finishes
+      // If transitioning normally, hide image to prevent new image from appearing
+      // before video starts playing (this prevents flicker)
       if (isTransitioning?.value) {
-         // Keep showing current level's image during transition
-         return getLevelImage(currentLevel.value);
+         // Return null to hide image - video will be visible instead
+         // This prevents new image from flickering before video starts
+         return null;
       }
 
       // Normal case: show current level's image
