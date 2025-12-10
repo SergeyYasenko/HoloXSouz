@@ -46,11 +46,29 @@ export function useTransitions(currentLevel, levelHistory) {
       loadedVideos.value.add(videoSrc);
    };
 
+   const stopVideo = () => {
+      if (transitionVideo.value) {
+         try {
+            const video = transitionVideo.value;
+            video.pause();
+            video.currentTime = 0;
+
+            if (video.src) {
+               video.src = "";
+               video.load();
+            }
+         } catch (e) { }
+      }
+   };
+
    const resetTransitionState = () => {
       if (transitionVideo.value && timeUpdateHandler) {
          transitionVideo.value.removeEventListener("timeupdate", timeUpdateHandler);
          timeUpdateHandler = null;
       }
+
+      stopVideo();
+
       isTransitioning.value = false;
       transitionVideoSrc.value = "";
       originalVideoPath.value = "";
@@ -154,6 +172,18 @@ export function useTransitions(currentLevel, levelHistory) {
                      forwardSourceLevel.value = targetLevel;
                   }
                   currentLevel.value = targetLevel;
+
+                  if (transitionVideo.value && timeUpdateHandler) {
+                     transitionVideo.value.removeEventListener("timeupdate", timeUpdateHandler);
+                     timeUpdateHandler = null;
+                  }
+
+                  setTimeout(() => {
+                     if (isTransitioning.value) {
+                        stopVideo();
+                        resetTransitionState();
+                     }
+                  }, 300);
                });
             });
          };
@@ -172,6 +202,8 @@ export function useTransitions(currentLevel, levelHistory) {
 
    const startLevelTransition = async (transitionVideoPath, targetLevel, isReverse = false) => {
       if (isTransitioning.value) return;
+
+      stopVideo();
 
       isHandlingTransitionEnd = false;
       hasSwitchedLevel = false;
@@ -212,6 +244,12 @@ export function useTransitions(currentLevel, levelHistory) {
       if (!transitionVideo.value) return;
 
       const video = transitionVideo.value;
+
+      try {
+         video.pause();
+         video.currentTime = 0;
+      } catch (e) { }
+
       video.load();
 
       try {
@@ -239,14 +277,28 @@ export function useTransitions(currentLevel, levelHistory) {
                   };
                   video.addEventListener("timeupdate", timeUpdateHandler);
 
-                  video.addEventListener("ended", () => {
+                  const onEnded = () => {
                      if (timeUpdateHandler) {
                         video.removeEventListener("timeupdate", timeUpdateHandler);
                         timeUpdateHandler = null;
                      }
-                  }, { once: true });
+                  };
+                  video.addEventListener("ended", onEnded, { once: true });
+
+                  const onError = () => {
+                     if (timeUpdateHandler) {
+                        video.removeEventListener("timeupdate", timeUpdateHandler);
+                        timeUpdateHandler = null;
+                     }
+                     if (isTransitioning.value) {
+                        stopVideo();
+                        handleLevelTransitionEnd(targetLevel);
+                     }
+                  };
+                  video.addEventListener("error", onError, { once: true });
                } catch (error) {
                   if (error.name !== "AbortError" && isTransitioning.value) {
+                     stopVideo();
                      handleLevelTransitionEnd(targetLevel);
                   }
                }
@@ -255,6 +307,7 @@ export function useTransitions(currentLevel, levelHistory) {
          });
       } catch (error) {
          if (error.name !== "AbortError" && isTransitioning.value) {
+            stopVideo();
             handleLevelTransitionEnd(targetLevel);
          }
       }
@@ -276,6 +329,7 @@ export function useTransitions(currentLevel, levelHistory) {
             startLevelTransition(floor.reverseVideo, targetLevel, true);
             return;
          }
+         stopVideo();
          currentLevel.value = targetLevel;
          return;
       }
@@ -306,10 +360,16 @@ export function useTransitions(currentLevel, levelHistory) {
          }
       }
 
+      stopVideo();
       currentLevel.value = targetLevel;
    };
 
    const cleanup = () => {
+      if (transitionVideo.value && timeUpdateHandler) {
+         transitionVideo.value.removeEventListener("timeupdate", timeUpdateHandler);
+         timeUpdateHandler = null;
+      }
+      stopVideo();
       resetTransitionState();
    };
 
