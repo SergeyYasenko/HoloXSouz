@@ -69,6 +69,12 @@ export function useImageDrag(containerRef, imageRef, scale = ref(1), onDragStart
    const handleMouseDown = (event) => {
       if (!containerRef.value || !imageRef.value || event.button !== 0) return;
 
+      const target = event.target;
+      if (target?.closest?.(".house-outline-hit-area") ||
+         target?.closest?.(".house-outline-wrapper")) {
+         return;
+      }
+
       isDragging.value = true;
       dragStart.value = {
          x: event.clientX - position.value.x,
@@ -103,6 +109,12 @@ export function useImageDrag(containerRef, imageRef, scale = ref(1), onDragStart
 
    const handleTouchStart = (event) => {
       if (!containerRef.value || !imageRef.value || event.touches.length !== 1) return;
+
+      const target = event.target || event.touches[0]?.target;
+      if (target?.closest?.(".house-outline-hit-area") ||
+         target?.closest?.(".house-outline-wrapper")) {
+         return;
+      }
 
       const touch = event.touches[0];
       touchStartPos.value = { x: touch.clientX, y: touch.clientY };

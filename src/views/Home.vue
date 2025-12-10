@@ -740,7 +740,6 @@ const isMaskElement = (target) => {
 
 const handleImageTouchStart = (event) => {
    if (!event?.touches || event.touches.length === 0) return;
-   if (isMaskElement(event.target)) return;
    imageDrag.handleTouchStart(event);
 };
 
@@ -755,7 +754,7 @@ const handleImageTouchEnd = (event) => {
 };
 
 const handleImageMouseDown = (event) => {
-   if (!event?.target || isMaskElement(event.target)) return;
+   if (!event?.target) return;
    imageDrag.handleMouseDown(event);
 };
 
