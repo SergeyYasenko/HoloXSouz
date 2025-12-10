@@ -225,7 +225,7 @@ export function useTransitions(currentLevel, levelHistory) {
                setTimeout(() => {
                   video.removeEventListener("canplay", onCanPlay);
                   resolve();
-               }, 1000);
+               }, 100);
             });
          }
 
