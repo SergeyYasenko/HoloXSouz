@@ -440,7 +440,7 @@ watch(
             setTimeout(() => {
                imageDrag.centerPosition();
                shouldCenterOnLoad.value = false;
-            }, 50);
+            }, 100);
          } else {
             imageDrag.resetPosition();
          }

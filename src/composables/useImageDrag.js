@@ -9,6 +9,7 @@ export function useImageDrag(containerRef, imageRef, scale = ref(1), onDragStart
    const lastPosition = ref({ x: 0, y: 0 });
    const touchStartPos = ref({ x: 0, y: 0 });
    const touchStartTime = ref(0);
+   const blockCenterUntil = ref(0);
 
    let rafId = null;
    let touchRafId = null;
@@ -72,6 +73,7 @@ export function useImageDrag(containerRef, imageRef, scale = ref(1), onDragStart
       const target = event.target;
       if (target?.closest?.(".house-outline-hit-area") ||
          target?.closest?.(".house-outline-wrapper")) {
+         blockCenterUntil.value = Date.now() + 300;
          return;
       }
 
@@ -113,6 +115,7 @@ export function useImageDrag(containerRef, imageRef, scale = ref(1), onDragStart
       const target = event.target || event.touches[0]?.target;
       if (target?.closest?.(".house-outline-hit-area") ||
          target?.closest?.(".house-outline-wrapper")) {
+         blockCenterUntil.value = Date.now() + 300;
          return;
       }
 
@@ -178,6 +181,10 @@ export function useImageDrag(containerRef, imageRef, scale = ref(1), onDragStart
    };
 
    const centerPosition = () => {
+      if (Date.now() < blockCenterUntil.value) {
+         return;
+      }
+
       if (!containerRef.value || !imageRef.value) {
          position.value = { x: 0, y: 0 };
          return;
