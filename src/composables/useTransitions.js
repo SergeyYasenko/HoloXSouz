@@ -47,9 +47,17 @@ export function useTransitions(currentLevel, levelHistory) {
    };
 
    const resetTransitionState = () => {
-      if (transitionVideo.value && timeUpdateHandler) {
-         transitionVideo.value.removeEventListener("timeupdate", timeUpdateHandler);
-         timeUpdateHandler = null;
+      if (transitionVideo.value) {
+         if (timeUpdateHandler) {
+            transitionVideo.value.removeEventListener("timeupdate", timeUpdateHandler);
+            timeUpdateHandler = null;
+         }
+         try {
+            transitionVideo.value.pause();
+            transitionVideo.value.currentTime = 0;
+            transitionVideo.value.src = "";
+            transitionVideo.value.load();
+         } catch (e) { }
       }
       isTransitioning.value = false;
       transitionVideoSrc.value = "";
@@ -69,6 +77,7 @@ export function useTransitions(currentLevel, levelHistory) {
 
       if (immediate) {
          currentLevel.value = targetLevel;
+         resetTransitionState();
          return;
       }
 
@@ -76,14 +85,11 @@ export function useTransitions(currentLevel, levelHistory) {
 
       setTimeout(() => {
          if (!isTransitioning.value) return;
-
+         currentLevel.value = targetLevel;
          setTimeout(() => {
-            if (!isTransitioning.value) return;
-            currentLevel.value = targetLevel;
-
-            nextTick(() => {
-               requestAnimationFrame(resetTransitionState);
-            });
+            if (isTransitioning.value) {
+               resetTransitionState();
+            }
          }, IMAGE_SWITCH_DELAY);
       }, delay);
    };
@@ -139,39 +145,33 @@ export function useTransitions(currentLevel, levelHistory) {
 
       hasSwitchedLevel = true;
 
-      const performSwitch = () => {
+      if (!isTransitioning.value) return;
+
+      const targetImageElement = document.querySelector(
+         `.home-image-level[data-level="${targetLevel}"]`
+      );
+
+      const switchToTarget = () => {
          if (!isTransitioning.value) return;
-
-         const targetImageElement = document.querySelector(
-            `.home-image-level[data-level="${targetLevel}"]`
-         );
-
-         const switchToTarget = () => {
-            requestAnimationFrame(() => {
-               requestAnimationFrame(() => {
-                  if (!isTransitioning.value) return;
-                  if (!isReverseTransition.value) {
-                     forwardSourceLevel.value = targetLevel;
-                  }
-                  currentLevel.value = targetLevel;
-               });
-            });
-         };
-
-         if (targetImageElement?.complete) {
-            switchToTarget();
-         } else if (targetImageElement) {
-            targetImageElement.addEventListener("load", switchToTarget, { once: true });
-         } else {
-            switchToTarget();
+         if (!isReverseTransition.value) {
+            forwardSourceLevel.value = targetLevel;
          }
+         currentLevel.value = targetLevel;
       };
 
-      nextTick(performSwitch);
+      if (targetImageElement?.complete) {
+         switchToTarget();
+      } else if (targetImageElement) {
+         targetImageElement.addEventListener("load", switchToTarget, { once: true });
+      } else {
+         switchToTarget();
+      }
    };
 
    const startLevelTransition = async (transitionVideoPath, targetLevel, isReverse = false) => {
       if (isTransitioning.value) return;
+
+      resetTransitionState();
 
       isHandlingTransitionEnd = false;
       hasSwitchedLevel = false;
@@ -192,12 +192,13 @@ export function useTransitions(currentLevel, levelHistory) {
       if (targetImage) {
          preloadImageLoaded.value = false;
          preloadImage.value = targetImage;
-
-         await nextTick();
-         const preloadImg = document.querySelector(".home-image-preload");
-         if (preloadImg?.complete) {
-            preloadImageLoaded.value = true;
-         }
+         nextTick(() => {
+            if (!isTransitioning.value) return;
+            const preloadImg = document.querySelector(".home-image-preload");
+            if (preloadImg?.complete) {
+               preloadImageLoaded.value = true;
+            }
+         });
       } else {
          preloadImage.value = null;
          preloadImageLoaded.value = true;
@@ -209,7 +210,10 @@ export function useTransitions(currentLevel, levelHistory) {
 
       await nextTick();
 
-      if (!transitionVideo.value) return;
+      if (!isTransitioning.value || !transitionVideo.value) {
+         resetTransitionState();
+         return;
+      }
 
       const video = transitionVideo.value;
       video.load();
@@ -217,6 +221,10 @@ export function useTransitions(currentLevel, levelHistory) {
       try {
          if (video.readyState < 2) {
             await new Promise((resolve) => {
+               if (!isTransitioning.value) {
+                  resolve();
+                  return;
+               }
                const onCanPlay = () => {
                   video.removeEventListener("canplay", onCanPlay);
                   resolve();
@@ -229,33 +237,46 @@ export function useTransitions(currentLevel, levelHistory) {
             });
          }
 
-         await new Promise((resolve) => {
-            requestAnimationFrame(async () => {
+         if (!isTransitioning.value) {
+            resetTransitionState();
+            return;
+         }
+
+         try {
+            await video.play();
+
+            if (!isTransitioning.value) {
                try {
-                  await video.play();
+                  video.pause();
+                  video.currentTime = 0;
+               } catch (e) { }
+               resetTransitionState();
+               return;
+            }
 
-                  timeUpdateHandler = () => {
-                     handleVideoTimeUpdate(targetLevel);
-                  };
-                  video.addEventListener("timeupdate", timeUpdateHandler);
+            timeUpdateHandler = () => {
+               handleVideoTimeUpdate(targetLevel);
+            };
+            video.addEventListener("timeupdate", timeUpdateHandler);
 
-                  video.addEventListener("ended", () => {
-                     if (timeUpdateHandler) {
-                        video.removeEventListener("timeupdate", timeUpdateHandler);
-                        timeUpdateHandler = null;
-                     }
-                  }, { once: true });
-               } catch (error) {
-                  if (error.name !== "AbortError" && isTransitioning.value) {
-                     handleLevelTransitionEnd(targetLevel);
-                  }
+            video.addEventListener("ended", () => {
+               if (timeUpdateHandler) {
+                  video.removeEventListener("timeupdate", timeUpdateHandler);
+                  timeUpdateHandler = null;
                }
-               resolve();
-            });
-         });
+            }, { once: true });
+         } catch (error) {
+            if (error.name !== "AbortError" && isTransitioning.value) {
+               handleLevelTransitionEnd(targetLevel);
+            } else {
+               resetTransitionState();
+            }
+         }
       } catch (error) {
          if (error.name !== "AbortError" && isTransitioning.value) {
             handleLevelTransitionEnd(targetLevel);
+         } else {
+            resetTransitionState();
          }
       }
    };
@@ -266,7 +287,9 @@ export function useTransitions(currentLevel, levelHistory) {
    };
 
    const goBackToLevel = (targetLevel, disabledArrowLeftRef, disabledArrowRightRef) => {
-      if (isTransitioning.value) return;
+      if (isTransitioning.value) {
+         resetTransitionState();
+      }
 
       if (currentLevel.value.startsWith("floor-") && targetLevel === "start") {
          const floorId = currentLevel.value.replace("floor-", "");

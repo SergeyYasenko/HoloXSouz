@@ -425,28 +425,32 @@ const calculateImageDimensions = () => {
 const imageDimensions = ref({ width: 0, height: 0 });
 const shouldCenterOnLoad = ref(true);
 
-watch(currentLevel, () => {
-   shouldCenterOnLoad.value = true;
-   updateActiveImageRef();
-   nextTick(() => {
-      const activeLevel = getActiveLevel();
-      const activeImage =
-         document.querySelector(
-            `.home-image-level[data-level="${activeLevel}"]`
-         ) || homeImageRef.value;
-      if (activeImage?.complete) {
+watch(
+   currentLevel,
+   () => {
+      shouldCenterOnLoad.value = true;
+      updateActiveImageRef();
+      nextTick(() => {
+         const activeLevel = getActiveLevel();
+         const activeImage =
+            document.querySelector(
+               `.home-image-level[data-level="${activeLevel}"]`
+            ) || homeImageRef.value;
+         if (activeImage?.complete) {
+            setTimeout(() => {
+               imageDrag.centerPosition();
+               shouldCenterOnLoad.value = false;
+            }, 50);
+         } else {
+            imageDrag.resetPosition();
+         }
          setTimeout(() => {
-            imageDrag.centerPosition();
-            shouldCenterOnLoad.value = false;
-         }, 50);
-      } else {
-         imageDrag.resetPosition();
-      }
-      setTimeout(() => {
-         window.dispatchEvent(new CustomEvent("mask-update"));
-      }, 100);
-   });
-});
+            window.dispatchEvent(new CustomEvent("mask-update"));
+         }, 100);
+      });
+   },
+   { flush: "post" }
+);
 
 const onImageLoad = () => {
    if (imageWrapperRef.value) {
@@ -462,23 +466,19 @@ const onImageLoad = () => {
       );
    }
 
-   nextTick(() => {
-      setTimeout(() => {
-         window.dispatchEvent(new CustomEvent("mask-update"));
-      }, 50);
-   });
+   setTimeout(() => {
+      window.dispatchEvent(new CustomEvent("mask-update"));
+   }, 50);
 
    calculateImageDimensions();
 
    if (imageDimensions.value.width > 0 && imageDimensions.value.height > 0) {
-      nextTick(() => {
-         setTimeout(() => {
-            imageDrag.centerPosition();
-            if (shouldCenterOnLoad.value) {
-               shouldCenterOnLoad.value = false;
-            }
-         }, 50);
-      });
+      setTimeout(() => {
+         imageDrag.centerPosition();
+         if (shouldCenterOnLoad.value) {
+            shouldCenterOnLoad.value = false;
+         }
+      }, 50);
    }
 };
 
@@ -551,32 +551,20 @@ const {
 
 const handleTransitionEnd = () => {
    originalHandleTransitionEnd();
-   nextTick(() => {
-      setTimeout(() => {
-         window.dispatchEvent(new CustomEvent("mask-update"));
-      }, 100);
-   });
+   setTimeout(() => {
+      window.dispatchEvent(new CustomEvent("mask-update"));
+   }, 100);
 };
 
 const handleVideoCanPlay = () => {
    if (transitionVideo.value && isTransitioning.value) {
-      requestAnimationFrame(() => {
-         if (transitionVideo.value) {
-            transitionVideo.value.style.willChange =
-               "transform, opacity, contents";
-         }
-      });
+      transitionVideo.value.style.willChange = "transform, opacity, contents";
    }
 };
 
 const handleVideoCanPlayThrough = () => {
    if (transitionVideo.value && isTransitioning.value) {
-      requestAnimationFrame(() => {
-         if (transitionVideo.value) {
-            transitionVideo.value.style.willChange =
-               "transform, opacity, contents";
-         }
-      });
+      transitionVideo.value.style.willChange = "transform, opacity, contents";
    }
 };
 
@@ -596,13 +584,8 @@ const handleVideoWaiting = () => {
 
 const handleVideoPlaying = () => {
    if (transitionVideo.value && isTransitioning.value) {
-      requestAnimationFrame(() => {
-         if (transitionVideo.value) {
-            transitionVideo.value.style.transform = "translate3d(0, 0, 0)";
-            transitionVideo.value.style.willChange =
-               "transform, opacity, contents";
-         }
-      });
+      transitionVideo.value.style.transform = "translate3d(0, 0, 0)";
+      transitionVideo.value.style.willChange = "transform, opacity, contents";
    }
 };
 
@@ -674,7 +657,8 @@ watch(
    ],
    () => {
       updateActiveImageRef();
-   }
+   },
+   { flush: "post" }
 );
 
 let maskUpdateTimeout = null;
@@ -689,51 +673,43 @@ watch(
    () => {
       updateActiveImageRef();
 
-      nextTick(() => {
-         const activeLevel = getActiveLevel();
-         const activeImage =
-            document.querySelector(
-               `.home-image-level[data-level="${activeLevel}"]`
-            ) || homeImageRef.value;
-         if (activeImage) {
-            energySaving.optimizeImage(
-               activeImage,
-               getLevelImageZIndex(activeLevel) === 2,
-               getLevelImageZIndex(activeLevel) === 2
-            );
-         }
-      });
+      const activeLevel = getActiveLevel();
+      const activeImage =
+         document.querySelector(
+            `.home-image-level[data-level="${activeLevel}"]`
+         ) || homeImageRef.value;
+      if (activeImage) {
+         energySaving.optimizeImage(
+            activeImage,
+            getLevelImageZIndex(activeLevel) === 2,
+            getLevelImageZIndex(activeLevel) === 2
+         );
+      }
 
       if (maskUpdateTimeout) clearTimeout(maskUpdateTimeout);
 
-      nextTick(() => {
-         const activeLevel = getActiveLevel();
-         const activeImage =
-            document.querySelector(
-               `.home-image-level[data-level="${activeLevel}"]`
-            ) || homeImageRef.value;
-         if (activeImage) {
-            if (activeImage.complete) {
-               maskUpdateTimeout = setTimeout(() => {
-                  window.dispatchEvent(new CustomEvent("mask-update"));
-                  maskUpdateTimeout = null;
-               }, 150);
-            } else {
-               activeImage.addEventListener(
-                  "load",
-                  () => {
-                     if (maskUpdateTimeout) clearTimeout(maskUpdateTimeout);
-                     maskUpdateTimeout = setTimeout(() => {
-                        window.dispatchEvent(new CustomEvent("mask-update"));
-                        maskUpdateTimeout = null;
-                     }, 150);
-                  },
-                  { once: true }
-               );
-            }
+      if (activeImage) {
+         if (activeImage.complete) {
+            maskUpdateTimeout = setTimeout(() => {
+               window.dispatchEvent(new CustomEvent("mask-update"));
+               maskUpdateTimeout = null;
+            }, 150);
+         } else {
+            activeImage.addEventListener(
+               "load",
+               () => {
+                  if (maskUpdateTimeout) clearTimeout(maskUpdateTimeout);
+                  maskUpdateTimeout = setTimeout(() => {
+                     window.dispatchEvent(new CustomEvent("mask-update"));
+                     maskUpdateTimeout = null;
+                  }, 150);
+               },
+               { once: true }
+            );
          }
-      });
-   }
+      }
+   },
+   { flush: "post" }
 );
 
 const arrowLevels = ["start", "facade-start", "facade-start-2"];
@@ -799,17 +775,16 @@ const handleImageWheel = (event) => {
 watch(
    [() => isTransitioning.value, () => transitionVideoSrc.value],
    ([isTransitioning, videoSrc]) => {
-      nextTick(() => {
-         if (transitionVideo.value) {
-            const isVisible = isTransitioning && !!videoSrc;
-            energySaving.optimizeVideo(
-               transitionVideo.value,
-               isVisible,
-               isVisible
-            );
-         }
-      });
-   }
+      if (transitionVideo.value) {
+         const isVisible = isTransitioning && !!videoSrc;
+         energySaving.optimizeVideo(
+            transitionVideo.value,
+            isVisible,
+            isVisible
+         );
+      }
+   },
+   { flush: "post" }
 );
 
 watch(
@@ -822,35 +797,32 @@ watch(
       () => currentLevel.value,
    ],
    () => {
-      nextTick(() => {
-         allLevelImages.value.forEach((levelImage) => {
-            const imageElement = document.querySelector(
-               `.home-image-level[data-level="${levelImage.level}"]`
+      allLevelImages.value.forEach((levelImage) => {
+         const imageElement = document.querySelector(
+            `.home-image-level[data-level="${levelImage.level}"]`
+         );
+         if (imageElement) {
+            const zIndex = getLevelImageZIndex(levelImage.level);
+            energySaving.optimizeImage(
+               imageElement,
+               zIndex === 2,
+               zIndex === 2
             );
-            if (imageElement) {
-               const zIndex = getLevelImageZIndex(levelImage.level);
-               energySaving.optimizeImage(
-                  imageElement,
-                  zIndex === 2,
-                  zIndex === 2
-               );
-            }
-         });
+         }
       });
    },
-   { immediate: true }
+   { immediate: true, flush: "post" }
 );
 
 watch(
    () => preloadImage.value,
    (newPreloadImage) => {
-      nextTick(() => {
-         const preloadImg = document.querySelector(".home-image-preload");
-         if (preloadImg) {
-            energySaving.optimizeImage(preloadImg, !!newPreloadImage, false);
-         }
-      });
-   }
+      const preloadImg = document.querySelector(".home-image-preload");
+      if (preloadImg) {
+         energySaving.optimizeImage(preloadImg, !!newPreloadImage, false);
+      }
+   },
+   { flush: "post" }
 );
 
 onMounted(() => {
