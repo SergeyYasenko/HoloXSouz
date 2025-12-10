@@ -137,7 +137,7 @@
                      :key="floorId"
                   >
                      <HouseOutline
-                        v-show="getFloorMaskConfig(floorId)"
+                        v-if="getFloorMaskConfig(floorId)"
                         :points="getFloorMaskConfig(floorId).points"
                         :path="getFloorMaskConfig(floorId).path"
                         :stroke-width="getFloorMaskConfig(floorId).strokeWidth"
@@ -214,7 +214,7 @@
                   :key="floorId"
                >
                   <HouseOutline
-                     v-show="
+                     v-if="
                         currentLevel === 'start' && getFloorMaskConfig(floorId)
                      "
                      :points="getFloorMaskConfig(floorId).points"
@@ -427,7 +427,20 @@ const shouldCenterOnLoad = ref(true);
 
 watch(
    currentLevel,
-   () => {
+   (newLevel, oldLevel) => {
+      if (newLevel === "facade-start" && oldLevel === "start") {
+         disabledArrowRight.value = true;
+         disabledArrowLeft.value = false;
+      } else if (newLevel === "facade-start-2" && oldLevel === "start") {
+         disabledArrowLeft.value = true;
+         disabledArrowRight.value = false;
+      } else if (newLevel === "start") {
+         if (oldLevel === "facade-start" || oldLevel === "facade-start-2") {
+            disabledArrowLeft.value = false;
+            disabledArrowRight.value = false;
+         }
+      }
+
       shouldCenterOnLoad.value = true;
       updateActiveImageRef();
       nextTick(() => {
@@ -726,6 +739,21 @@ const handleArrowNavigation = (direction) => {
       } else {
          handleFacadeStartClick();
       }
+
+      const currentLevelBefore = currentLevel.value;
+      setTimeout(() => {
+         if (
+            !isTransitioning.value &&
+            currentLevel.value === currentLevelBefore &&
+            currentLevel.value === "start"
+         ) {
+            if (direction === "left") {
+               currentLevel.value = "facade-start-2";
+            } else {
+               currentLevel.value = "facade-start";
+            }
+         }
+      }, 100);
    } else {
       handleBackFromFacade(direction === "left");
    }

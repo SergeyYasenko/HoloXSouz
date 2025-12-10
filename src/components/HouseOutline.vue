@@ -422,6 +422,17 @@ const handleClick = (event) => {
       event.preventDefault();
       event.stopPropagation();
 
+      if (!props.alwaysVisible && isVisible.value) {
+         isVisible.value = false;
+         if (canvasRef.value) {
+            updateCanvas();
+         }
+         if (animationFrame) {
+            cancelAnimationFrame(animationFrame);
+            animationFrame = null;
+         }
+      }
+
       if (props.onClick && typeof props.onClick === "function") {
          props.onClick(event);
       } else {
@@ -489,6 +500,17 @@ const handleTouchEnd = (event) => {
             event.preventDefault();
             event.stopPropagation();
             event.stopImmediatePropagation();
+
+            if (!props.alwaysVisible && isVisible.value) {
+               isVisible.value = false;
+               if (canvasRef.value) {
+                  updateCanvas();
+               }
+               if (animationFrame) {
+                  cancelAnimationFrame(animationFrame);
+                  animationFrame = null;
+               }
+            }
 
             setTimeout(() => {
                if (props.onClick && typeof props.onClick === "function") {

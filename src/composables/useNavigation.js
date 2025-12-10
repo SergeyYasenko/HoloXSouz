@@ -1,4 +1,4 @@
-import { computed } from "vue";
+import { computed, nextTick } from "vue";
 import { levelImages, levelTransitions, floorsConfig } from "../config/navigation.js";
 
 export function useNavigation(
@@ -78,22 +78,52 @@ export function useNavigation(
       startLevelTransition(levelTransitions["2-projects-to-start"], "start");
    };
 
-   const handleFacadeStartClick = () => {
+   const handleFacadeStartClick = async () => {
       if (isTransitioning.value) return;
-      disabledArrowRight.value = !disabledArrowRight.value;
+
+      const previousLevel = currentLevel.value;
+      const wasTransitioning = isTransitioning.value;
+
       startLevelTransition(
          levelTransitions["start-to-facade-start"],
          "facade-start"
       );
+
+      await nextTick();
+
+      if (isTransitioning.value && !wasTransitioning) {
+         disabledArrowRight.value = true;
+
+         setTimeout(() => {
+            if (currentLevel.value !== "facade-start" && currentLevel.value === previousLevel) {
+               disabledArrowRight.value = false;
+            }
+         }, 2000);
+      }
    };
 
-   const handleFacadeStart2Click = () => {
+   const handleFacadeStart2Click = async () => {
       if (isTransitioning.value) return;
-      disabledArrowLeft.value = !disabledArrowLeft.value;
+
+      const previousLevel = currentLevel.value;
+      const wasTransitioning = isTransitioning.value;
+
       startLevelTransition(
          levelTransitions["start-to-facade-start-2"],
          "facade-start-2"
       );
+
+      await nextTick();
+
+      if (isTransitioning.value && !wasTransitioning) {
+         disabledArrowLeft.value = true;
+
+         setTimeout(() => {
+            if (currentLevel.value !== "facade-start-2" && currentLevel.value === previousLevel) {
+               disabledArrowLeft.value = false;
+            }
+         }, 2000);
+      }
    };
 
    const handleBackToStartFromFacade = () => {
