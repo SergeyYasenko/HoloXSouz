@@ -171,17 +171,37 @@ const updateCanvas = (forceDraw = false) => {
    const canvas = canvasRef.value;
    const ctx = canvas.getContext("2d");
 
-   canvas.width = imageInfo.containerWidth;
-   canvas.height = imageInfo.containerHeight;
-
+   // For Telegram mini app, ensure we use the actual container size
+   // Get the parent container to use its actual dimensions
+   const wrapperElement = canvasRef.value?.closest('.house-outline-wrapper');
+   const parentContainer = wrapperElement?.parentElement;
+   
+   let finalWidth = imageInfo.containerWidth;
+   let finalHeight = imageInfo.containerHeight;
+   
+   // Use parent container size if available and valid (more accurate for Telegram mini app)
+   if (parentContainer) {
+      const parentRect = parentContainer.getBoundingClientRect();
+      if (parentRect.width > 0 && parentRect.height > 0) {
+         finalWidth = parentRect.width;
+         finalHeight = parentRect.height;
+      }
+   }
+   
+   // Set canvas dimensions
+   canvas.width = finalWidth;
+   canvas.height = finalHeight;
+   
+   // Set canvas style
    canvasStyle.value = {
-      width: `${imageInfo.containerWidth}px`,
-      height: `${imageInfo.containerHeight}px`,
+      width: `${finalWidth}px`,
+      height: `${finalHeight}px`,
    };
-
+   
+   // Set wrapper style (same dimensions)
    wrapperStyle.value = {
-      width: `${imageInfo.containerWidth}px`,
-      height: `${imageInfo.containerHeight}px`,
+      width: `${finalWidth}px`,
+      height: `${finalHeight}px`,
    };
 
    const currentTime = Date.now() - animationStartTime;
@@ -534,9 +554,12 @@ const animate = () => {
 };
 
 const handleResize = () => {
-   if (canvasRef.value) {
-      updateCanvas(true);
-   }
+   // Add a small delay for Telegram mini app to ensure dimensions are updated
+   setTimeout(() => {
+      if (canvasRef.value) {
+         updateCanvas(true);
+      }
+   }, 50);
 };
 
 const handleMaskUpdate = () => {
@@ -600,6 +623,16 @@ const init = () => {
    window.addEventListener("resize", handleResize, {
       passive: true,
    });
+   
+   // Also listen to visualViewport changes for Telegram mini app and mobile browsers
+   if (window.visualViewport) {
+      window.visualViewport.addEventListener("resize", handleResize, {
+         passive: true,
+      });
+      window.visualViewport.addEventListener("scroll", handleResize, {
+         passive: true,
+      });
+   }
 
    window.addEventListener("mask-update", handleMaskUpdate, {
       passive: true,
@@ -651,6 +684,12 @@ const cleanup = () => {
    document.removeEventListener("click", handleGlobalClick);
    window.removeEventListener("resize", handleResize);
    window.removeEventListener("mask-update", handleMaskUpdate);
+   
+   // Remove visualViewport listeners
+   if (window.visualViewport) {
+      window.visualViewport.removeEventListener("resize", handleResize);
+      window.visualViewport.removeEventListener("scroll", handleResize);
+   }
 };
 
 watch(
@@ -719,6 +758,10 @@ onUnmounted(() => {
    isolation: isolate;
    width: 100%;
    height: 100%;
+   /* Ensure wrapper covers the full container in Telegram mini app */
+   min-width: 100%;
+   min-height: 100%;
+   box-sizing: border-box;
 }
 
 .house-outline-wrapper .house-outline-hit-area {

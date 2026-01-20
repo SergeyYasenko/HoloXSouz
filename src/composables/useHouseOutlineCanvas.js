@@ -35,8 +35,13 @@ export function useHouseOutlineCanvas() {
          let containerHeight = video.offsetHeight;
 
          if (containerWidth <= 0 || containerHeight <= 0) {
-            containerWidth = window.innerWidth;
-            containerHeight = window.innerHeight;
+            // For Telegram mini app and mobile browsers, use the most reliable method
+            containerWidth = document.documentElement.clientWidth || 
+                           window.visualViewport?.width || 
+                           window.innerWidth;
+            containerHeight = document.documentElement.clientHeight || 
+                            window.visualViewport?.height || 
+                            window.innerHeight;
          }
 
          const finalVideoWidth = videoWidth > 0 ? videoWidth : containerWidth;
@@ -118,18 +123,27 @@ export function useHouseOutlineCanvas() {
             if (wrapper) {
                const computedStyle = window.getComputedStyle(wrapper);
                containerWidth =
-                  parseFloat(computedStyle.width) || window.innerWidth;
+                  parseFloat(computedStyle.width) || 
+                  document.documentElement.clientWidth || 
+                  window.innerWidth;
                containerHeight =
-                  parseFloat(computedStyle.height) || window.innerHeight;
+                  parseFloat(computedStyle.height) || 
+                  document.documentElement.clientHeight || 
+                  window.innerHeight;
             } else {
-               containerWidth = window.innerWidth;
-               containerHeight = window.innerHeight;
+               containerWidth = document.documentElement.clientWidth || window.innerWidth;
+               containerHeight = document.documentElement.clientHeight || window.innerHeight;
             }
          }
 
          if (containerWidth <= 0 || containerHeight <= 0) {
-            containerWidth = window.innerWidth;
-            containerHeight = window.innerHeight;
+            // For Telegram mini app and mobile browsers, use the most reliable method
+            containerWidth = document.documentElement.clientWidth || 
+                           window.visualViewport?.width || 
+                           window.innerWidth;
+            containerHeight = document.documentElement.clientHeight || 
+                            window.visualViewport?.height || 
+                            window.innerHeight;
          }
 
          const finalNaturalWidth =
@@ -160,8 +174,13 @@ export function useHouseOutlineCanvas() {
          };
       }
 
-      const width = window.innerWidth;
-      const height = window.innerHeight;
+      // For Telegram mini app and mobile browsers, use the most reliable method
+      const width = document.documentElement.clientWidth || 
+                   window.visualViewport?.width || 
+                   window.innerWidth;
+      const height = document.documentElement.clientHeight || 
+                    window.visualViewport?.height || 
+                    window.innerHeight;
       return {
          containerWidth: width,
          containerHeight: height,

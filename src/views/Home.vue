@@ -398,8 +398,19 @@ const calculateImageDimensions = () => {
       ) || homeImageRef.value;
    if (!activeImage || !imageWrapperRef.value) return;
 
-   const containerWidth = imageWrapperRef.value.offsetWidth;
-   const containerHeight = imageWrapperRef.value.offsetHeight;
+   let containerWidth = imageWrapperRef.value.offsetWidth;
+   let containerHeight = imageWrapperRef.value.offsetHeight;
+   
+   // For Telegram mini app, use more reliable dimensions
+   if (containerWidth <= 0 || containerHeight <= 0) {
+      containerWidth = document.documentElement.clientWidth || 
+                      window.visualViewport?.width || 
+                      window.innerWidth;
+      containerHeight = document.documentElement.clientHeight || 
+                       window.visualViewport?.height || 
+                       window.innerHeight;
+   }
+   
    const naturalWidth = activeImage.naturalWidth;
    const naturalHeight = activeImage.naturalHeight;
 
@@ -518,7 +529,8 @@ let getImageStyle = (level) => {
 };
 
 const handleResize = (event) => {
-   if (event?.type === "resize" && event.target === window) {
+   // Handle window resize and visualViewport changes (for Telegram mini app)
+   if (event?.type === "resize" && (event.target === window || event.target === window.visualViewport)) {
       const activeLevel = getActiveLevel();
       const activeImage =
          document.querySelector(
@@ -526,6 +538,10 @@ const handleResize = (event) => {
          ) || homeImageRef.value;
       if (activeImage?.complete) {
          calculateImageDimensions();
+         // Trigger mask update after dimensions are recalculated
+         setTimeout(() => {
+            window.dispatchEvent(new CustomEvent("mask-update"));
+         }, 100);
       }
    }
 };
@@ -922,11 +938,23 @@ onMounted(() => {
    });
 
    window.addEventListener("resize", handleResize);
+   
+   // Also listen to visualViewport changes for Telegram mini app and mobile browsers
+   if (window.visualViewport) {
+      window.visualViewport.addEventListener("resize", handleResize);
+      window.visualViewport.addEventListener("scroll", handleResize);
+   }
 });
 
 onUnmounted(() => {
    transitions.cleanup();
    window.removeEventListener("resize", handleResize);
+   
+   // Remove visualViewport listeners
+   if (window.visualViewport) {
+      window.visualViewport.removeEventListener("resize", handleResize);
+      window.visualViewport.removeEventListener("scroll", handleResize);
+   }
 });
 </script>
 
