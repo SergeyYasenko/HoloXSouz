@@ -26,6 +26,7 @@
                   :src="image"
                   alt="Floor plan"
                   class="floor-plan-panel-image"
+                  @load="onImageLoad"
                />
             </div>
          </div>
@@ -41,7 +42,7 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted, onUnmounted } from "vue";
+import { ref, watch, nextTick, onMounted, onUnmounted } from "vue";
 import Icon from "./Icon.vue";
 import { useImageDrag } from "../composables/useImageDrag.js";
 
@@ -182,17 +183,46 @@ const close = () => {
 
 const initialize = () => {
    if (!imageRef.value || !containerRef.value) return;
+   const img = imageRef.value;
+   if (!img.naturalWidth || !img.naturalHeight) return;
    const calculatedMinZoom = calculateMinZoom();
    scale.value = calculatedMinZoom;
    const centerPos = getCenterPosition(calculatedMinZoom);
    position.value = imageDrag.constrainPosition(centerPos, calculatedMinZoom);
 };
 
+const onImageLoad = () => {
+   if (props.modelValue) {
+      initialize();
+   }
+};
+
 watch(
    () => props.modelValue,
    (isOpen) => {
       if (isOpen) {
-         setTimeout(initialize, 100);
+         nextTick(() => {
+            if (imageRef.value?.complete && imageRef.value.naturalWidth) {
+               initialize();
+            } else {
+               setTimeout(initialize, 100);
+            }
+         });
+      }
+   }
+);
+
+watch(
+   () => props.image,
+   () => {
+      if (props.modelValue) {
+         nextTick(() => {
+            setTimeout(() => {
+               if (imageRef.value?.complete && imageRef.value.naturalWidth) {
+                  initialize();
+               }
+            }, 50);
+         });
       }
    }
 );
@@ -232,6 +262,7 @@ onUnmounted(() => {
    position: relative;
    cursor: grab;
    touch-action: pan-x pan-y pinch-zoom;
+   background: #0e0e0e;
 }
 
 .floor-plan-panel-container:active {
