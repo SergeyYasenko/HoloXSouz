@@ -83,17 +83,17 @@ const calculateMinZoom = () => {
    if (!mapContainer.value || !mapImageRef.value) return 0.5;
 
    const containerRect = mapContainer.value.getBoundingClientRect();
-   const containerHeight = containerRect.height;
+   const containerWidth = containerRect.width;
 
-   const imageHeight =
-      mapImageRef.value.naturalHeight ||
-      mapImageRef.value.offsetHeight ||
-      mapImageRef.value.height ||
-      containerHeight;
+   const imageWidth =
+      mapImageRef.value.naturalWidth ||
+      mapImageRef.value.offsetWidth ||
+      mapImageRef.value.width ||
+      containerWidth;
 
-   const minZoomByHeight = containerHeight / imageHeight;
+   const minZoomByWidth = containerWidth / imageWidth;
 
-   return Math.max(0.5, minZoomByHeight);
+   return Math.max(0.5, minZoomByWidth);
 };
 
 const minZoom = ref(0.5);

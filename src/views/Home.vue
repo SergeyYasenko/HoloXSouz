@@ -3,6 +3,7 @@
       <div
          ref="imageWrapperRef"
          class="home-image-wrapper"
+         :class="{ 'home-image-wrapper-floor': isFloorLevel }"
          @touchstart="handleImageTouchStart"
          @touchmove="handleImageTouchMove"
          @touchend="handleImageTouchEnd"
@@ -337,8 +338,20 @@
             <div class="home-content-bottom home-content">
                <BottomActions :show-labels="true" :disabled="isTransitioning" />
             </div>
+            <button
+               v-if="isFloorLevel && currentFloorScheme2D && !showFloorPlanModal"
+               class="home-floor-plan-btn"
+               aria-label="Open floor plan"
+               @click="showFloorPlanModal = true"
+            >
+               <Icon name="location" :size="24" color="currentColor" />
+            </button>
          </div>
       </div>
+      <FloorPlanModal
+         v-model="showFloorPlanModal"
+         :image="currentFloorScheme2D"
+      />
    </div>
 </template>
 
@@ -355,6 +368,7 @@ import {
 import Icon from "../components/Icon.vue";
 import BottomActions from "../components/BottomActions.vue";
 import HouseOutline from "../components/HouseOutline.vue";
+import FloorPlanModal from "../components/FloorPlanModal.vue";
 import {
    floorsConfig,
    levelImages,
@@ -372,7 +386,221 @@ const { currentLevel, levelHistory } = useLevelStorage();
 
 const imageWrapperRef = ref(null);
 const homeImageRef = ref(null);
-const imageDrag = useImageDrag(imageWrapperRef, homeImageRef, ref(1));
+const scale = ref(1);
+const maxZoom = 1.8;
+const lastPosition = ref({ x: 0, y: 0 });
+
+const isFloorLevel = computed(() =>
+   typeof currentLevel.value === "string" &&
+   currentLevel.value.startsWith("floor-")
+);
+
+const currentFloorScheme2D = computed(() => {
+   const level = currentLevel.value;
+   if (typeof level !== "string" || !level.startsWith("floor-")) return null;
+   const floorId = level.replace("floor-", "");
+   return floorsConfig[floorId]?.scheme2D ?? floorsConfig[floorId]?.image ?? null;
+});
+
+const showFloorPlanModal = ref(false);
+
+const calculateMinZoomForFloor = () => {
+   if (!imageWrapperRef.value) return 0.5;
+   const containerRect = imageWrapperRef.value.getBoundingClientRect();
+   const containerWidth = containerRect.width;
+   const imageWidth =
+      imageDimensions.value.width ||
+      homeImageRef.value?.naturalWidth ||
+      homeImageRef.value?.offsetWidth ||
+      containerWidth;
+   const minZoomByWidth = containerWidth / imageWidth;
+   return Math.max(0.5, minZoomByWidth);
+};
+
+const getCenterPositionForFloor = (newScale) => {
+   if (!imageWrapperRef.value) return { x: 0, y: 0 };
+   const containerRect = imageWrapperRef.value.getBoundingClientRect();
+   const containerWidth = containerRect.width;
+   const containerHeight = containerRect.height;
+   const imageWidth =
+      imageDimensions.value.width ||
+      homeImageRef.value?.naturalWidth ||
+      homeImageRef.value?.offsetWidth ||
+      containerWidth;
+   const imageHeight =
+      imageDimensions.value.height ||
+      homeImageRef.value?.naturalHeight ||
+      homeImageRef.value?.offsetHeight ||
+      containerHeight;
+   const scaledWidth = imageWidth * newScale;
+   const scaledHeight = imageHeight * newScale;
+   const centerX = (containerWidth - scaledWidth) / 2;
+   const centerY = (containerHeight - scaledHeight) / 2;
+   return { x: centerX, y: centerY };
+};
+
+const imageDrag = useImageDrag(imageWrapperRef, homeImageRef, scale);
+
+const position = imageDrag.position;
+const isDragging = imageDrag.isDragging;
+
+const originalConstrainPosition = imageDrag.constrainPosition;
+imageDrag.constrainPosition = (newPosition, currentScale = scale.value) => {
+   if (!isFloorLevel.value) {
+      return originalConstrainPosition(newPosition, currentScale);
+   }
+   if (!imageWrapperRef.value || !homeImageRef.value) return newPosition;
+   const containerRect = imageWrapperRef.value.getBoundingClientRect();
+   const containerWidth = containerRect.width;
+   const containerHeight = containerRect.height;
+   const imageWidth =
+      imageDimensions.value.width ||
+      homeImageRef.value.naturalWidth ||
+      homeImageRef.value.offsetWidth ||
+      containerWidth;
+   const imageHeight =
+      imageDimensions.value.height ||
+      homeImageRef.value.naturalHeight ||
+      homeImageRef.value.offsetHeight ||
+      containerHeight;
+   const scaledWidth = imageWidth * currentScale;
+   const scaledHeight = imageHeight * currentScale;
+   const minX = containerWidth - scaledWidth;
+   const maxX = 0;
+   const minY = containerHeight - scaledHeight;
+   const maxY = 0;
+   if (scaledWidth <= containerWidth) {
+      const centerX = (containerWidth - scaledWidth) / 2;
+      return {
+         x: centerX,
+         y: Math.max(
+            minY,
+            Math.min(maxY, newPosition.y !== 0 ? newPosition.y : (containerHeight - scaledHeight) / 2)
+         ),
+      };
+   }
+   if (scaledHeight <= containerHeight) {
+      const centerY = (containerHeight - scaledHeight) / 2;
+      return {
+         x: Math.max(
+            minX,
+            Math.min(maxX, newPosition.x !== 0 ? newPosition.x : (containerWidth - scaledWidth) / 2)
+         ),
+         y: centerY,
+      };
+   }
+   return {
+      x: Math.max(minX, Math.min(maxX, newPosition.x)),
+      y: Math.max(minY, Math.min(maxY, newPosition.y)),
+   };
+};
+
+const originalHandleMouseMove = imageDrag.handleMouseMove;
+imageDrag.handleMouseMove = (event) => {
+   if (isFloorLevel.value && isDragging.value) {
+      const newPosition = {
+         x: event.clientX - imageDrag.dragStart.value.x,
+         y: event.clientY - imageDrag.dragStart.value.y,
+      };
+      position.value = imageDrag.constrainPosition(newPosition, scale.value);
+      lastPosition.value = { ...position.value };
+   } else {
+      originalHandleMouseMove(event);
+   }
+};
+
+const initialPinchDistance = ref(0);
+const initialPinchScale = ref(1);
+const initialPinchCenter = ref({ x: 0, y: 0 });
+
+const originalHandleTouchStart = imageDrag.handleTouchStart;
+imageDrag.handleTouchStart = (event) => {
+   if (isFloorLevel.value && event.touches.length === 2) {
+      event.preventDefault();
+      const touch1 = event.touches[0];
+      const touch2 = event.touches[1];
+      const distance = Math.sqrt(
+         Math.pow(touch2.clientX - touch1.clientX, 2) +
+            Math.pow(touch2.clientY - touch1.clientY, 2)
+      );
+      initialPinchDistance.value = distance;
+      initialPinchScale.value = scale.value;
+      const centerX = (touch1.clientX + touch2.clientX) / 2;
+      const centerY = (touch1.clientY + touch2.clientY) / 2;
+      const containerRect = imageWrapperRef.value.getBoundingClientRect();
+      initialPinchCenter.value = {
+         x: centerX,
+         y: centerY,
+         mapX: (centerX - containerRect.left - position.value.x) / scale.value,
+         mapY: (centerY - containerRect.top - position.value.y) / scale.value,
+      };
+   } else if (event.touches.length === 1) {
+      originalHandleTouchStart(event);
+   }
+};
+
+const originalHandleTouchMove = imageDrag.handleTouchMove;
+imageDrag.handleTouchMove = (event) => {
+   if (isFloorLevel.value && event.touches.length === 2) {
+      event.preventDefault();
+      const touch1 = event.touches[0];
+      const touch2 = event.touches[1];
+      const distance = Math.sqrt(
+         Math.pow(touch2.clientX - touch1.clientX, 2) +
+            Math.pow(touch2.clientY - touch1.clientY, 2)
+      );
+      if (initialPinchDistance.value > 0) {
+         const scaleRatio = distance / initialPinchDistance.value;
+         const newScale = Math.max(
+            calculateMinZoomForFloor(),
+            Math.min(maxZoom, initialPinchScale.value * scaleRatio)
+         );
+         if (newScale !== scale.value) {
+            scale.value = newScale;
+            const centerX = (touch1.clientX + touch2.clientX) / 2;
+            const centerY = (touch1.clientY + touch2.clientY) / 2;
+            const containerRect = imageWrapperRef.value.getBoundingClientRect();
+            const newPosition = {
+               x:
+                  centerX -
+                  containerRect.left -
+                  initialPinchCenter.value.mapX * newScale,
+               y:
+                  centerY -
+                  containerRect.top -
+                  initialPinchCenter.value.mapY * newScale,
+            };
+            position.value = imageDrag.constrainPosition(newPosition, newScale);
+            lastPosition.value = { ...position.value };
+         }
+      }
+   } else if (isFloorLevel.value && isDragging.value && event.touches.length === 1) {
+      event.preventDefault();
+      const touch = event.touches[0];
+      const newPosition = {
+         x: touch.clientX - imageDrag.dragStart.value.x,
+         y: touch.clientY - imageDrag.dragStart.value.y,
+      };
+      position.value = imageDrag.constrainPosition(newPosition, scale.value);
+      lastPosition.value = { ...position.value };
+   } else if (event.touches.length === 1) {
+      originalHandleTouchMove(event);
+   }
+};
+
+const originalHandleTouchEnd = imageDrag.handleTouchEnd;
+imageDrag.handleTouchEnd = (event) => {
+   if (event.touches.length === 0 || event.touches.length === 1) {
+      initialPinchDistance.value = 0;
+      if (event.touches.length === 1) {
+         originalHandleTouchStart(event);
+      } else {
+         originalHandleTouchEnd(event);
+      }
+   } else {
+      originalHandleTouchEnd(event);
+   }
+};
 
 const homeImageStyle = computed(() => {
    const dragStyle = imageDrag.imageStyle.value;
@@ -452,6 +680,8 @@ watch(
          }
       }
 
+      scale.value = 1;
+
       shouldCenterOnLoad.value = true;
       updateActiveImageRef();
       nextTick(() => {
@@ -461,8 +691,17 @@ watch(
                `.home-image-level[data-level="${activeLevel}"]`
             ) || homeImageRef.value;
          if (activeImage?.complete) {
+            calculateImageDimensions();
             setTimeout(() => {
-               imageDrag.centerPosition();
+               if (typeof activeLevel === "string" && activeLevel.startsWith("floor-")) {
+                  const currentMinZoom = calculateMinZoomForFloor();
+                  scale.value = currentMinZoom;
+                  const centerPos = getCenterPositionForFloor(currentMinZoom);
+                  position.value = imageDrag.constrainPosition(centerPos, currentMinZoom);
+                  lastPosition.value = { ...position.value };
+               } else {
+                  imageDrag.centerPosition();
+               }
                shouldCenterOnLoad.value = false;
             }, 100);
          } else {
@@ -498,7 +737,16 @@ const onImageLoad = () => {
 
    if (imageDimensions.value.width > 0 && imageDimensions.value.height > 0) {
       setTimeout(() => {
-         imageDrag.centerPosition();
+         const activeLevel = getActiveLevel();
+         if (typeof activeLevel === "string" && activeLevel.startsWith("floor-")) {
+            const currentMinZoom = calculateMinZoomForFloor();
+            scale.value = currentMinZoom;
+            const centerPos = getCenterPositionForFloor(currentMinZoom);
+            position.value = imageDrag.constrainPosition(centerPos, currentMinZoom);
+            lastPosition.value = { ...position.value };
+         } else {
+            imageDrag.centerPosition();
+         }
          if (shouldCenterOnLoad.value) {
             shouldCenterOnLoad.value = false;
          }
@@ -538,13 +786,39 @@ const handleResize = (event) => {
          ) || homeImageRef.value;
       if (activeImage?.complete) {
          calculateImageDimensions();
-         // Trigger mask update after dimensions are recalculated
+         if (typeof activeLevel === "string" && activeLevel.startsWith("floor-")) {
+            const calculatedMinZoom = calculateMinZoomForFloor();
+            if (scale.value < calculatedMinZoom) {
+               scale.value = calculatedMinZoom;
+            }
+            position.value = imageDrag.constrainPosition(position.value, scale.value);
+            lastPosition.value = { ...position.value };
+         }
          setTimeout(() => {
             window.dispatchEvent(new CustomEvent("mask-update"));
          }, 100);
       }
    }
 };
+
+watch(
+   position,
+   (newPos) => {
+      lastPosition.value = { ...newPos };
+   },
+   { deep: true }
+);
+
+watch(scale, (newScale) => {
+   if (!isFloorLevel.value) return;
+   const currentMinZoom = calculateMinZoomForFloor();
+   if (newScale < currentMinZoom) {
+      scale.value = currentMinZoom;
+      return;
+   }
+   position.value = imageDrag.constrainPosition(position.value, newScale);
+   lastPosition.value = { ...position.value };
+});
 
 const {
    editMode,
@@ -813,6 +1087,34 @@ const handleImageMouseUp = () => {
 
 const handleImageWheel = (event) => {
    event.preventDefault();
+   if (!isFloorLevel.value) return;
+
+   const delta = event.deltaY > 0 ? -0.1 : 0.1;
+   const currentMinZoom = calculateMinZoomForFloor();
+   const newScale = Math.max(
+      currentMinZoom,
+      Math.min(maxZoom, scale.value + delta)
+   );
+
+   if (newScale === scale.value) return;
+   if (!imageWrapperRef.value || !homeImageRef.value) return;
+
+   const rect = imageWrapperRef.value.getBoundingClientRect();
+   const mouseX = event.clientX - rect.left;
+   const mouseY = event.clientY - rect.top;
+
+   const mapX = (mouseX - position.value.x) / scale.value;
+   const mapY = (mouseY - position.value.y) / scale.value;
+
+   scale.value = newScale;
+
+   const newPosition = {
+      x: mouseX - mapX * newScale,
+      y: mouseY - mapY * newScale,
+   };
+
+   position.value = imageDrag.constrainPosition(newPosition, newScale);
+   lastPosition.value = { ...position.value };
 };
 
 watch(
@@ -983,6 +1285,10 @@ onUnmounted(() => {
    -ms-user-select: none;
    touch-action: none;
    cursor: grab;
+}
+
+.home-image-wrapper-floor {
+   touch-action: pan-x pan-y pinch-zoom;
 }
 
 .home-image-wrapper:active {
@@ -1308,6 +1614,44 @@ onUnmounted(() => {
    pointer-events: none;
    cursor: default;
    z-index: 13;
+}
+
+.home-floor-plan-btn {
+   position: absolute;
+   top: 50%;
+   right: 1rem;
+   transform: translateY(-50%);
+   width: 48px;
+   height: 48px;
+   border-radius: 50%;
+   background: rgba(14, 14, 14, 0.6);
+   backdrop-filter: blur(8px);
+   border: 1px solid rgba(255, 255, 255, 0.2);
+   color: #fff;
+   cursor: pointer;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   z-index: 15;
+   transition: all 0.2s ease;
+}
+
+.home-floor-plan-btn:hover {
+   background: rgba(14, 14, 14, 0.8);
+   border-color: rgba(255, 255, 255, 0.4);
+   transform: translateY(-50%) scale(1.05);
+}
+
+.home-floor-plan-btn:active {
+   transform: translateY(-50%) scale(0.95);
+}
+
+@media (max-width: 768px) {
+   .home-floor-plan-btn {
+      right: 0.75rem;
+      width: 44px;
+      height: 44px;
+   }
 }
 
 .home-navigation-arrows {
