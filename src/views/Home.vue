@@ -333,7 +333,7 @@
                      @click="toggleDisclaimerMode"
                   >
                      <Icon name="attention" :size="24" color="currentColor" />
-                     <p>About</p>
+                     <p>Hotels</p>
                   </div>
                   <div v-if="editMode" class="home-content-top-edit-mode">
                      <Icon name="help" :size="24" color="currentColor" />
