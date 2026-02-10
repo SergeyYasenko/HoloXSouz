@@ -12,19 +12,6 @@ jobs:
     steps:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 2 # нужно для проверки изменений
-
-      - name: 🔍 Check for package.json changes
-        id: check-package
-        run: |
-          if git diff --name-only HEAD~1 HEAD | grep -q "package.json\|package-lock.json"; then
-            echo "changed=true" >> $GITHUB_OUTPUT
-            echo "📦 package.json changed - will run npm install"
-          else
-            echo "changed=false" >> $GITHUB_OUTPUT
-            echo "✅ package.json unchanged - skipping npm install"
-          fi
 
       - name: ⚙️ Setup Node.js
         uses: actions/setup-node@v4
@@ -33,7 +20,6 @@ jobs:
           cache: 'npm'
 
       - name: 📦 Install dependencies
-        if: steps.check-package.outputs.changed == 'true' || github.event_name == 'workflow_dispatch'
         run: |
           echo "Installing dependencies..."
           npm ci
