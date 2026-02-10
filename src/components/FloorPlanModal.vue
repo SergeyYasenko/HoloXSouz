@@ -245,15 +245,22 @@ onUnmounted(() => {
 <style scoped>
 .floor-plan-panel {
    position: fixed;
-   top: 0;
-   right: 0;
-   width: min(90vw, 600px);
-   height: 100%;
+   top: 50%;
+   right: 1rem;
+   transform: translateY(-50%);
+   width: min(90vw, 400px);
+   max-height: 80vh;
    background: rgba(14, 14, 14, 0.98);
    z-index: 100;
    display: flex;
    flex-direction: column;
    box-shadow: -4px 0 24px rgba(0, 0, 0, 0.4);
+   border-radius: 12px;
+   overflow: hidden;
+   user-select: none;
+   -webkit-user-select: none;
+   -moz-user-select: none;
+   -ms-user-select: none;
 }
 
 .floor-plan-panel-container {
@@ -263,6 +270,12 @@ onUnmounted(() => {
    cursor: grab;
    touch-action: pan-x pan-y pinch-zoom;
    background: #0e0e0e;
+   min-height: 0;
+   max-height: 80vh;
+   user-select: none;
+   -webkit-user-select: none;
+   -moz-user-select: none;
+   -ms-user-select: none;
 }
 
 .floor-plan-panel-container:active {
@@ -282,17 +295,25 @@ onUnmounted(() => {
    max-height: none;
    pointer-events: none;
    display: block;
+   user-select: none;
+   -webkit-user-select: none;
+   -moz-user-select: none;
+   -ms-user-select: none;
+   -webkit-user-drag: none;
+   -khtml-user-drag: none;
+   -moz-user-drag: none;
+   -o-user-drag: none;
+   user-drag: none;
 }
 
 .floor-plan-panel-close {
    position: absolute;
-   top: 50%;
-   right: 1rem;
-   transform: translateY(-50%);
-   width: 48px;
-   height: 48px;
+   top: 0.5rem;
+   right: 0.5rem;
+   width: 36px;
+   height: 36px;
    border-radius: 50%;
-   background: rgba(14, 14, 14, 0.6);
+   background: rgba(14, 14, 14, 0.8);
    backdrop-filter: blur(8px);
    border: 1px solid rgba(255, 255, 255, 0.2);
    color: #fff;
@@ -305,39 +326,43 @@ onUnmounted(() => {
 }
 
 .floor-plan-panel-close:hover {
-   background: rgba(14, 14, 14, 0.8);
+   background: rgba(14, 14, 14, 0.9);
    border-color: rgba(255, 255, 255, 0.4);
-   transform: translateY(-50%) scale(1.05);
+   transform: scale(1.05);
 }
 
 .floor-plan-panel-close:active {
-   transform: translateY(-50%) scale(0.95);
+   transform: scale(0.95);
 }
 
 @media (max-width: 768px) {
    .floor-plan-panel {
-      width: min(95vw, 100%);
+      width: min(85vw, 350px);
+      right: 0.75rem;
    }
 
    .floor-plan-panel-close {
-      right: 0.75rem;
-      width: 44px;
-      height: 44px;
+      right: 0.5rem;
+      top: 0.5rem;
+      width: 32px;
+      height: 32px;
    }
 }
 
 .floor-plan-slide-enter-active,
 .floor-plan-slide-leave-active {
-   transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+   transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .floor-plan-slide-enter-from,
 .floor-plan-slide-leave-to {
-   transform: translateX(100%);
+   transform: translateY(-50%) translateX(calc(100% + 1rem));
+   opacity: 0;
 }
 
 .floor-plan-slide-enter-to,
 .floor-plan-slide-leave-from {
-   transform: translateX(0);
+   transform: translateY(-50%) translateX(0);
+   opacity: 1;
 }
 </style>

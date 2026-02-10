@@ -1,0 +1,497 @@
+/**
+ * Координаты масок квартир для этажа 3.
+ * Точки в процентах от размера изображения этажа (x, y: 0-100).
+ * При клике на маску открывается 2D схема квартиры (scheme2D).
+ */
+
+import floor3Scheme1 from "../../assets/img/2DScheme/1floor/floor_1.png";
+import floor3Scheme2 from "../../assets/img/2DScheme/1floor/floor_2.png";
+
+export const floor3ApartmentMasks = [
+    // {
+    //    id: "1",
+    //    name: "1",
+    //    scheme2D: floor3Scheme1,
+    //    points: [
+    //       { x: 33.1, y: 51.1 },
+    //       { x: 37, y: 56 },
+    //       { x: 35.7, y: 59 },
+    //       { x: 33, y: 54.5 },
+    //    ],
+    // },
+    {
+       id: "2",
+       name: "2",
+       scheme2D: floor3Scheme1,
+       points: [
+          { x: 33.4, y: 47.8 },
+          { x: 37.8, y: 52.5 },
+          { x: 36.3, y: 56.4 },
+          { x: 33.2, y: 52.1 },
+       ],
+    },
+    {
+       id: "3",
+       name: "3",
+       scheme2D: floor3Scheme2,
+       points: [
+          { x: 34.8, y: 44.5 },
+          { x: 39, y: 49 },
+          { x: 37.8, y: 52.5 },
+          { x: 33.7, y: 47.8 },
+       ],
+    },
+    {
+       id: "4",
+       name: "4",
+       scheme2D: floor3Scheme1,
+       points: [
+          { x: 36, y: 41 },
+          { x: 40.2, y: 46 },
+          { x: 39.2, y: 49.2 },
+          { x: 34.8, y: 44.3 },
+       ],
+    },
+    {
+       id: "5",
+       name: "5",
+       scheme2D: floor3Scheme2,
+       points: [
+          { x: 37.5, y: 37.2 },
+          { x: 41.6, y: 42.4 },
+          { x: 40.3, y: 45.8 },
+          { x: 36.4, y: 41 },
+       ],
+    },
+    {
+       id: "6",
+       name: "6",
+       scheme2D: floor3Scheme1,
+       points: [
+          { x: 39, y: 34.5 },
+          { x: 43, y: 39 },
+          { x: 41.5, y: 42.5 },
+          { x: 37.7, y: 38 },
+       ],
+    },
+    {
+       id: "7",
+       name: "7",
+       scheme2D: floor3Scheme2,
+       points: [
+          { x: 40, y: 30.6 },
+          { x: 44.2, y: 35.2 },
+          { x: 43, y: 38.7 },
+          { x: 38.7, y: 34.2 },
+       ],
+    },
+    {
+       id: "8",
+       name: "8",
+       scheme2D: floor3Scheme1,
+       points: [
+          { x: 41.5, y: 26.8 },
+          { x: 45.4, y: 32 },
+          { x: 44.2, y: 35.5 },
+          { x: 40, y: 30.6 },
+       ],
+    },
+    {
+       id: "9",
+       name: "9",
+       scheme2D: floor3Scheme2,
+       points: [
+          { x: 42.6, y: 23.3 },
+          { x: 46.6, y: 28.5 },
+          { x: 45.3, y: 32 },
+          { x: 41.3, y: 27 },
+       ],
+    },
+    {
+       id: "10",
+       name: "10",
+       scheme2D: floor3Scheme1,
+       points: [
+          { x: 44, y: 20.2 },
+          { x: 48, y: 24.7 },
+          { x: 46.8, y: 28.7 },
+          { x: 42.7, y: 23.8 },
+       ],
+    },
+    {
+       id: "11",
+       name: "11",
+       scheme2D: floor3Scheme2,
+       points: [
+          { x: 45.2, y: 17 },
+          { x: 49.2, y: 21.8 },
+          { x: 48.1, y: 25.6 },
+          { x: 44, y: 20.6 },
+       ],
+    },
+    {
+       id: "12",
+       name: "12",
+       scheme2D: floor3Scheme1,
+       points: [
+          { x: 46.5, y: 13.8 },
+          { x: 50.4, y: 18.5 },
+          { x: 49.2, y: 21.8 },
+          { x: 45.3, y: 16.8 },
+       ],
+    },
+    {
+       id: "13",
+       name: "13",
+       scheme2D: floor3Scheme2,
+       points: [
+          { x: 48, y: 9.5 },
+          { x: 52, y: 14.6 },
+          { x: 50.7, y: 18.3 },
+          { x: 46.7, y: 13.4 },
+       ],
+    },
+    {
+       id: "2r",
+       name: "2r",
+       scheme2D: floor3Scheme1,
+       points: [
+          { x: 38.6, y: 53.7 },
+          { x: 43, y: 58.9 },
+          { x: 40.9, y: 61.3 },
+          { x: 37.2, y: 57.3 },
+       ],
+    },
+    {
+       id: "3r",
+       name: "3r",
+       scheme2D: floor3Scheme2,
+       points: [
+          { x: 40, y: 50.1 },
+          { x: 44.3, y: 54.5 },
+          { x: 43, y: 58.7 },
+          { x: 38.8, y: 53.5 },
+       ],
+    },
+   //  {
+   //     id: "4r",
+   //     name: "4r",
+   //     scheme2D: floor3Scheme2,
+   //     points: [
+   //        { x: 41.6, y: 46.5 },
+   //        { x: 45.5, y: 51.5 },
+   //        { x: 44.3, y: 54.4 },
+   //        { x: 40.4, y: 50 },
+   //     ],
+   //  },
+    {
+       id: "5r",
+       name: "5r",
+       scheme2D: floor3Scheme1,
+       points: [
+          { x: 42.8, y: 43.5 },
+          { x: 46.8, y: 47.9 },
+          { x: 45.5, y: 51.3 },
+          { x: 41.7, y: 46.5 },
+       ],
+    },
+    {
+       id: "6r",
+       name: "6r",
+       scheme2D: floor3Scheme2,
+       points: [
+          { x: 44, y: 40 },
+          { x: 48, y: 44.5 },
+          { x: 46.6, y: 48 },
+          { x: 42.8, y: 43.5 },
+       ],
+    },
+    {
+       id: "7r",
+       name: "7r",
+       scheme2D: floor3Scheme1,
+       points: [
+          { x: 45.3, y: 36.5 },
+          { x: 49.3, y: 41.5 },
+          { x: 48, y: 44.5 },
+          { x: 44, y: 40 },
+       ],
+    },
+    {
+       id: "8r",
+       name: "8r",
+       scheme2D: floor3Scheme2,
+       points: [
+          { x: 46.5, y: 33.7 },
+          { x: 50.3, y: 38 },
+          { x: 49.2, y: 41 },
+          { x: 45.3, y: 36.5 },
+       ],
+    },
+   //  {
+   //     id: "10r",
+   //     name: "10r",
+   //     scheme2D: floor3Scheme2,
+   //     points: [
+   //        { x: 49.1, y: 26.7 },
+   //        { x: 53.2, y: 31.4 },
+   //        { x: 52.1, y: 34.3 },
+   //        { x: 48, y: 29.5 },
+   //     ],
+   //  },
+    {
+       id: "11r",
+       name: "11r",
+       scheme2D: floor3Scheme1,
+       points: [
+          { x: 50.3, y: 23.5 },
+          { x: 54.3, y: 28 },
+          { x: 52.9, y: 31.1 },
+          { x: 49, y: 26.9 },
+       ],
+    },
+    {
+       id: "12r",
+       name: "12r",
+       scheme2D: floor3Scheme2,
+       points: [
+          { x: 51.5, y: 19.7 },
+          { x: 55.4, y: 24 },
+          { x: 54.3, y: 27.8 },
+          { x: 50.3, y: 23.4 },
+       ],
+    },
+    {
+       id: "13r",
+       name: "13r",
+       scheme2D: floor3Scheme1,
+       points: [
+          { x: 53.1, y: 15.6 },
+          { x: 57.1, y: 20.3 },
+          { x: 55.8, y: 23.8 },
+          { x: 51.8, y: 18.9 },
+       ],
+    },
+    // Правое крыло — копия левого, повёрнутая на 35° под углом крыла
+    {
+       id: "1w",
+       name: "1w",
+       scheme2D: floor3Scheme2,
+       points: [
+          { x: 61.3, y: 30.6 },
+          { x: 57, y: 32.6 },
+          { x: 56.2, y: 35.5 },
+          { x: 56.7, y: 37.5 },
+          { x: 62.2, y: 34.3 },
+       ],
+    },
+    {
+       id: "2w",
+       name: "2w",
+       scheme2D: floor3Scheme1,
+       points: [
+          { x: 62.3, y: 34.6 },
+          { x: 57.2, y:37.3 },
+          { x: 57.8, y: 40.9 },
+          { x: 63, y: 38.1 },
+       ],
+    },
+    {
+       id: "3w",
+       name: "3w",
+       scheme2D: floor3Scheme2,
+       points: [
+          { x: 63, y: 38.2 },
+          { x: 57.9, y: 41 },
+          { x: 58.6, y: 45 },
+          { x: 63.8, y: 41.9 },
+       ],
+    },
+    {
+       id: "4w",
+       name: "4w",
+       scheme2D: floor3Scheme1,
+       points: [
+          { x: 64, y: 42 },
+          { x: 58.8, y: 45 },
+          { x: 59.5, y: 48.5 },
+          { x: 64.8, y: 45.5 },
+       ],
+    },
+    {
+       id: "5w",
+       name: "5w",
+       scheme2D: floor3Scheme2,
+       points: [
+          { x: 64.8, y: 45.5 },
+          { x: 59.6, y: 48.7 },
+          { x: 60.2, y: 52.3 },
+          { x: 65.7, y: 49.5 },
+       ],
+    },
+    {
+       id: "6w",
+       name: "6w",
+       scheme2D: floor3Scheme1,
+       points: [
+          { x: 65.8, y: 49.7 },
+          { x: 60.4, y: 52.6 },
+          { x: 60.9, y: 56.3 },
+          { x: 66.5, y: 53.5 },
+       ],
+    },
+    {
+       id: "7w",
+       name: "7w",
+       scheme2D: floor3Scheme2,
+       points: [
+          { x: 66.6, y: 53.5 },
+          { x: 60.9, y: 56.4 },
+          { x: 61.7, y: 60.5 },
+          { x: 67.5, y: 57.8 },
+       ],
+    },
+    {
+       id: "8w",
+       name: "8w",
+       scheme2D: floor3Scheme1,
+       points: [
+          { x: 67.4, y: 57.8 },
+          { x: 61.7, y: 60.8 },
+          { x: 62.3, y: 64.8 },
+          { x: 68.2, y: 61.8 },
+       ],
+    },
+    {
+       id: "9w",
+       name: "9w",
+       scheme2D: floor3Scheme2,
+       points: [
+          { x: 68.2, y: 61.6 },
+          { x: 62.4, y: 64.9 },
+          { x: 63, y: 68.7 },
+          { x: 68.9, y: 65.8 },
+       ],
+    },
+    {
+       id: "10w",
+       name: "10w",
+       scheme2D: floor3Scheme1,
+       points: [
+          { x: 63, y: 68.7 },
+          { x: 68.8, y: 65.7 },
+          { x: 69.4, y: 69.2 },
+          { x: 63.7, y: 72.4 },
+       ],
+    },
+    {
+       id: "11w",
+       name: "11w",
+       scheme2D: floor3Scheme2,
+       points: [
+          { x: 69.5, y: 69.4 },
+          { x: 63.7, y: 72.5 },
+          { x: 64.5, y: 76.8 },
+          { x: 70, y: 73.7 },
+       ],
+    },
+    // {
+    //    id: "12w",
+    //    name: "12w",
+    //    scheme2D: floor3Scheme2,
+    //    points: [
+    //       { x: 69.8, y: 72.3 },
+    //       { x: 63.9, y: 75.5 },
+    //       { x: 64.4, y: 79.2 },
+    //       { x: 70.3, y: 76.3 },
+    //    ],
+    // },
+    // {
+    //    id: "13w",
+    //    name: "13w",
+    //    scheme2D: floor3Scheme2,
+    //    points: [
+    //       { x: 70.5, y: 76.3 },
+    //       { x: 64.5, y: 79.5 },
+    //       { x: 65.3, y: 83.2 },
+    //       { x: 71, y: 80.3 },
+    //    ],
+    // },
+    {
+       id: "1rw",
+       name: "1rw",
+       scheme2D: floor3Scheme1,
+       points: [
+          { x: 58.9, y: 53.2 },
+          { x: 53.6, y: 56.1 },
+          { x: 54.2, y: 59.6 },
+          { x: 59.7, y: 57.2 },
+       ],
+    },
+    {
+       id: "2rw",
+       name: "2rw",
+       scheme2D: floor3Scheme2,
+       points: [
+          { x: 59.7, y: 57.2 },
+          { x: 54.2, y: 59.8 },
+          { x: 54.8, y: 63.3 },
+          { x: 60.3, y: 60.9 },
+       ],
+    },
+    {
+       id: "3rw",
+       name: "3rw",
+       scheme2D: floor3Scheme1,
+       points: [
+          { x: 60.3, y: 60.9 },
+          { x: 54.9, y: 63.5 },
+          { x: 55.5, y: 67.4 },
+          { x: 61, y: 64.7 },
+       ],
+    },
+    {
+       id: "4rw",
+       name: "4rw",
+       scheme2D: floor3Scheme2,
+       points: [
+          { x: 61.2, y: 64.9 },
+          { x: 55.5, y: 67.7 },
+          { x: 56.3, y: 71.9 },
+          { x: 61.8, y: 69 },
+       ],
+    },
+    {
+       id: "5rw",
+       name: "5rw",
+       scheme2D: floor3Scheme1,
+       points: [
+          { x: 62.7, y: 73 },
+          { x: 57, y: 75.8 },
+          { x: 57.7, y: 80 },
+          { x: 63.3, y: 77.2 },
+       ],
+    },
+    // {
+    //    id: "6rw",
+    //    name: "6rw",
+    //    scheme2D: floor3Scheme2,
+    //    points: [
+    //       { x: 62.8, y: 75.9 },
+    //       { x: 57.5, y: 79 },
+    //       { x: 58, y: 82.5 },
+    //       { x: 63.4, y: 79.4 },
+    //    ],
+    // },
+    // {
+    //    id: "7rw",
+    //    name: "7rw",
+    //    scheme2D: floor3Scheme2,
+    //    points: [
+    //       { x: 63.5, y: 79.7 },
+    //       { x: 58.1, y: 82.7 },
+    //       { x: 58.8, y: 87 },
+    //       { x: 64.4, y: 83.7 },
+    //    ],
+    // }
+ ];

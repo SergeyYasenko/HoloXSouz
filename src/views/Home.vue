@@ -152,6 +152,24 @@
                      />
                   </template>
                </template>
+               <template v-if="isFloorLevel">
+                  <template
+                     v-for="apartment in currentFloorApartmentMasks"
+                     :key="`floor-apartment-edit-${apartment.id}`"
+                  >
+                     <HouseOutline
+                        :points="apartment.points"
+                        :path="apartment.path || ''"
+                        :stroke-width="3"
+                        :stroke-color="'rgba(0, 255, 255, 0.9)'"
+                        :glow-color="'rgba(0, 255, 255, 0.5)'"
+                        :glow-blur="20"
+                        :animated="true"
+                        :always-visible="false"
+                        :on-click="() => handleApartmentMaskClick(apartment)"
+                     />
+                  </template>
+               </template>
             </template>
             <template v-else>
                <HouseOutline
@@ -226,6 +244,23 @@
                      :animated="getFloorMaskConfig(floorId).animated"
                      :always-visible="getFloorMaskConfig(floorId).alwaysVisible"
                      :on-click="() => handleFloorClick(floorId)"
+                  />
+               </template>
+               <template
+                  v-for="apartment in currentFloorApartmentMasks"
+                  :key="`floor-apartment-${apartment.id}`"
+               >
+                  <HouseOutline
+                     v-if="isFloorLevel"
+                     :points="apartment.points"
+                     :path="apartment.path || ''"
+                     :stroke-width="3"
+                     :stroke-color="'rgba(0, 255, 255, 0.9)'"
+                     :glow-color="'rgba(0, 255, 255, 0.5)'"
+                     :glow-blur="20"
+                     :animated="true"
+                     :always-visible="false"
+                     :on-click="() => handleApartmentMaskClick(apartment)"
                   />
                </template>
             </template>
@@ -342,7 +377,7 @@
                v-if="isFloorLevel && currentFloorScheme2D && !showFloorPlanModal"
                class="home-floor-plan-btn"
                aria-label="Open floor plan"
-               @click="showFloorPlanModal = true"
+               @click="apartmentSchemeImage = null; showFloorPlanModal = true"
             >
                <Icon name="location" :size="24" color="currentColor" />
             </button>
@@ -350,7 +385,7 @@
       </div>
       <FloorPlanModal
          v-model="showFloorPlanModal"
-         :image="currentFloorScheme2D"
+         :image="(apartmentSchemeImage || currentFloorScheme2D)"
       />
    </div>
 </template>
@@ -374,6 +409,7 @@ import {
    levelImages,
    levelTransitions,
 } from "../config/navigation.js";
+import { floorApartmentMasksByFloor } from "../config/floorApartmentMasks.js";
 import { useMasks } from "../composables/useMasks.js";
 import { useLevelStorage } from "../composables/useLevelStorage.js";
 import { useNavigation } from "../composables/useNavigation.js";
@@ -402,7 +438,29 @@ const currentFloorScheme2D = computed(() => {
    return floorsConfig[floorId]?.scheme2D ?? floorsConfig[floorId]?.image ?? null;
 });
 
+const currentFloorApartmentMasks = computed(() => {
+   const level = currentLevel.value;
+   if (typeof level !== "string" || !level.startsWith("floor-")) return [];
+   const floorId = level.replace("floor-", "");
+   return floorApartmentMasksByFloor[floorId] ?? [];
+});
+
 const showFloorPlanModal = ref(false);
+const apartmentSchemeImage = ref(null);
+
+const handleApartmentMaskClick = (apartment) => {
+   apartmentSchemeImage.value = apartment.scheme2D;
+   showFloorPlanModal.value = true;
+};
+
+watch(currentLevel, (newLevel) => {
+   apartmentSchemeImage.value = null;
+   // Закрываем модальное окно при уходе с уровня этажа
+   const isNewLevelFloor = typeof newLevel === "string" && newLevel.startsWith("floor-");
+   if (!isNewLevelFloor) {
+      showFloorPlanModal.value = false;
+   }
+});
 
 const calculateMinZoomForFloor = () => {
    if (!imageWrapperRef.value) return 0.5;
