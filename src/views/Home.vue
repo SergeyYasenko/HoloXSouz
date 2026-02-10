@@ -332,7 +332,6 @@
                      class="home-content-top-about"
                      @click="toggleDisclaimerMode"
                   >
-                     <Icon name="attention" :size="24" color="currentColor" />
                      <p>Hotels</p>
                   </div>
                   <div v-if="editMode" class="home-content-top-edit-mode">
