@@ -1,0 +1,75 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch: # позволяет запускать вручную из GitHub UI
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2 # нужно для проверки изменений
+
+      - name: 🔍 Check for package.json changes
+        id: check-package
+        run: |
+          if git diff --name-only HEAD~1 HEAD | grep -q "package.json\|package-lock.json"; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "📦 package.json changed - will run npm install"
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "✅ package.json unchanged - skipping npm install"
+          fi
+
+      - name: ⚙️ Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: 📦 Install dependencies
+        if: steps.check-package.outputs.changed == 'true' || github.event_name == 'workflow_dispatch'
+        run: |
+          echo "Installing dependencies..."
+          npm ci
+          echo "✅ Dependencies installed"
+
+      - name: 🏗️ Build project
+        run: |
+          echo "Building project..."
+          npm run build
+          echo "✅ Build completed"
+          ls -lah dist/
+
+      - name: 📤 Deploy to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "dist/*"
+          target: "/var/www/holoxdubai/"
+          strip_components: 1
+          rm: false # не удалять старые файлы
+
+      - name: 🔄 Restart nginx
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            echo "Restarting nginx..."
+            sudo systemctl restart nginx
+            echo "✅ Nginx restarted"
+            sudo systemctl status nginx --no-pager
+
+      - name: ✅ Deployment success
+        run: |
+          echo "🎉 Deployment completed successfully!"
+          echo "Deployed at: $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
