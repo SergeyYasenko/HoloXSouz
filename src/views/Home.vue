@@ -165,7 +165,7 @@
                         :glow-color="'rgba(0, 255, 255, 0.5)'"
                         :glow-blur="20"
                         :animated="true"
-                        :always-visible="false"
+                        :always-visible="selectedApartmentId === apartment.id"
                         :on-click="() => handleApartmentMaskClick(apartment)"
                      />
                   </template>
@@ -259,7 +259,7 @@
                      :glow-color="'rgba(0, 255, 255, 0.5)'"
                      :glow-blur="20"
                      :animated="true"
-                     :always-visible="false"
+                     :always-visible="selectedApartmentId === apartment.id"
                      :on-click="() => handleApartmentMaskClick(apartment)"
                   />
                </template>
@@ -446,14 +446,17 @@ const currentFloorApartmentMasks = computed(() => {
 
 const showFloorPlanModal = ref(false);
 const apartmentSchemeImage = ref(null);
+const selectedApartmentId = ref(null);
 
 const handleApartmentMaskClick = (apartment) => {
+   selectedApartmentId.value = apartment.id;
    apartmentSchemeImage.value = apartment.scheme2D;
    showFloorPlanModal.value = true;
 };
 
 watch(currentLevel, (newLevel) => {
    apartmentSchemeImage.value = null;
+   selectedApartmentId.value = null;
    // Закрываем модальное окно при уходе с уровня этажа
    const isNewLevelFloor = typeof newLevel === "string" && newLevel.startsWith("floor-");
    if (!isNewLevelFloor) {
