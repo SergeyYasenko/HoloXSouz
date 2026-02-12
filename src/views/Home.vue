@@ -288,12 +288,12 @@
                <!-- Имя для house2 -->
                <div
                   v-if="currentLevel === 'map' && showHouseOutline2 && mapMaskConfig?.house2?.points"
-                  class="apartment-label apartment-label-left"
+                  class="apartment-label apartment-label-top"
                   :style="{
-                     left: getMaskLeftPosition(mapMaskConfig.house2.points).x + '%',
-                     top: getMaskLeftPosition(mapMaskConfig.house2.points).y + '%',
-                     transform: 'translate(0%, -50%)',
-                     transformOrigin: '100% 50%',
+                     left: getMaskTopPosition(mapMaskConfig.house2.points).x + '%',
+                     top: getMaskTopPosition(mapMaskConfig.house2.points).y + '%',
+                     transform: 'translate(-50%, calc(-100% - 15px))',
+                     transformOrigin: '50% 100%',
                   }"
                   @click="handleHouse2Click"
                >
@@ -337,12 +337,12 @@
                <!-- Имя для project2 -->
                <div
                   v-if="currentLevel === '2-projects' && showHouseOutline2 && twoProjectsMaskConfig?.project2?.points"
-                  class="apartment-label apartment-label-left"
+                  class="apartment-label apartment-label-top"
                   :style="{
-                     left: getMaskLeftPosition(twoProjectsMaskConfig.project2.points).x + '%',
-                     top: getMaskLeftPosition(twoProjectsMaskConfig.project2.points).y + '%',
-                     transform: 'translate(0%, -50%)',
-                     transformOrigin: '100% 50%',
+                     left: getMaskTopPosition(twoProjectsMaskConfig.project2.points).x + '%',
+                     top: getMaskTopPosition(twoProjectsMaskConfig.project2.points).y + '%',
+                     transform: 'translate(-50%, calc(-100% - 15px))',
+                     transformOrigin: '50% 100%',
                   }"
                   @click="handleProject2Click"
                >
@@ -589,6 +589,14 @@ const getMaskRightPosition = (points) => {
    // Смещение ближе к маске
    const offset = 10;
    return { x: Math.min(98, maxX + offset), y: avgY }; // Максимум 98% от левого края
+};
+
+const getMaskTopPosition = (points) => {
+   if (!points || points.length === 0) return { x: 0, y: 0 };
+   const avgX = points.reduce((sum, p) => sum + p.x, 0) / points.length;
+   const minY = Math.min(...points.map(p => p.y));
+   // Позиционирование над маской (координаты в процентах, отступ будет через margin)
+   return { x: avgX, y: minY };
 };
 
 const getInvertedMaskStyle = () => {
@@ -1827,7 +1835,7 @@ onUnmounted(() => {
    left: 0;
    width: 100%;
    height: 100%;
-   background: rgba(0, 0, 0, 0.4);
+   background: rgba(0, 0, 0, 0.6);
    pointer-events: none;
    transition: opacity 0.6s ease-in-out;
 }
@@ -1866,6 +1874,11 @@ onUnmounted(() => {
 .apartment-label-right {
    margin-left: 0.5rem;
    padding-left: 0.5rem;
+}
+
+.apartment-label-top {
+   margin-bottom: 0.5rem;
+   padding-bottom: 0.5rem;
 }
 
 @media (max-width: 768px) {
