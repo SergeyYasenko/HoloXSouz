@@ -249,8 +249,8 @@ onUnmounted(() => {
    right: 1rem;
    transform: translateY(-50%);
    width: min(90vw, 400px);
-   max-height: 80vh;
-   background: rgba(14, 14, 14, 0.98);
+   max-height: 65vh;
+   background: transparent;
    z-index: 100;
    display: flex;
    flex-direction: column;
@@ -269,9 +269,9 @@ onUnmounted(() => {
    position: relative;
    cursor: grab;
    touch-action: pan-x pan-y pinch-zoom;
-   background: #0e0e0e;
+   background: transparent;
    min-height: 0;
-   max-height: 80vh;
+   max-height: 65vh;
    user-select: none;
    -webkit-user-select: none;
    -moz-user-select: none;

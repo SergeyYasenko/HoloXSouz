@@ -12,7 +12,7 @@ export function useLevelStorage() {
       typeof sessionStorage !== "undefined"
          ? sessionStorage.getItem(STORAGE_KEY)
          : null;
-   const currentLevel = ref(savedLevel || "map");
+   const currentLevel = ref(savedLevel || "facade-start");
    const levelHistory = ref([]);
 
    // Временно: сохранять уровень при изменении (для удобства редактирования масок)

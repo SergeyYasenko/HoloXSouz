@@ -73,62 +73,96 @@
                "
             />
             <template v-if="editMode">
+               <!-- Overlay с затемнением для map и 2-projects в режиме редактирования -->
+               <div
+                  v-if="currentLevel === 'map' || currentLevel === '2-projects'"
+                  class="home-mask-overlay"
+               >
+                  <!-- SVG маска для затемнения -->
+                  <svg
+                     style="position: absolute; width: 0; height: 0; pointer-events: none;"
+                     xmlns="http://www.w3.org/2000/svg"
+                  >
+                     <defs>
+                        <mask id="darkness-mask-edit" maskUnits="objectBoundingBox" maskContentUnits="objectBoundingBox">
+                           <rect width="1" height="1" fill="white" />
+                           <!-- Временно закомментировано для house1 -->
+                           <!-- <polygon
+                              v-if="currentLevel === 'map' && showHouseOutline1 && mapMaskConfig?.house1?.points"
+                              :points="mapMaskConfig.house1.points.map(p => `${p.x/100},${p.y/100}`).join(' ')"
+                              fill="black"
+                           /> -->
+                           <polygon
+                              v-if="currentLevel === 'map' && showHouseOutline2 && mapMaskConfig?.house2?.points"
+                              :points="mapMaskConfig.house2.points.map(p => `${p.x/100},${p.y/100}`).join(' ')"
+                              fill="black"
+                           />
+                           <!-- Временно закомментировано для TheRoyalYacht -->
+                           <!-- <polygon
+                              v-if="currentLevel === '2-projects' && showHouseOutline1 && twoProjectsMaskConfig?.project1?.points"
+                              :points="twoProjectsMaskConfig.project1.points.map(p => `${p.x/100},${p.y/100}`).join(' ')"
+                              fill="black"
+                           /> -->
+                           <polygon
+                              v-if="currentLevel === '2-projects' && showHouseOutline2 && twoProjectsMaskConfig?.project2?.points"
+                              :points="twoProjectsMaskConfig.project2.points.map(p => `${p.x/100},${p.y/100}`).join(' ')"
+                              fill="black"
+                           />
+                        </mask>
+                     </defs>
+                  </svg>
+                  <div 
+                     class="home-mask-overlay-dark"
+                     :style="{ mask: 'url(#darkness-mask-edit)', WebkitMask: 'url(#darkness-mask-edit)' }"
+                  ></div>
+               </div>
                <template v-if="currentLevel === 'map'">
-                  <HouseOutline
-                     :points="mapMaskConfig.territory.points"
-                     :path="mapMaskConfig.territory.path"
-                     :stroke-width="mapMaskConfig.territory.strokeWidth"
-                     :glow-color="mapMaskConfig.territory.glowColor"
-                     :glow-blur="mapMaskConfig.territory.glowBlur"
-                     :animated="mapMaskConfig.territory.animated"
-                     :always-visible="mapMaskConfig.territory.alwaysVisible"
-                     :on-click="() => {}"
-                     class="home-disclaimer-mask"
-                  />
-                  <HouseOutline
+                  <!-- Временно закомментировано для house1 -->
+                  <!-- <HouseOutline
                      :points="mapMaskConfig.house1.points"
                      :path="mapMaskConfig.house1.path"
-                     :stroke-width="mapMaskConfig.house1.strokeWidth"
-                     :glow-color="mapMaskConfig.house1.glowColor"
-                     :glow-blur="mapMaskConfig.house1.glowBlur"
-                     :animated="mapMaskConfig.house1.animated"
-                     :always-visible="mapMaskConfig.house1.alwaysVisible"
+                     :stroke-width="0"
+                     :stroke-color="'transparent'"
+                     :glow-color="'transparent'"
+                     :glow-blur="0"
+                     :animated="false"
+                     :always-visible="true"
                      :on-click="handleHouse1Click"
-                  />
+                  /> -->
                   <HouseOutline
                      :points="mapMaskConfig.house2.points"
                      :path="mapMaskConfig.house2.path"
-                     :stroke-width="mapMaskConfig.house2.strokeWidth"
-                     :glow-color="mapMaskConfig.house2.glowColor"
-                     :glow-blur="mapMaskConfig.house2.glowBlur"
-                     :animated="mapMaskConfig.house2.animated"
-                     :always-visible="mapMaskConfig.house2.alwaysVisible"
+                     :stroke-width="0"
+                     :stroke-color="'transparent'"
+                     :glow-color="'transparent'"
+                     :glow-blur="0"
+                     :animated="false"
+                     :always-visible="true"
                      :on-click="handleHouse2Click"
                   />
                </template>
                <template v-if="currentLevel === '2-projects'">
-                  <HouseOutline
+                  <!-- Временно закомментировано для TheRoyalYacht -->
+                  <!-- <HouseOutline
                      :points="twoProjectsMaskConfig.project1.points"
                      :path="twoProjectsMaskConfig.project1.path"
-                     :stroke-width="twoProjectsMaskConfig.project1.strokeWidth"
-                     :glow-color="twoProjectsMaskConfig.project1.glowColor"
-                     :glow-blur="twoProjectsMaskConfig.project1.glowBlur"
-                     :animated="twoProjectsMaskConfig.project1.animated"
-                     :always-visible="
-                        twoProjectsMaskConfig.project1.alwaysVisible
-                     "
+                     :stroke-width="0"
+                     :stroke-color="'transparent'"
+                     :glow-color="'transparent'"
+                     :glow-blur="0"
+                     :animated="false"
+                     :always-visible="true"
                      :on-click="handleProject1Click"
-                  />
+                  /> -->
                   <HouseOutline
                      :points="twoProjectsMaskConfig.project2.points"
                      :path="twoProjectsMaskConfig.project2.path"
-                     :stroke-width="twoProjectsMaskConfig.project2.strokeWidth"
-                     :glow-color="twoProjectsMaskConfig.project2.glowColor"
-                     :glow-blur="twoProjectsMaskConfig.project2.glowBlur"
-                     :animated="twoProjectsMaskConfig.project2.animated"
-                     :always-visible="
-                        twoProjectsMaskConfig.project2.alwaysVisible
-                     "
+                     :stroke-width="0"
+                     :stroke-color="'transparent'"
+                     :glow-color="'transparent'"
+                     :glow-blur="0"
+                     :animated="false"
+                     :always-visible="true"
                      :on-click="handleProject2Click"
                   />
                </template>
@@ -172,62 +206,148 @@
                </template>
             </template>
             <template v-else>
-               <HouseOutline
-                  v-show="currentLevel === 'map' && showDisclaimerMode"
-                  :points="mapMaskConfig.territory.points"
-                  :path="mapMaskConfig.territory.path"
-                  :stroke-width="mapMaskConfig.territory.strokeWidth"
-                  :glow-color="mapMaskConfig.territory.glowColor"
-                  :glow-blur="mapMaskConfig.territory.glowBlur"
-                  :animated="mapMaskConfig.territory.animated"
-                  :always-visible="mapMaskConfig.territory.alwaysVisible"
-                  :on-click="() => {}"
-                  class="home-disclaimer-mask"
-               />
-               <HouseOutline
+               <!-- Overlay с затемнением для map и 2-projects -->
+               <div
+                  v-if="currentLevel === 'map' || currentLevel === '2-projects'"
+                  class="home-mask-overlay"
+               >
+                  <!-- SVG маска для затемнения -->
+                  <svg
+                     style="position: absolute; width: 0; height: 0; pointer-events: none;"
+                     xmlns="http://www.w3.org/2000/svg"
+                  >
+                     <defs>
+                        <mask id="darkness-mask" maskUnits="objectBoundingBox" maskContentUnits="objectBoundingBox">
+                           <rect width="1" height="1" fill="white" />
+                           <!-- Временно закомментировано для house1 -->
+                           <!-- <polygon
+                              v-if="currentLevel === 'map' && showHouseOutline1 && mapMaskConfig?.house1?.points"
+                              :points="mapMaskConfig.house1.points.map(p => `${p.x/100},${p.y/100}`).join(' ')"
+                              fill="black"
+                           /> -->
+                           <polygon
+                              v-if="currentLevel === 'map' && showHouseOutline2 && mapMaskConfig?.house2?.points"
+                              :points="mapMaskConfig.house2.points.map(p => `${p.x/100},${p.y/100}`).join(' ')"
+                              fill="black"
+                           />
+                           <!-- Временно закомментировано для TheRoyalYacht -->
+                           <!-- <polygon
+                              v-if="currentLevel === '2-projects' && showHouseOutline1 && twoProjectsMaskConfig?.project1?.points"
+                              :points="twoProjectsMaskConfig.project1.points.map(p => `${p.x/100},${p.y/100}`).join(' ')"
+                              fill="black"
+                           /> -->
+                           <polygon
+                              v-if="currentLevel === '2-projects' && showHouseOutline2 && twoProjectsMaskConfig?.project2?.points"
+                              :points="twoProjectsMaskConfig.project2.points.map(p => `${p.x/100},${p.y/100}`).join(' ')"
+                              fill="black"
+                           />
+                        </mask>
+                     </defs>
+                  </svg>
+                  <!-- Затемненный фон с SVG маской (вырезает области масок) -->
+                  <div 
+                     class="home-mask-overlay-dark"
+                     :style="getInvertedMaskStyle()"
+                  ></div>
+               </div>
+               <!-- Временно закомментировано для house1 -->
+               <!-- <HouseOutline
                   v-show="currentLevel === 'map' && showHouseOutline1"
                   :points="mapMaskConfig.house1.points"
                   :path="mapMaskConfig.house1.path"
-                  :stroke-width="mapMaskConfig.house1.strokeWidth"
-                  :glow-color="mapMaskConfig.house1.glowColor"
-                  :glow-blur="mapMaskConfig.house1.glowBlur"
-                  :animated="mapMaskConfig.house1.animated"
-                  :always-visible="mapMaskConfig.house1.alwaysVisible"
+                  :stroke-width="0"
+                  :stroke-color="'transparent'"
+                  :glow-color="'transparent'"
+                  :glow-blur="0"
+                  :animated="false"
+                  :always-visible="true"
                   :on-click="handleHouse1Click"
                />
+               <div
+                  v-if="currentLevel === 'map' && showHouseOutline1 && mapMaskConfig?.house1?.points"
+                  class="apartment-label apartment-label-right"
+                  :style="{
+                     left: getMaskRightPosition(mapMaskConfig.house1.points).x + '%',
+                     top: getMaskRightPosition(mapMaskConfig.house1.points).y + '%',
+                  }"
+               >
+                  {{ mapMasks.house1.name }}
+               </div> -->
                <HouseOutline
                   v-show="currentLevel === 'map' && showHouseOutline2"
                   :points="mapMaskConfig.house2.points"
                   :path="mapMaskConfig.house2.path"
-                  :stroke-width="mapMaskConfig.house2.strokeWidth"
-                  :glow-color="mapMaskConfig.house2.glowColor"
-                  :glow-blur="mapMaskConfig.house2.glowBlur"
-                  :animated="mapMaskConfig.house2.animated"
-                  :always-visible="mapMaskConfig.house2.alwaysVisible"
+                  :stroke-width="0"
+                  :stroke-color="'transparent'"
+                  :glow-color="'transparent'"
+                  :glow-blur="0"
+                  :animated="false"
+                  :always-visible="true"
                   :on-click="handleHouse2Click"
                />
-               <HouseOutline
+               <!-- Имя для house2 -->
+               <div
+                  v-if="currentLevel === 'map' && showHouseOutline2 && mapMaskConfig?.house2?.points"
+                  class="apartment-label apartment-label-left"
+                  :style="{
+                     left: getMaskLeftPosition(mapMaskConfig.house2.points).x + '%',
+                     top: getMaskLeftPosition(mapMaskConfig.house2.points).y + '%',
+                     transform: 'translate(0%, -50%)',
+                     transformOrigin: '100% 50%',
+                  }"
+                  @click="handleHouse2Click"
+               >
+                  {{ mapMasks.house2.name }}
+               </div>
+               <!-- Временно закомментировано для TheRoyalYacht -->
+               <!-- <HouseOutline
                   v-show="currentLevel === '2-projects' && showHouseOutline1"
                   :points="twoProjectsMaskConfig.project1.points"
                   :path="twoProjectsMaskConfig.project1.path"
-                  :stroke-width="twoProjectsMaskConfig.project1.strokeWidth"
-                  :glow-color="twoProjectsMaskConfig.project1.glowColor"
-                  :glow-blur="twoProjectsMaskConfig.project1.glowBlur"
-                  :animated="twoProjectsMaskConfig.project1.animated"
-                  :always-visible="twoProjectsMaskConfig.project1.alwaysVisible"
+                  :stroke-width="0"
+                  :stroke-color="'transparent'"
+                  :glow-color="'transparent'"
+                  :glow-blur="0"
+                  :animated="false"
+                  :always-visible="true"
                   :on-click="handleProject1Click"
                />
+               <div
+                  v-if="currentLevel === '2-projects' && showHouseOutline1 && twoProjectsMaskConfig?.project1?.points"
+                  class="apartment-label apartment-label-right"
+                  :style="{
+                     left: getMaskRightPosition(twoProjectsMaskConfig.project1.points).x + '%',
+                     top: getMaskRightPosition(twoProjectsMaskConfig.project1.points).y + '%',
+                  }"
+               >
+                  {{ twoProjectsMasks.project1.name }}
+               </div> -->
                <HouseOutline
                   v-show="currentLevel === '2-projects' && showHouseOutline2"
                   :points="twoProjectsMaskConfig.project2.points"
                   :path="twoProjectsMaskConfig.project2.path"
-                  :stroke-width="twoProjectsMaskConfig.project2.strokeWidth"
-                  :glow-color="twoProjectsMaskConfig.project2.glowColor"
-                  :glow-blur="twoProjectsMaskConfig.project2.glowBlur"
-                  :animated="twoProjectsMaskConfig.project2.animated"
-                  :always-visible="twoProjectsMaskConfig.project2.alwaysVisible"
+                  :stroke-width="0"
+                  :stroke-color="'transparent'"
+                  :glow-color="'transparent'"
+                  :glow-blur="0"
+                  :animated="false"
+                  :always-visible="true"
                   :on-click="handleProject2Click"
                />
+               <!-- Имя для project2 -->
+               <div
+                  v-if="currentLevel === '2-projects' && showHouseOutline2 && twoProjectsMaskConfig?.project2?.points"
+                  class="apartment-label apartment-label-left"
+                  :style="{
+                     left: getMaskLeftPosition(twoProjectsMaskConfig.project2.points).x + '%',
+                     top: getMaskLeftPosition(twoProjectsMaskConfig.project2.points).y + '%',
+                     transform: 'translate(0%, -50%)',
+                     transformOrigin: '100% 50%',
+                  }"
+                  @click="handleProject2Click"
+               >
+                  {{ twoProjectsMasks.project2.name }}
+               </div>
                <template
                   v-for="floorId in ['g', '1', '2', '3', '4', '5']"
                   :key="floorId"
@@ -327,13 +447,6 @@
                   </div>
                </div>
                <div class="home-content-top-actions">
-                  <div
-                     v-if="currentLevel === 'map'"
-                     class="home-content-top-about"
-                     @click="toggleDisclaimerMode"
-                  >
-                     <p>Hotels</p>
-                  </div>
                   <div v-if="editMode" class="home-content-top-edit-mode">
                      <Icon name="help" :size="24" color="currentColor" />
                      <p>Edit Mode</p>
@@ -410,6 +523,7 @@ import {
 } from "../config/navigation.js";
 import { floorApartmentMasksByFloor } from "../config/floorApartmentMasks.js";
 import { useMasks } from "../composables/useMasks.js";
+import { mapMasks, twoProjectsMasks } from "../config/navigation.js";
 import { useLevelStorage } from "../composables/useLevelStorage.js";
 import { useNavigation } from "../composables/useNavigation.js";
 import { useTransitions } from "../composables/useTransitions.js";
@@ -443,6 +557,50 @@ const currentFloorApartmentMasks = computed(() => {
    const floorId = level.replace("floor-", "");
    return floorApartmentMasksByFloor[floorId] ?? [];
 });
+
+const getMaskClipPathStyle = (points) => {
+   if (!points || points.length < 3) return {};
+   const pointsStr = points.map((p) => `${p.x}% ${p.y}%`).join(", ");
+   return {
+      clipPath: `polygon(${pointsStr})`,
+   };
+};
+
+const getMaskCenterPosition = (points) => {
+   if (!points || points.length === 0) return { x: 0, y: 0 };
+   const avgX = points.reduce((sum, p) => sum + p.x, 0) / points.length;
+   const avgY = points.reduce((sum, p) => sum + p.y, 0) / points.length;
+   return { x: avgX, y: avgY };
+};
+
+const getMaskLeftPosition = (points) => {
+   if (!points || points.length === 0) return { x: 0, y: 0 };
+   const minX = Math.min(...points.map(p => p.x));
+   const avgY = points.reduce((sum, p) => sum + p.y, 0) / points.length;
+   // Смещение ближе к маске
+   const offset = 9;
+   return { x: Math.max(2, minX - offset), y: avgY }; // Минимум 2% от левого края
+};
+
+const getMaskRightPosition = (points) => {
+   if (!points || points.length === 0) return { x: 0, y: 0 };
+   const maxX = Math.max(...points.map(p => p.x));
+   const avgY = points.reduce((sum, p) => sum + p.y, 0) / points.length;
+   // Смещение ближе к маске
+   const offset = 10;
+   return { x: Math.min(98, maxX + offset), y: avgY }; // Максимум 98% от левого края
+};
+
+const getInvertedMaskStyle = () => {
+   // Используем SVG маску для вырезания областей масок из затемнения
+   // Маска: белый = затемнение видно, черный = затемнение не видно (вырезано)
+   return {
+      mask: 'url(#darkness-mask)',
+      WebkitMask: 'url(#darkness-mask)',
+   };
+};
+
+
 
 const showFloorPlanModal = ref(false);
 const apartmentSchemeImage = ref(null);
@@ -882,10 +1040,8 @@ watch(scale, (newScale) => {
 
 const {
    editMode,
-   showDisclaimerMode,
    showHouseOutline1,
    showHouseOutline2,
-   toggleDisclaimerMode,
    mapMaskConfig,
    twoProjectsMaskConfig,
    getFloorMaskConfig,
@@ -1552,21 +1708,6 @@ onUnmounted(() => {
    font-size: 1.7rem;
 }
 
-.home-content-top-about {
-   display: flex;
-   align-items: center;
-   gap: 0.5rem;
-   background-color: #fff;
-   color: #0e0e0e;
-   padding: 0.5rem 1rem;
-   border-radius: 1rem;
-   cursor: pointer;
-   transition: all 0.3s ease;
-}
-
-.home-content-top-about:hover {
-   opacity: 0.8;
-}
 
 .home-content-top-edit-mode {
    display: flex;
@@ -1660,21 +1801,81 @@ onUnmounted(() => {
    transform: rotate(180deg) scale(1.1);
 }
 
-.home-disclaimer-mask :deep(.house-outline-wrapper) {
-   z-index: 13;
+.home-mask-overlay {
+   position: absolute;
+   top: 0;
+   left: 0;
+   width: 100%;
+   height: 100%;
+   z-index: 12;
    pointer-events: none;
+   animation: fadeInOverlay 0.6s ease-in-out;
 }
 
-.home-disclaimer-mask :deep(.house-outline-canvas) {
-   mix-blend-mode: normal;
-   z-index: 13;
+@keyframes fadeInOverlay {
+   from {
+      opacity: 0;
+   }
+   to {
+      opacity: 1;
+   }
 }
 
-.home-disclaimer-mask :deep(.house-outline-hit-area) {
+.home-mask-overlay-dark {
+   position: absolute;
+   top: 0;
+   left: 0;
+   width: 100%;
+   height: 100%;
+   background: rgba(0, 0, 0, 0.4);
    pointer-events: none;
-   cursor: default;
-   z-index: 13;
+   transition: opacity 0.6s ease-in-out;
 }
+
+.apartment-label {
+   position: absolute;
+   background: transparent;
+   color: white;
+   padding: 0.5rem 1rem;
+   border-radius: 8px;
+   border: 1px solid rgba(255, 255, 255, 0.8);
+   font-size: 16px;
+   font-weight: 500;
+   white-space: nowrap;
+   z-index: 13;
+   pointer-events: all;
+   cursor: pointer;
+   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+   transition: opacity 0.2s ease, border-color 0.2s ease;
+   will-change: transform;
+   max-width: calc(100% - 20px);
+   overflow: hidden;
+   text-overflow: ellipsis;
+}
+
+.apartment-label:hover {
+   opacity: 0.9;
+   border-color: rgba(255, 255, 255, 1);
+}
+
+.apartment-label-left {
+   margin-right: 0.5rem;
+   padding-right: 0.5rem;
+}
+
+.apartment-label-right {
+   margin-left: 0.5rem;
+   padding-left: 0.5rem;
+}
+
+@media (max-width: 768px) {
+   .apartment-label {
+      font-size: 14px;
+      padding: 0.4rem 0.8rem;
+      max-width: calc(50% - 10px);
+   }
+}
+
 
 .home-floor-plan-btn {
    position: absolute;

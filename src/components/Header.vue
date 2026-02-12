@@ -1,70 +1,79 @@
 <template>
-   <header class="header">
-      <div class="header-container">
-         <div class="header-logo-wrapper">
-            <router-link to="/" class="logo-link">
-               <img
-                  src="../assets/icons/logo.svg"
-                  alt="Palladium logo"
-                  class="logo"
-               />
-            </router-link>
-            <div class="header-location">
-               <div class="header-location-icon">
-                  <Icon name="location" :size="24" color="currentColor" />
+   <div>
+      <header class="header" :class="$attrs.class">
+         <div class="header-container">
+            <div class="header-logo-wrapper">
+               <router-link to="/" class="logo-link">
+                  <img
+                     src="../assets/icons/logo.svg"
+                     alt="Palladium logo"
+                     class="logo"
+                  />
+               </router-link>
+               <div class="header-location">
+                  <div class="header-location-icon">
+                     <Icon name="location" :size="24" color="currentColor" />
+                  </div>
+                  <div class="header-location-text">Dubai</div>
                </div>
-               <div class="header-location-text">Dubai</div>
             </div>
+            <!-- Desktop Navigation -->
+            <nav class="nav nav-desktop">
+               <router-link to="/map" class="nav-link">Map</router-link>
+               <router-link to="/" class="nav-link">Explore Projects</router-link>
+               <router-link to="/favorites" class="nav-link"
+                  >Favorites</router-link
+               >
+               <router-link to="/brochures" class="nav-link"
+                  >Brochures
+                  <Icon name="arrow-chevron" :size="24" color="currentColor" />
+               </router-link>
+            </nav>
+            <!-- Spacer for desktop (balances logo on the left) -->
+            <div class="header-spacer"></div>
+            <!-- Burger Button -->
+            <button
+               class="burger-button"
+               :class="{ 'burger-button-active': isMenuOpen }"
+               @click="toggleMenu"
+               aria-label="Toggle menu"
+            >
+               <span class="burger-line"></span>
+               <span class="burger-line"></span>
+               <span class="burger-line"></span>
+            </button>
          </div>
-         <!-- Desktop Navigation -->
-         <nav class="nav nav-desktop">
-            <router-link to="/map" class="nav-link">Map</router-link>
-            <router-link to="/" class="nav-link">Explore Projects</router-link>
-            <router-link to="/favorites" class="nav-link"
+      </header>
+      <!-- Mobile Navigation - вынесено за пределы header для корректной работы backdrop-filter -->
+      <nav class="nav nav-mobile" :class="{ 'nav-mobile-open': isMenuOpen }">
+         <div class="nav-mobile-background"></div>
+         <div class="nav-mobile-content">
+            <router-link to="/map" class="nav-link" @click="closeMenu"
+               >Map</router-link
+            >
+            <router-link to="/" class="nav-link" @click="closeMenu"
+               >Explore Projects</router-link
+            >
+            <router-link to="/favorites" class="nav-link" @click="closeMenu"
                >Favorites</router-link
             >
-            <router-link to="/brochures" class="nav-link"
+            <router-link to="/brochures" class="nav-link" @click="closeMenu"
                >Brochures
                <Icon name="arrow-chevron" :size="24" color="currentColor" />
             </router-link>
-         </nav>
-         <!-- Spacer for desktop (balances logo on the left) -->
-         <div class="header-spacer"></div>
-         <!-- Burger Button -->
-         <button
-            class="burger-button"
-            :class="{ 'burger-button-active': isMenuOpen }"
-            @click="toggleMenu"
-            aria-label="Toggle menu"
-         >
-            <span class="burger-line"></span>
-            <span class="burger-line"></span>
-            <span class="burger-line"></span>
-         </button>
-      </div>
-      <!-- Mobile Navigation -->
-      <nav class="nav nav-mobile" :class="{ 'nav-mobile-open': isMenuOpen }">
-         <router-link to="/map" class="nav-link" @click="closeMenu"
-            >Map</router-link
-         >
-         <router-link to="/" class="nav-link" @click="closeMenu"
-            >Explore Projects</router-link
-         >
-         <router-link to="/favorites" class="nav-link" @click="closeMenu"
-            >Favorites</router-link
-         >
-         <router-link to="/brochures" class="nav-link" @click="closeMenu"
-            >Brochures
-            <Icon name="arrow-chevron" :size="24" color="currentColor" />
-         </router-link>
+         </div>
       </nav>
-   </header>
+   </div>
 </template>
 
 <script setup>
 import { ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import Icon from "./Icon.vue";
+
+defineOptions({
+   inheritAttrs: false
+});
 
 const isMenuOpen = ref(false);
 const route = useRoute();
@@ -89,18 +98,28 @@ watch(
 <style scoped>
 .header {
    position: fixed;
-   background-color: #fff;
-   top: 0;
-   left: 0;
-   right: 0;
+   background-color: rgba(255, 255, 255, 0.1);
+   backdrop-filter: blur(20px);
+   -webkit-backdrop-filter: blur(20px);
+   top: 5px;
+   left: 5px;
+   right: 5px;
    z-index: 1000;
    padding: 1rem 0;
-   opacity: 0;
-   transform: translateY(-100%);
-   transition: opacity 0.3s ease, transform 0.3s ease;
-   pointer-events: none;
+   opacity: 1;
+   transform: translateY(0);
+   transition: opacity 0.3s ease, transform 0.3s ease, background-color 0.3s ease;
+   pointer-events: all;
    min-height: 92px;
    box-sizing: border-box;
+   border-radius: 16px;
+   border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.header:not(.header-visible) {
+   opacity: 0;
+   transform: translateY(-120%);
+   pointer-events: none;
 }
 
 .header.header-visible {
@@ -148,19 +167,19 @@ watch(
 }
 
 .logo {
-   color: #0e0e0e;
+   color: #fff;
    margin: 0;
    max-height: 60px;
    height: 100%;
    display: block;
-   filter: brightness(0) saturate(100%);
+   filter: brightness(0) invert(1);
 }
 
 .header-location {
    display: flex;
    align-items: center;
    gap: 0.5rem;
-   color: #a9a9aa;
+   color: rgba(255, 255, 255, 0.8);
 }
 
 .header-location-text {
@@ -193,9 +212,9 @@ watch(
 }
 
 .nav-link {
-   color: #0e0e0e;
+   color: #fff;
    text-decoration: none;
-   transition: color 0.3s ease;
+   transition: color 0.3s ease, opacity 0.3s ease;
    position: relative;
    display: flex;
    align-items: center;
@@ -207,7 +226,7 @@ watch(
 }
 
 .nav-link.router-link-active {
-   background-color: #00a5c2;
+   background-color: rgba(255, 255, 255, 0.2);
    color: #fff;
    padding: 1rem 1.2rem;
    border-radius: 1rem;
@@ -215,32 +234,35 @@ watch(
 
 /* Burger Button */
 .burger-button {
-   display: none;
+   display: flex;
    flex-direction: column;
-   justify-content: space-around;
-   width: 30px;
-   height: 30px;
+   justify-content: center;
+   align-items: center;
+   width: 40px;
+   height: 40px;
    background: transparent;
-   border: none;
+   border: 1px solid rgba(255, 255, 255, 0.5);
+   border-radius: 6px;
    cursor: pointer;
-   padding: 0;
+   padding: 8px;
    z-index: 1001;
    position: relative;
    flex: 0 0 auto;
    margin-left: auto;
+   gap: 4px;
 }
 
 .burger-line {
-   width: 100%;
-   height: 3px;
-   background-color: #0e0e0e;
-   border-radius: 2px;
+   width: 16px;
+   height: 2px;
+   background-color: #fff;
+   border-radius: 1px;
    transition: opacity 0.3s ease, transform 0.3s ease;
    transform-origin: center;
 }
 
 .burger-button-active .burger-line:nth-child(1) {
-   transform: translateY(10px) rotate(45deg);
+   transform: translateY(6px) rotate(45deg);
 }
 
 .burger-button-active .burger-line:nth-child(2) {
@@ -248,26 +270,27 @@ watch(
 }
 
 .burger-button-active .burger-line:nth-child(3) {
-   transform: translateY(-10px) rotate(-45deg);
+   transform: translateY(-6px) rotate(-45deg);
 }
 
 /* Mobile Navigation */
 .nav-mobile {
    display: none;
    flex-direction: column;
-   position: absolute;
-   top: 100%;
-   left: 0;
-   right: 0;
-   background-color: #fff;
-   padding: 2rem;
-   gap: 1.5rem;
-   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+   position: fixed;
+   top: 102px;
+   left: 5px;
+   right: 5px;
+   padding: 0;
    transform: translateY(-100%);
    opacity: 0;
    visibility: hidden;
-   transition: transform 0.3s ease, opacity 0.3s ease, visibility 0.3s ease;
-   z-index: 1000;
+   transition: transform 0.3s ease, opacity 0.1s ease, visibility 0.1s ease;
+   z-index: 1002;
+   border-radius: 16px;
+   overflow: hidden;
+   max-height: calc(100vh - 97px);
+   isolation: isolate;
 }
 
 .nav-mobile-open {
@@ -276,18 +299,54 @@ watch(
    visibility: visible;
 }
 
-.nav-mobile .nav-link {
+.nav-mobile-background {
+   opacity: 1 !important;
+   transform: none !important;
+   transition: none !important;
+}
+
+.nav-mobile-background {
+   position: absolute;
+   top: 0;
+   left: 0;
+   right: 0;
+   bottom: 0;
+   background-color: rgba(255, 255, 255, 0.1);
+   backdrop-filter: blur(20px);
+   -webkit-backdrop-filter: blur(20px);
+   border: 1px solid rgba(255, 255, 255, 0.3);
+   border-top: none;
+   border-radius: 16px;
+   z-index: 0;
+   pointer-events: none;
+   opacity: 1;
+   transform: none;
+   transition: none;
+   will-change: auto;
+}
+
+.nav-mobile-content {
+   position: relative;
+   display: flex;
+   flex-direction: column;
+   padding: 2rem;
+   gap: 1.5rem;
+   z-index: 1;
+   isolation: isolate;
+}
+
+.nav-mobile-content .nav-link {
    padding: 1rem;
-   border-bottom: 1px solid #f0f0f0;
+   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
    font-size: 1.1rem;
 }
 
-.nav-mobile .nav-link:last-child {
+.nav-mobile-content .nav-link:last-child {
    border-bottom: none;
 }
 
-.nav-mobile .nav-link.router-link-active {
-   background-color: #00a5c2;
+.nav-mobile-content .nav-link.router-link-active {
+   background-color: rgba(255, 255, 255, 0.2);
    color: #fff;
    border-radius: 0.5rem;
    border-bottom: none;
