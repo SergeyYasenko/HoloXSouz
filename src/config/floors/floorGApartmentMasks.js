@@ -3,14 +3,19 @@
  * Точки в процентах от размера изображения этажа (x, y: 0-100).
  * При клике на маску открывается 2D схема квартиры (scheme2D).
  */
-import floorGScheme1 from "../../assets/img/2DScheme/1floor/floor_1.png";
-import floorGScheme2 from "../../assets/img/2DScheme/1floor/floor_2.png";
+import floorGScheme1 from "../../assets/img/2DScheme/1floor/2D-SchemeL.png";
+import floorGScheme2 from "../../assets/img/2DScheme/1floor/2D-SchemeR.png";
+import floorGScheme3DLeft from "../../assets/img/2DScheme/1floor/3D-SchemeL.png";
+import floorGScheme3DRight from "../../assets/img/2DScheme/1floor/3D-SchemeR.png";
 
 export const floorGApartmentMasks = [
     {
         id: "0",
         name: "0",
         scheme2D: floorGScheme1,
+        view3D: floorGScheme3DLeft,
+        scheme3DLeft: floorGScheme3DLeft,
+        scheme3DRight: floorGScheme3DRight,
         points: [
            { x: 31.5, y: 54 },
            { x: 35.7, y: 59 },
@@ -22,6 +27,9 @@ export const floorGApartmentMasks = [
        id: "1",
        name: "1",
        scheme2D: floorGScheme2,
+       view3D: floorGScheme3DRight,
+       scheme3DLeft: floorGScheme3DLeft,
+       scheme3DRight: floorGScheme3DRight,
        points: [
           { x: 33.1, y: 51.1 },
           { x: 37, y: 56 },
@@ -33,6 +41,9 @@ export const floorGApartmentMasks = [
        id: "2",
        name: "2",
        scheme2D: floorGScheme1,
+       view3D: floorGScheme3DLeft,
+       scheme3DLeft: floorGScheme3DLeft,
+       scheme3DRight: floorGScheme3DRight,
        points: [
           { x: 34.4, y: 47.8 },
           { x: 38.2, y: 52.5 },
@@ -44,6 +55,9 @@ export const floorGApartmentMasks = [
        id: "3",
        name: "3",
        scheme2D: floorGScheme2,
+       view3D: floorGScheme3DRight,
+       scheme3DLeft: floorGScheme3DLeft,
+       scheme3DRight: floorGScheme3DRight,
        points: [
           { x: 35.6, y: 44.6 },
           { x: 39.5, y: 49 },
@@ -55,6 +69,9 @@ export const floorGApartmentMasks = [
        id: "4",
        name: "4",
        scheme2D: floorGScheme1,
+       view3D: floorGScheme3DLeft,
+       scheme3DLeft: floorGScheme3DLeft,
+       scheme3DRight: floorGScheme3DRight,
        points: [
           { x: 36.8, y: 41 },
           { x: 40.7, y: 46 },
@@ -66,6 +83,9 @@ export const floorGApartmentMasks = [
        id: "5",
        name: "5",
        scheme2D: floorGScheme2,
+       view3D: floorGScheme3DRight,
+       scheme3DLeft: floorGScheme3DLeft,
+       scheme3DRight: floorGScheme3DRight,
        points: [
           { x: 38, y: 38 },
           { x: 42, y: 42.4 },
@@ -77,6 +97,9 @@ export const floorGApartmentMasks = [
        id: "6",
        name: "6",
        scheme2D: floorGScheme1,
+       view3D: floorGScheme3DLeft,
+       scheme3DLeft: floorGScheme3DLeft,
+       scheme3DRight: floorGScheme3DRight,
        points: [
           { x: 39.2, y: 34.5 },
           { x: 43.2, y: 39 },
@@ -88,6 +111,9 @@ export const floorGApartmentMasks = [
        id: "7",
        name: "7",
        scheme2D: floorGScheme2,
+       view3D: floorGScheme3DRight,
+       scheme3DLeft: floorGScheme3DLeft,
+       scheme3DRight: floorGScheme3DRight,
        points: [
           { x: 40.5, y: 31 },
           { x: 44.5, y: 35.5 },
@@ -99,6 +125,9 @@ export const floorGApartmentMasks = [
        id: "8",
        name: "8",
        scheme2D: floorGScheme1,
+       view3D: floorGScheme3DLeft,
+       scheme3DLeft: floorGScheme3DLeft,
+       scheme3DRight: floorGScheme3DRight,
        points: [
           { x: 41.8, y: 27.5 },
           { x: 45.8, y: 32.5 },
@@ -110,6 +139,9 @@ export const floorGApartmentMasks = [
        id: "9",
        name: "9",
        scheme2D: floorGScheme2,
+       view3D: floorGScheme3DRight,
+       scheme3DLeft: floorGScheme3DLeft,
+       scheme3DRight: floorGScheme3DRight,
        points: [
           { x: 43, y: 24.3 },
           { x: 47, y: 29 },
@@ -121,6 +153,9 @@ export const floorGApartmentMasks = [
        id: "10",
        name: "10",
        scheme2D: floorGScheme1,
+       view3D: floorGScheme3DLeft,
+       scheme3DLeft: floorGScheme3DLeft,
+       scheme3DRight: floorGScheme3DRight,
        points: [
           { x: 44.3, y: 21.2 },
           { x: 48.2, y: 25.7 },
@@ -132,6 +167,9 @@ export const floorGApartmentMasks = [
        id: "11",
        name: "11",
        scheme2D: floorGScheme2,
+       view3D: floorGScheme3DRight,
+       scheme3DLeft: floorGScheme3DLeft,
+       scheme3DRight: floorGScheme3DRight,
        points: [
           { x: 45.5, y: 18 },
           { x: 49.5, y: 22.5 },
@@ -143,6 +181,9 @@ export const floorGApartmentMasks = [
        id: "12",
        name: "12",
        scheme2D: floorGScheme1,
+       view3D: floorGScheme3DLeft,
+       scheme3DLeft: floorGScheme3DLeft,
+       scheme3DRight: floorGScheme3DRight,
        points: [
           { x: 46.7, y: 14.5 },
           { x: 50.6, y: 19.2 },
@@ -154,6 +195,9 @@ export const floorGApartmentMasks = [
        id: "13",
        name: "13",
        scheme2D: floorGScheme2,
+       view3D: floorGScheme3DRight,
+       scheme3DLeft: floorGScheme3DLeft,
+       scheme3DRight: floorGScheme3DRight,
        points: [
           { x: 48, y: 11.5 },
           { x: 52, y: 16.3 },
@@ -166,6 +210,9 @@ export const floorGApartmentMasks = [
         id: "0r",
         name: "0r",
         scheme2D: floorGScheme1,
+        view3D: floorGScheme3DLeft,
+        scheme3DLeft: floorGScheme3DLeft,
+        scheme3DRight: floorGScheme3DRight,
         points: [
            { x: 36.5, y: 60.3 },
            { x: 40.7, y: 64.5 },
@@ -177,6 +224,9 @@ export const floorGApartmentMasks = [
        id: "1r",
        name: "1r",
        scheme2D: floorGScheme2,
+       view3D: floorGScheme3DRight,
+       scheme3DLeft: floorGScheme3DLeft,
+       scheme3DRight: floorGScheme3DRight,
        points: [
           { x: 37.9, y: 56.6 },
           { x: 41.8, y: 61.5 },
@@ -188,6 +238,9 @@ export const floorGApartmentMasks = [
        id: "2r",
        name: "2r",
        scheme2D: floorGScheme1,
+       view3D: floorGScheme3DLeft,
+       scheme3DLeft: floorGScheme3DLeft,
+       scheme3DRight: floorGScheme3DRight,
        points: [
           { x: 39.2, y: 53.3 },
           { x: 43, y: 58 },
@@ -199,6 +252,9 @@ export const floorGApartmentMasks = [
        id: "3r",
        name: "3r",
        scheme2D: floorGScheme2,
+       view3D: floorGScheme3DRight,
+       scheme3DLeft: floorGScheme3DLeft,
+       scheme3DRight: floorGScheme3DRight,
        points: [
           { x: 40.4, y: 50.1 },
           { x: 44.3, y: 54.5 },
@@ -221,6 +277,9 @@ export const floorGApartmentMasks = [
        id: "5r",
        name: "5r",
        scheme2D: floorGScheme1,
+       view3D: floorGScheme3DLeft,
+       scheme3DLeft: floorGScheme3DLeft,
+       scheme3DRight: floorGScheme3DRight,
        points: [
           { x: 42.8, y: 43.5 },
           { x: 46.8, y: 47.9 },
@@ -232,6 +291,9 @@ export const floorGApartmentMasks = [
        id: "6r",
        name: "6r",
        scheme2D: floorGScheme2,
+       view3D: floorGScheme3DRight,
+       scheme3DLeft: floorGScheme3DLeft,
+       scheme3DRight: floorGScheme3DRight,
        points: [
           { x: 44, y: 40 },
           { x: 48, y: 44.5 },
@@ -243,6 +305,9 @@ export const floorGApartmentMasks = [
        id: "7r",
        name: "7r",
        scheme2D: floorGScheme1,
+       view3D: floorGScheme3DLeft,
+       scheme3DLeft: floorGScheme3DLeft,
+       scheme3DRight: floorGScheme3DRight,
        points: [
           { x: 45.3, y: 36.5 },
           { x: 49.3, y: 41.5 },
@@ -254,6 +319,9 @@ export const floorGApartmentMasks = [
        id: "8r",
        name: "8r",
        scheme2D: floorGScheme2,
+       view3D: floorGScheme3DRight,
+       scheme3DLeft: floorGScheme3DLeft,
+       scheme3DRight: floorGScheme3DRight,
        points: [
           { x: 46.5, y: 33.7 },
           { x: 50.3, y: 38 },
@@ -276,6 +344,9 @@ export const floorGApartmentMasks = [
        id: "11r",
        name: "11r",
        scheme2D: floorGScheme1,
+       view3D: floorGScheme3DLeft,
+       scheme3DLeft: floorGScheme3DLeft,
+       scheme3DRight: floorGScheme3DRight,
        points: [
           { x: 50.3, y: 23.5 },
           { x: 54.3, y: 28.5 },
@@ -287,6 +358,9 @@ export const floorGApartmentMasks = [
        id: "12r",
        name: "12r",
        scheme2D: floorGScheme2,
+       view3D: floorGScheme3DRight,
+       scheme3DLeft: floorGScheme3DLeft,
+       scheme3DRight: floorGScheme3DRight,
        points: [
           { x: 51.5, y: 21 },
           { x: 55.4, y: 25.3 },
@@ -298,6 +372,9 @@ export const floorGApartmentMasks = [
        id: "13r",
        name: "13r",
        scheme2D: floorGScheme1,
+       view3D: floorGScheme3DLeft,
+       scheme3DLeft: floorGScheme3DLeft,
+       scheme3DRight: floorGScheme3DRight,
        points: [
           { x: 52.8, y: 17.7 },
           { x: 56.8, y: 22 },
@@ -310,6 +387,9 @@ export const floorGApartmentMasks = [
        id: "1w",
        name: "1w",
        scheme2D: floorGScheme2,
+       view3D: floorGScheme3DRight,
+       scheme3DLeft: floorGScheme3DLeft,
+       scheme3DRight: floorGScheme3DRight,
        points: [
           { x: 60.3, y: 31.6 },
           { x: 56.7, y: 33.6 },
@@ -322,6 +402,9 @@ export const floorGApartmentMasks = [
        id: "2w",
        name: "2w",
        scheme2D: floorGScheme1,
+       view3D: floorGScheme3DLeft,
+       scheme3DLeft: floorGScheme3DLeft,
+       scheme3DRight: floorGScheme3DRight,
        points: [
           { x: 61.4, y: 35 },
           { x: 57.2, y:37.3 },
@@ -333,6 +416,9 @@ export const floorGApartmentMasks = [
        id: "3w",
        name: "3w",
        scheme2D: floorGScheme2,
+       view3D: floorGScheme3DRight,
+       scheme3DLeft: floorGScheme3DLeft,
+       scheme3DRight: floorGScheme3DRight,
        points: [
           { x: 62, y: 38.6 },
           { x: 57.9, y: 41 },
@@ -344,6 +430,9 @@ export const floorGApartmentMasks = [
        id: "4w",
        name: "4w",
        scheme2D: floorGScheme1,
+       view3D: floorGScheme3DLeft,
+       scheme3DLeft: floorGScheme3DLeft,
+       scheme3DRight: floorGScheme3DRight,
        points: [
           { x: 63, y: 42 },
           { x: 58.5, y: 45 },
@@ -355,6 +444,9 @@ export const floorGApartmentMasks = [
        id: "5w",
        name: "5w",
        scheme2D: floorGScheme2,
+       view3D: floorGScheme3DRight,
+       scheme3DLeft: floorGScheme3DLeft,
+       scheme3DRight: floorGScheme3DRight,
        points: [
           { x: 63.8, y: 45.5 },
           { x: 59.3, y: 48.7 },
@@ -366,6 +458,9 @@ export const floorGApartmentMasks = [
        id: "6w",
        name: "6w",
        scheme2D: floorGScheme1,
+       view3D: floorGScheme3DLeft,
+       scheme3DLeft: floorGScheme3DLeft,
+       scheme3DRight: floorGScheme3DRight,
        points: [
           { x: 64, y: 49.7 },
           { x: 60, y: 52.6 },
@@ -377,6 +472,9 @@ export const floorGApartmentMasks = [
        id: "7w",
        name: "7w",
        scheme2D: floorGScheme2,
+       view3D: floorGScheme3DRight,
+       scheme3DLeft: floorGScheme3DLeft,
+       scheme3DRight: floorGScheme3DRight,
        points: [
           { x: 65, y: 53.5 },
           { x: 60.5, y: 56.4 },
@@ -388,6 +486,9 @@ export const floorGApartmentMasks = [
        id: "8w",
        name: "8w",
        scheme2D: floorGScheme1,
+       view3D: floorGScheme3DLeft,
+       scheme3DLeft: floorGScheme3DLeft,
+       scheme3DRight: floorGScheme3DRight,
        points: [
           { x: 65.5, y: 57.1 },
           { x: 61.2, y: 59.8 },
@@ -399,6 +500,9 @@ export const floorGApartmentMasks = [
        id: "9w",
        name: "9w",
        scheme2D: floorGScheme2,
+       view3D: floorGScheme3DRight,
+       scheme3DLeft: floorGScheme3DLeft,
+       scheme3DRight: floorGScheme3DRight,
        points: [
           { x: 66.2, y: 60.8 },
           { x: 61.9, y: 63.9 },
@@ -410,6 +514,9 @@ export const floorGApartmentMasks = [
        id: "10w",
        name: "10w",
        scheme2D: floorGScheme1,
+       view3D: floorGScheme3DLeft,
+       scheme3DLeft: floorGScheme3DLeft,
+       scheme3DRight: floorGScheme3DRight,
        points: [
           { x: 62.4, y: 67.6 },
           { x: 67, y: 64.3 },
@@ -421,6 +528,9 @@ export const floorGApartmentMasks = [
        id: "11w",
        name: "11w",
        scheme2D: floorGScheme2,
+       view3D: floorGScheme3DRight,
+       scheme3DLeft: floorGScheme3DLeft,
+       scheme3DRight: floorGScheme3DRight,
        points: [
           { x: 67.4, y: 68.4 },
           { x: 63.2, y: 71.2 },
@@ -432,6 +542,9 @@ export const floorGApartmentMasks = [
        id: "12w",
        name: "12w",
        scheme2D: floorGScheme1,
+       view3D: floorGScheme3DLeft,
+       scheme3DLeft: floorGScheme3DLeft,
+       scheme3DRight: floorGScheme3DRight,
        points: [
           { x: 68, y: 72.3 },
           { x: 63.5, y: 74.5 },
@@ -443,6 +556,9 @@ export const floorGApartmentMasks = [
        id: "13w",
        name: "13w",
        scheme2D: floorGScheme2,
+       view3D: floorGScheme3DRight,
+       scheme3DLeft: floorGScheme3DLeft,
+       scheme3DRight: floorGScheme3DRight,
        points: [
           { x: 69, y: 76.3 },
           { x: 64.5, y: 78.5 },
@@ -454,6 +570,9 @@ export const floorGApartmentMasks = [
       id: "14w",
       name: "14w",
       scheme2D: floorGScheme1,
+      view3D: floorGScheme3DLeft,
+      scheme3DLeft: floorGScheme3DLeft,
+      scheme3DRight: floorGScheme3DRight,
       points: [
          { x: 69.7, y: 80.3 },
          { x: 65, y: 82.5 },
@@ -465,6 +584,9 @@ export const floorGApartmentMasks = [
        id: "1rw",
        name: "1rw",
        scheme2D: floorGScheme2,
+       view3D: floorGScheme3DRight,
+       scheme3DLeft: floorGScheme3DLeft,
+       scheme3DRight: floorGScheme3DRight,
        points: [
           { x: 58.9, y: 53.2 },
           { x: 53.6, y: 56.1 },
@@ -476,6 +598,9 @@ export const floorGApartmentMasks = [
        id: "2rw",
        name: "2rw",
        scheme2D: floorGScheme1,
+       view3D: floorGScheme3DLeft,
+       scheme3DLeft: floorGScheme3DLeft,
+       scheme3DRight: floorGScheme3DRight,
        points: [
           { x: 59.7, y: 57.2 },
           { x: 54.2, y: 59.8 },
@@ -487,6 +612,9 @@ export const floorGApartmentMasks = [
        id: "3rw",
        name: "3rw",
        scheme2D: floorGScheme2,
+       view3D: floorGScheme3DRight,
+       scheme3DLeft: floorGScheme3DLeft,
+       scheme3DRight: floorGScheme3DRight,
        points: [
           { x: 60.3, y: 60.9 },
           { x: 54.9, y: 63.5 },
@@ -498,6 +626,9 @@ export const floorGApartmentMasks = [
        id: "4rw",
        name: "4rw",
        scheme2D: floorGScheme1,
+       view3D: floorGScheme3DLeft,
+       scheme3DLeft: floorGScheme3DLeft,
+       scheme3DRight: floorGScheme3DRight,
        points: [
           { x: 60.8, y: 64.9 },
           { x: 55.5, y: 67.7 },
@@ -509,6 +640,9 @@ export const floorGApartmentMasks = [
        id: "5rw",
        name: "5rw",
        scheme2D: floorGScheme2,
+       view3D: floorGScheme3DRight,
+       scheme3DLeft: floorGScheme3DLeft,
+       scheme3DRight: floorGScheme3DRight,
        points: [
           { x: 62.2, y: 71.6 },
           { x: 56.8, y: 74.4 },

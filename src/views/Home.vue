@@ -489,7 +489,7 @@
                v-if="isFloorLevel && currentFloorScheme2D && !showFloorPlanModal"
                class="home-floor-plan-btn"
                aria-label="Open floor plan"
-               @click="apartmentSchemeImage = null; showFloorPlanModal = true"
+               @click="apartmentSchemeImage = null; apartmentPlans = null; showFloorPlanModal = true"
             >
                <Icon name="location" :size="24" color="currentColor" />
             </button>
@@ -498,6 +498,7 @@
       <FloorPlanModal
          v-model="showFloorPlanModal"
          :image="(apartmentSchemeImage || currentFloorScheme2D)"
+         :plans="apartmentPlans"
       />
    </div>
 </template>
@@ -612,16 +613,22 @@ const getInvertedMaskStyle = () => {
 
 const showFloorPlanModal = ref(false);
 const apartmentSchemeImage = ref(null);
+const apartmentPlans = ref(null);
 const selectedApartmentId = ref(null);
 
 const handleApartmentMaskClick = (apartment) => {
    selectedApartmentId.value = apartment.id;
    apartmentSchemeImage.value = apartment.scheme2D;
+   apartmentPlans.value = {
+      view3D: apartment.view3D ?? apartment.scheme3DLeft ?? apartment.scheme2D,
+      view2D: apartment.scheme2D,
+   };
    showFloorPlanModal.value = true;
 };
 
 watch(currentLevel, (newLevel) => {
    apartmentSchemeImage.value = null;
+   apartmentPlans.value = null;
    selectedApartmentId.value = null;
    // Закрываем модальное окно при уходе с уровня этажа
    const isNewLevelFloor = typeof newLevel === "string" && newLevel.startsWith("floor-");

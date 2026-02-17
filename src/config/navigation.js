@@ -14,6 +14,13 @@ import floorImage3 from "../assets/video/3.png";
 import floorImage4 from "../assets/video/4.png";
 import floorImageG from "../assets/video/G.png";
 
+// Импорт 2D схем этажей (для модалки планировок)
+import floorScheme1 from "../assets/img/2DScheme/1.jpg";
+import floorScheme2 from "../assets/img/2DScheme/2.jpg";
+import floorScheme3 from "../assets/img/2DScheme/3.jpg";
+import floorScheme4 from "../assets/img/2DScheme/4.jpg";
+import floorSchemeG from "../assets/img/2DScheme/G.jpg";
+
 // Импорт видео переходов
 import internetCityVideo from "../assets/video/InternetCity.mp4";
 import theRoyalYachtVideo from "../assets/video/TheRoyalYacht.mp4";
@@ -152,6 +159,7 @@ export const floorsConfig = {
       transitionVideo: floorGVideo,
       reverseVideo: floorGReverseVideo,
       image: floorImageG,
+      scheme2D: floorSchemeG,
       path: "", // SVG path (если используется)
       points: [
          // Координаты маски для этажа G (в процентах от размера изображения)
@@ -194,7 +202,8 @@ export const floorsConfig = {
       name: "Floor 1",
       transitionVideo: floor1Video,
       reverseVideo: floor1ReverseVideo,
-      image: floorImage1, // Пока нет картинки для этажа 1
+      image: floorImage1,
+      scheme2D: floorScheme1,
       path: "",
       points: [
          // Координаты маски для этажа 1 (в процентах от размера изображения)
@@ -243,6 +252,7 @@ export const floorsConfig = {
       transitionVideo: floor2Video,
       reverseVideo: floor2ReverseVideo,
       image: floorImage2,
+      scheme2D: floorScheme2,
       path: "",
       points: [
          // Координаты маски для этажа 2 (в процентах от размера изображения)
@@ -293,6 +303,7 @@ export const floorsConfig = {
       transitionVideo: floor3Video,
       reverseVideo: floor3ReverseVideo,
       image: floorImage3,
+      scheme2D: floorScheme3,
       path: "",
       points: [
          // Координаты маски для этажа 3 (в процентах от размера изображения)
@@ -335,6 +346,7 @@ export const floorsConfig = {
       transitionVideo: floor4Video,
       reverseVideo: floor4ReverseVideo,
       image: floorImage4,
+      scheme2D: floorScheme4,
       path: "",
       points: [
          // Координаты маски для этажа 4 (в процентах от размера изображения)
