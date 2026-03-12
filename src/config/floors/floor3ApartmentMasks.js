@@ -4,10 +4,10 @@
  * При клике на маску открывается 2D схема квартиры (scheme2D).
  */
 
-import floor3Scheme1 from "../../assets/img/2DScheme/1floor/2D-SchemeL.png";
-import floor3Scheme2 from "../../assets/img/2DScheme/1floor/2D-SchemeR.png";
-import floor3Scheme3DLeft from "../../assets/img/2DScheme/1floor/3D-SchemeL.png";
-import floor3Scheme3DRight from "../../assets/img/2DScheme/1floor/3D-SchemeR.png";
+import floor3Scheme1 from "../../assets/holo/Appartments-right1.jpeg";
+import floor3Scheme2 from "../../assets/holo/Appartments-right2.jpeg";
+import floor3Scheme3DLeft from "../../assets/holo/Appartments-right1.jpeg";
+import floor3Scheme3DRight from "../../assets/holo/Appartments-right2.jpeg";
 
 export const floor3ApartmentMasks = [
     // {

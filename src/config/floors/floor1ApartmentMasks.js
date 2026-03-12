@@ -4,10 +4,10 @@
  * При клике на маску открывается 2D схема квартиры (scheme2D).
  */
 
-import floor1Scheme1 from "../../assets/img/2DScheme/1floor/2D-SchemeL.png";
-import floor1Scheme2 from "../../assets/img/2DScheme/1floor/2D-SchemeR.png";
-import floor1Scheme3DLeft from "../../assets/img/2DScheme/1floor/3D-SchemeL.png";
-import floor1Scheme3DRight from "../../assets/img/2DScheme/1floor/3D-SchemeR.png";
+import floor1Scheme1 from "../../assets/holo/Appartments-right1.jpeg";
+import floor1Scheme2 from "../../assets/holo/Appartments-right2.jpeg";
+import floor1Scheme3DLeft from "../../assets/holo/Appartments-right1.jpeg";
+import floor1Scheme3DRight from "../../assets/holo/Appartments-right2.jpeg";
 
 /**
  * Маски для этажа 1.

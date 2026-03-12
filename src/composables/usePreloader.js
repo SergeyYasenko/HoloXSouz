@@ -1,8 +1,8 @@
 import { ref, computed } from "vue";
 
-import mapImage from "../assets/video/Map.png";
-import startImage from "../assets/video/Start.png";
-import twoProjectsImage from "../assets/video/2Projects.png";
+import mapImage from "../assets/holo/Build-start.jpeg";
+import startImage from "../assets/holo/Build2-end.jpeg";
+import twoProjectsImage from "../assets/holo/Build-end.jpeg";
 
 import facadeImage from "../assets/holo/Build-end.jpeg";
 import apartmentsImage from "../assets/holo/Appartments-right1.jpeg";

@@ -2,7 +2,6 @@
 
 // Импорт статических изображений
 import mapImage from "../assets/holo/Build-start.jpeg";
-import twoProjectsBaseImage from "../assets/video/2Projects.png";
 import buildEndImage from "../assets/holo/Build-end.jpeg";
 import build2EndImage from "../assets/holo/Build2-end.jpeg";
 import build3EndImage from "../assets/holo/Build3-end.jpeg";

@@ -3,10 +3,10 @@
  * Точки в процентах от размера изображения этажа (x, y: 0-100).
  * При клике на маску открывается 2D схема квартиры (scheme2D).
  */
-import floorGScheme1 from "../../assets/img/2DScheme/1floor/2D-SchemeL.png";
-import floorGScheme2 from "../../assets/img/2DScheme/1floor/2D-SchemeR.png";
-import floorGScheme3DLeft from "../../assets/img/2DScheme/1floor/3D-SchemeL.png";
-import floorGScheme3DRight from "../../assets/img/2DScheme/1floor/3D-SchemeR.png";
+import floorGScheme1 from "../../assets/holo/Appartments-right1.jpeg";
+import floorGScheme2 from "../../assets/holo/Appartments-right2.jpeg";
+import floorGScheme3DLeft from "../../assets/holo/Appartments-right1.jpeg";
+import floorGScheme3DRight from "../../assets/holo/Appartments-right2.jpeg";
 
 export const floorGApartmentMasks = [
     {
