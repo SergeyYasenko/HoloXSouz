@@ -71,6 +71,7 @@ username ALL=(ALL) NOPASSWD: /bin/systemctl restart nginx
 2. В репозитории открой вкладку **Actions**
 3. Должен запуститься workflow **Build and Deploy**
 4. Открой запуск и посмотри логи — зелёная галочка = деплой прошёл успешно
+5. Для проверки можно сделать небольшой тестовый коммит и убедиться, что изменения доехали до сервера
 
 **Ручной запуск:** **Actions** → **Build and Deploy** → **Run workflow** → **Run workflow**
 
