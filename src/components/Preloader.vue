@@ -1,9 +1,7 @@
 <template>
    <div class="preloader" :class="{ 'preloader-hidden': !isLoading }">
       <div class="preloader-content">
-         <div class="preloader-logo">
-            <img :src="logoSrc" alt="Logo" class="preloader-logo-img" />
-         </div>
+         <div class="preloader-logo"></div>
          <div class="preloader-progress-container">
             <div class="preloader-progress-bar">
                <div
@@ -23,8 +21,6 @@
 </template>
 
 <script setup>
-import logoSrc from "../assets/icons/logo.svg";
-
 defineProps({
    progress: {
       type: Number,

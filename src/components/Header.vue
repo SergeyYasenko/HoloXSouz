@@ -3,23 +3,17 @@
       <header class="header" :class="$attrs.class">
          <div class="header-container">
             <div class="header-logo-wrapper">
-               <router-link to="/" class="logo-link">
-                  <img
-                     src="../assets/icons/logo.svg"
-                     alt="Palladium logo"
-                     class="logo"
-                  />
-               </router-link>
-               <div class="header-location">
-                  <div class="header-location-icon">
-                     <Icon name="location" :size="24" color="currentColor" />
-                  </div>
-                  <div class="header-location-text">Dubai</div>
-               </div>
+               <div class="header-left-placeholder" aria-hidden="true"></div>
             </div>
             <!-- Desktop Navigation -->
             <nav class="nav nav-desktop">
-               <router-link to="/map" class="nav-link">Map</router-link>
+               <router-link
+                  to="/map"
+                  class="nav-link"
+                  @click.prevent="handleMapClick"
+               >
+                  Map
+               </router-link>
                <router-link to="/" class="nav-link">Explore Projects</router-link>
                <router-link to="/favorites" class="nav-link"
                   >Favorites</router-link
@@ -48,9 +42,13 @@
       <nav class="nav nav-mobile" :class="{ 'nav-mobile-open': isMenuOpen }">
          <div class="nav-mobile-background"></div>
          <div class="nav-mobile-content">
-            <router-link to="/map" class="nav-link" @click="closeMenu"
-               >Map</router-link
+            <router-link
+               to="/map"
+               class="nav-link"
+               @click.prevent="handleMapClick"
             >
+               Map
+            </router-link>
             <router-link to="/" class="nav-link" @click="closeMenu"
                >Explore Projects</router-link
             >
@@ -84,6 +82,10 @@ const toggleMenu = () => {
 
 const closeMenu = () => {
    isMenuOpen.value = false;
+};
+
+const handleMapClick = () => {
+   window.location.reload();
 };
 
 // Close menu when route changes
@@ -158,33 +160,12 @@ watch(
    }
 }
 
-.header-logo-wrapper a {
-   text-decoration: none;
-}
-
-.logo-link {
-   display: inline-block;
-}
-
-.logo {
-   color: #fff;
-   margin: 0;
-   max-height: 60px;
-   height: 100%;
-   display: block;
-   filter: brightness(0) invert(1);
-}
-
-.header-location {
-   display: flex;
-   align-items: center;
-   gap: 0.5rem;
-   color: rgba(255, 255, 255, 0.8);
-}
-
-.header-location-text {
-   font-size: 1.3rem;
-   margin: 0;
+.header-left-placeholder {
+   width: 14.25rem;
+   min-width: 14.25rem;
+   height: 60px;
+   min-height: 60px;
+   flex-shrink: 0;
 }
 
 .nav {
@@ -368,8 +349,11 @@ watch(
       padding: 0 1rem;
    }
 
-   .header-location {
-      display: none;
+   .header-left-placeholder {
+      width: 7rem;
+      min-width: 7rem;
+      height: 50px;
+      min-height: 50px;
    }
 
    .nav-desktop {
@@ -384,8 +368,5 @@ watch(
       display: flex;
    }
 
-   .logo {
-      max-height: 50px;
-   }
 }
 </style>

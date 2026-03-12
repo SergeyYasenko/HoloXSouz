@@ -308,6 +308,11 @@ export function useTransitions(currentLevel, levelHistory) {
          "2-projects:map": "map-to-2-projects",
          "facade-start:start": "start-to-facade-start",
          "facade-start-2:start": "start-to-facade-start-2",
+         "facade-start-2:facade-start": "facade-start-to-facade-start-2",
+         "view-4:facade-start-2": "facade-start-to-view-4",
+         "view-5:view-4": "view-4-to-view-5",
+         "view-6:view-5": "view-5-to-view-6",
+         "facade-start:view-6": "view-6-to-facade-start",
       };
 
       const key = `${currentLevel.value}:${targetLevel}`;

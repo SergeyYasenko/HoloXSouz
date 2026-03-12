@@ -1,5 +1,5 @@
 import { ref, computed } from "vue";
-import { mapMasks, twoProjectsMasks, floorsConfig } from "../config/navigation.js";
+import { mapMasks, twoProjectsMasks, startMasks, floorsConfig } from "../config/navigation.js";
 
 export function useMasks() {
    let defaultEditMode = false;
@@ -27,52 +27,37 @@ export function useMasks() {
    };
 
    const mapMaskConfig = computed(() => ({
-      house1: {
-         points: mapMasks.house1.points,
-         path: mapMasks.house1.path,
-         strokeWidth: houseOutlineWidth.value,
-         glowColor: houseOutlineGlow.value,
-         glowBlur: houseOutlineGlowBlur.value,
-         animated: editMode.value ? false : houseOutlineAnimatedMap.value,
-         alwaysVisible: editMode.value || showDisclaimerMode.value,
-      },
       house2: {
-         points: mapMasks.house2.points,
-         path: mapMasks.house2.path,
+         points: mapMasks.house2?.points ?? [],
+         path: mapMasks.house2?.path ?? "",
          strokeWidth: houseOutlineWidth.value,
          glowColor: houseOutlineGlow.value,
          glowBlur: houseOutlineGlowBlur.value,
          animated: editMode.value ? false : houseOutlineAnimatedMap.value,
          alwaysVisible: editMode.value || showDisclaimerMode.value,
-      },
-      territory: {
-         points: mapMasks.territory.points,
-         path: mapMasks.territory.path,
-         strokeWidth: 0,
-         glowColor: "rgba(255, 0, 0, 0.3)",
-         glowBlur: 0,
-         animated: false,
-         alwaysVisible: true,
       },
    }));
 
    const twoProjectsMaskConfig = computed(() => ({
-      project1: {
-         points: twoProjectsMasks.project1.points,
-         path: twoProjectsMasks.project1.path,
+      project2: {
+         points: twoProjectsMasks.project2?.points ?? [],
+         path: twoProjectsMasks.project2?.path ?? "",
          strokeWidth: houseOutlineWidth.value,
          glowColor: houseOutlineGlow.value,
          glowBlur: houseOutlineGlowBlur.value,
          animated: editMode.value ? false : houseOutlineAnimatedMap.value,
          alwaysVisible: editMode.value,
       },
-      project2: {
-         points: twoProjectsMasks.project2.points,
-         path: twoProjectsMasks.project2.path,
+   }));
+
+   const startMaskConfig = computed(() => ({
+      toApartments: {
+         points: startMasks.toApartments?.points ?? [],
+         path: startMasks.toApartments?.path ?? "",
          strokeWidth: houseOutlineWidth.value,
          glowColor: houseOutlineGlow.value,
          glowBlur: houseOutlineGlowBlur.value,
-         animated: editMode.value ? false : houseOutlineAnimatedMap.value,
+         animated: editMode.value ? false : houseOutlineAnimated.value,
          alwaysVisible: editMode.value,
       },
    }));
@@ -101,6 +86,7 @@ export function useMasks() {
       toggleDisclaimerMode,
       mapMaskConfig,
       twoProjectsMaskConfig,
+      startMaskConfig,
       getFloorMaskConfig,
    };
 }

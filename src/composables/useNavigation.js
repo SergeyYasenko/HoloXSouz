@@ -102,28 +102,13 @@ export function useNavigation(
       }
    };
 
-   const handleFacadeStart2Click = async () => {
+   const handleFacadeStart2Click = () => {
       if (isTransitioning.value) return;
-
-      const previousLevel = currentLevel.value;
-      const wasTransitioning = isTransitioning.value;
 
       startLevelTransition(
          levelTransitions["start-to-facade-start-2"],
          "facade-start-2"
       );
-
-      await nextTick();
-
-      if (isTransitioning.value && !wasTransitioning) {
-         disabledArrowLeft.value = true;
-
-         setTimeout(() => {
-            if (currentLevel.value !== "facade-start-2" && currentLevel.value === previousLevel) {
-               disabledArrowLeft.value = false;
-            }
-         }, 2000);
-      }
    };
 
    const handleBackToStartFromFacade = () => {
@@ -151,6 +136,17 @@ export function useNavigation(
 
    const handleBackClick = () => {
       if (isTransitioning.value) return;
+
+      // При просмотре ЖК: с любого вида один шаг "Назад" возвращает на facade-start (Build3-end)
+      if (
+         currentLevel.value === "facade-start-2" ||
+         currentLevel.value === "view-4" ||
+         currentLevel.value === "view-5" ||
+         currentLevel.value === "view-6"
+      ) {
+         goBackToLevel("facade-start");
+         return;
+      }
 
       if (
          currentLevel.value === "facade-start" ||

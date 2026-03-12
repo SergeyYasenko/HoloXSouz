@@ -3,61 +3,24 @@ import { ref, computed } from "vue";
 import mapImage from "../assets/video/Map.png";
 import startImage from "../assets/video/Start.png";
 import twoProjectsImage from "../assets/video/2Projects.png";
-import leftImage from "../assets/video/Left.png";
-import rightImage from "../assets/video/Right.png";
-import floorImage1 from "../assets/video/1.png";
-import floorImage2 from "../assets/video/2.png";
-import floorImage3 from "../assets/video/3.png";
-import floorImage4 from "../assets/video/4.png";
-import floorImageG from "../assets/video/G.png";
 
-import internetCityVideo from "../assets/video/InternetCity.mp4";
-import theRoyalYachtVideo from "../assets/video/TheRoyalYacht.mp4";
-import facadeStartVideo from "../assets/video/FacadeStart.mp4";
-import facadeStart2Video from "../assets/video/FacadeStart2.mp4";
-import floor1Video from "../assets/video/Floor1.mp4";
-import floor2Video from "../assets/video/Floor2.mp4";
-import floor3Video from "../assets/video/Floor3.mp4";
-import floor4Video from "../assets/video/Floor4.mp4";
-import floorGVideo from "../assets/video/FloorG.mp4";
+import facadeImage from "../assets/holo/Build-end.jpeg";
+import apartmentsImage from "../assets/holo/Appartments-right1.jpeg";
 
-import mapNewDesktop from "../assets/img/map-new-desktop.jpg";
-import downtown from "../assets/img/downtown.png";
-import downtownTable from "../assets/img/downtown-table.png";
-import dubaiMarina from "../assets/img/dubai-marina.png";
-import dubaiMarinaTable from "../assets/img/dubai-marina-table.png";
-import marasiDrive from "../assets/img/marasi-drive.png";
-import marasiDriveTable from "../assets/img/marasi-drive-table.png";
+import build1Video from "../assets/holo/Build1.mp4";
+import build2Video from "../assets/holo/Build2.mp4";
+import build3Video from "../assets/holo/Build3.mp4";
+import build4Video from "../assets/holo/Build4.mp4";
 
 const CRITICAL_IMAGES = [mapImage, startImage, twoProjectsImage];
 
-const SECONDARY_IMAGES = [
-   leftImage,
-   rightImage,
-   floorImage1,
-   floorImage2,
-   floorImage3,
-   floorImage4,
-   floorImageG,
-   mapNewDesktop,
-   downtown,
-   downtownTable,
-   dubaiMarina,
-   dubaiMarinaTable,
-   marasiDrive,
-   marasiDriveTable,
-];
+const SECONDARY_IMAGES = [facadeImage, apartmentsImage];
 
 const VIDEOS_TO_PRELOAD = [
-   { key: "internetCity", src: internetCityVideo },
-   { key: "theRoyalYacht", src: theRoyalYachtVideo },
-   { key: "facadeStart", src: facadeStartVideo },
-   { key: "facadeStart2", src: facadeStart2Video },
-   { key: "floor1", src: floor1Video },
-   { key: "floor2", src: floor2Video },
-   { key: "floor3", src: floor3Video },
-   { key: "floor4", src: floor4Video },
-   { key: "floorG", src: floorGVideo },
+   { key: "build1", src: build1Video },
+   { key: "build2", src: build2Video },
+   { key: "build3", src: build3Video },
+   { key: "build4", src: build4Video },
 ];
 
 export function usePreloader() {
