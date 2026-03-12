@@ -65,7 +65,7 @@ username ALL=(ALL) NOPASSWD: /bin/systemctl restart nginx
 
 ---
 
-## 4. Проверка
+## 4. Проверка (быстрый чек-лист)
 
 1. Сделай коммит и пуш в `main` или `master`
 2. В репозитории открой вкладку **Actions**
