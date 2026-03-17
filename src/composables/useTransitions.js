@@ -313,6 +313,12 @@ export function useTransitions(currentLevel, levelHistory) {
          "view-5:view-4": "view-4-to-view-5",
          "view-6:view-5": "view-5-to-view-6",
          "facade-start:view-6": "view-6-to-facade-start",
+         "leftFootballField:start": "start-to-leftFootballField",
+         "sportsCourts:start": "start-to-sportsCourts",
+         "sportsCenter:start": "start-to-sportsCenter",
+         "sportsCenterTop:start": "start-to-sportsCenterTop",
+         "rightStadium:start": "start-to-rightStadium",
+         "innerCourtyard:start": "start-to-innerCourtyard",
       };
 
       const key = `${currentLevel.value}:${targetLevel}`;

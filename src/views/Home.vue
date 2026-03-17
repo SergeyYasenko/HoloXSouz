@@ -145,6 +145,16 @@
                      :always-visible="true"
                      :on-click="handleHouse2Click"
                   />
+                  <div
+                     v-if="mapMaskConfig?.house2?.points"
+                     class="apartment-label"
+                     :style="{
+                        left: getMaskBottomPosition(mapMaskConfig.house2.points).x + '%',
+                        top: getMaskBottomPosition(mapMaskConfig.house2.points).y + '%',
+                     }"
+                  >
+                     {{ mapMasks.house2.name }}
+                  </div>
                </template>
                <template v-if="currentLevel === '2-projects'">
                   <!-- Временно закомментировано для TheRoyalYacht -->
@@ -172,6 +182,91 @@
                   />
                </template>
                <template v-if="currentLevel === 'start'">
+                  <!-- Невидимые, но кликабельные маски на уровне start в режиме редактирования -->
+                  <HouseOutline
+                     v-if="startMaskConfig.toApartments?.points?.length"
+                     :points="startMaskConfig.toApartments.points"
+                     :path="startMaskConfig.toApartments.path"
+                     :stroke-width="0"
+                     :stroke-color="'transparent'"
+                     :glow-color="'transparent'"
+                     :glow-blur="0"
+                     :animated="false"
+                     :always-visible="true"
+                     :on-click="handleFacadeStartClick"
+                  />
+                  <HouseOutline
+                     v-if="startMaskConfig.leftFootballField?.points?.length"
+                     :points="startMaskConfig.leftFootballField.points"
+                     :path="startMaskConfig.leftFootballField.path"
+                     :stroke-width="0"
+                     :stroke-color="'transparent'"
+                     :glow-color="'transparent'"
+                     :glow-blur="0"
+                     :animated="false"
+                     :always-visible="true"
+                     :on-click="handleLeftFootballFieldClick"
+                  />
+                  <HouseOutline
+                     v-if="startMaskConfig.sportsCourts?.points?.length"
+                     :points="startMaskConfig.sportsCourts.points"
+                     :path="startMaskConfig.sportsCourts.path"
+                     :stroke-width="0"
+                     :stroke-color="'transparent'"
+                     :glow-color="'transparent'"
+                     :glow-blur="0"
+                     :animated="false"
+                     :always-visible="true"
+                     :on-click="handleSportsCourtsClick"
+                  />
+                  <HouseOutline
+                     v-if="startMaskConfig.sportsCenter?.points?.length"
+                     :points="startMaskConfig.sportsCenter.points"
+                     :path="startMaskConfig.sportsCenter.path"
+                     :stroke-width="0"
+                     :stroke-color="'transparent'"
+                     :glow-color="'transparent'"
+                     :glow-blur="0"
+                     :animated="false"
+                     :always-visible="true"
+                     :on-click="handleSportsCenterClick"
+                  />
+                  <HouseOutline
+                     v-if="startMaskConfig.sportsCenterTop?.points?.length"
+                     :points="startMaskConfig.sportsCenterTop.points"
+                     :path="startMaskConfig.sportsCenterTop.path"
+                     :stroke-width="0"
+                     :stroke-color="'transparent'"
+                     :glow-color="'transparent'"
+                     :glow-blur="0"
+                     :animated="false"
+                     :always-visible="true"
+                     :on-click="handleSportsCenterTopClick"
+                  />
+                  <HouseOutline
+                     v-if="startMaskConfig.rightStadium?.points?.length"
+                     :points="startMaskConfig.rightStadium.points"
+                     :path="startMaskConfig.rightStadium.path"
+                     :stroke-width="0"
+                     :stroke-color="'transparent'"
+                     :glow-color="'transparent'"
+                     :glow-blur="0"
+                     :animated="false"
+                     :always-visible="true"
+                     :on-click="handleRightStadiumClick"
+                  />
+                  <HouseOutline
+                     v-if="startMaskConfig.innerCourtyard?.points?.length"
+                     :points="startMaskConfig.innerCourtyard.points"
+                     :path="startMaskConfig.innerCourtyard.path"
+                     :stroke-width="0"
+                     :stroke-color="'transparent'"
+                     :glow-color="'transparent'"
+                     :glow-blur="0"
+                     :animated="false"
+                     :always-visible="true"
+                     :on-click="handleInnerCourtyardClick"
+                  />
                   <template
                      v-for="floorId in ['g', '1', '2', '3', '4', '5']"
                      :key="floorId"
@@ -199,11 +294,11 @@
                      <HouseOutline
                         :points="apartment.points"
                         :path="apartment.path || ''"
-                        :stroke-width="3"
-                        :stroke-color="'rgba(0, 255, 255, 0.9)'"
-                        :glow-color="'rgba(0, 255, 255, 0.5)'"
-                        :glow-blur="20"
-                        :animated="true"
+                        :stroke-width="0"
+                        :stroke-color="'transparent'"
+                        :glow-color="'transparent'"
+                        :glow-blur="0"
+                        :animated="false"
                         :always-visible="selectedApartmentId === apartment.id"
                         :on-click="() => handleApartmentMaskClick(apartment)"
                      />
@@ -211,55 +306,6 @@
                </template>
             </template>
             <template v-else>
-               <!-- Overlay с затемнением для map, 2-projects и start -->
-               <div
-                  v-if="currentLevel === 'map' || currentLevel === '2-projects' || currentLevel === 'start'"
-                  class="home-mask-overlay"
-               >
-                  <!-- SVG маска для затемнения -->
-                  <svg
-                     style="position: absolute; width: 0; height: 0; pointer-events: none;"
-                     xmlns="http://www.w3.org/2000/svg"
-                  >
-                     <defs>
-                        <mask id="darkness-mask" maskUnits="objectBoundingBox" maskContentUnits="objectBoundingBox">
-                           <rect width="1" height="1" fill="white" />
-                           <!-- Временно закомментировано для house1 -->
-                           <!-- <polygon
-                              v-if="currentLevel === 'map' && showHouseOutline1 && mapMaskConfig?.house1?.points"
-                              :points="mapMaskConfig.house1.points.map(p => `${p.x/100},${p.y/100}`).join(' ')"
-                              fill="black"
-                           /> -->
-                           <polygon
-                              v-if="currentLevel === 'map' && showHouseOutline2 && mapMaskConfig?.house2?.points"
-                              :points="mapMaskConfig.house2.points.map(p => `${p.x/100},${p.y/100}`).join(' ')"
-                              fill="black"
-                           />
-                           <!-- Временно закомментировано для TheRoyalYacht -->
-                           <!-- <polygon
-                              v-if="currentLevel === '2-projects' && showHouseOutline1 && twoProjectsMaskConfig?.project1?.points"
-                              :points="twoProjectsMaskConfig.project1.points.map(p => `${p.x/100},${p.y/100}`).join(' ')"
-                              fill="black"
-                           /> -->
-                           <polygon
-                              v-if="currentLevel === '2-projects' && showHouseOutline2 && twoProjectsMaskConfig?.project2?.points"
-                              :points="twoProjectsMaskConfig.project2.points.map(p => `${p.x/100},${p.y/100}`).join(' ')"
-                              fill="black"
-                           />
-                           <polygon
-                              v-if="currentLevel === 'start' && startMaskConfig?.toApartments?.points?.length"
-                              :points="startMaskConfig.toApartments.points.map(p => `${p.x/100},${p.y/100}`).join(' ')"
-                              fill="black"
-                           />
-                        </mask>
-                     </defs>
-                  </svg>
-                  <!-- Затемненный фон с SVG маской (вырезает области масок) -->
-                  <div 
-                     class="home-mask-overlay-dark"
-                     :style="getInvertedMaskStyle()"
-                  ></div>
-               </div>
                <!-- Временно закомментировано для house1 -->
                <!-- <HouseOutline
                   v-show="currentLevel === 'map' && showHouseOutline1"
@@ -295,6 +341,16 @@
                   :always-visible="true"
                   :on-click="handleHouse2Click"
                />
+               <div
+                  v-if="currentLevel === 'map' && mapMaskConfig?.house2?.points"
+                  class="apartment-label"
+                  :style="{
+                     left: getMaskTopPosition(mapMaskConfig.house2.points).x + '%',
+                     top: getMaskTopPosition(mapMaskConfig.house2.points).y + '%',
+                  }"
+               >
+                  {{ mapMasks.house2.name }}
+               </div>
                <!-- Временно закомментировано для TheRoyalYacht -->
                <!-- <HouseOutline
                   v-show="currentLevel === '2-projects' && showHouseOutline1"
@@ -330,7 +386,89 @@
                   :always-visible="true"
                   :on-click="handleProject2Click"
                />
-               <!-- Маска на уровне start для перехода к аппартаментам -->
+               <div
+                  v-if="currentLevel === '2-projects' && twoProjectsMaskConfig?.project2?.points"
+                  class="apartment-label"
+                  :style="{
+                     left: getMaskTopPosition(twoProjectsMaskConfig.project2.points).x + '%',
+                     top: getMaskTopPosition(twoProjectsMaskConfig.project2.points).y + '%',
+                  }"
+               >
+                  {{ twoProjectsMasks.project2.name }}
+               </div>
+               <HouseOutline
+                  v-if="currentLevel === 'start' && startMaskConfig.leftFootballField?.points?.length"
+                  :points="startMaskConfig.leftFootballField.points"
+                  :path="startMaskConfig.leftFootballField.path"
+                  :stroke-width="0"
+                  :stroke-color="'transparent'"
+                  :glow-color="'transparent'"
+                  :glow-blur="0"
+                  :animated="false"
+                  :always-visible="true"
+                  :on-click="handleLeftFootballFieldClick"
+               />
+               <HouseOutline
+                  v-if="currentLevel === 'start' && startMaskConfig.sportsCourts?.points?.length"
+                  :points="startMaskConfig.sportsCourts.points"
+                  :path="startMaskConfig.sportsCourts.path"
+                  :stroke-width="0"
+                  :stroke-color="'transparent'"
+                  :glow-color="'transparent'"
+                  :glow-blur="0"
+                  :animated="false"
+                  :always-visible="true"
+                  :on-click="handleSportsCourtsClick"
+               />
+               <HouseOutline
+                  v-if="currentLevel === 'start' && startMaskConfig.sportsCenter?.points?.length"
+                  :points="startMaskConfig.sportsCenter.points"
+                  :path="startMaskConfig.sportsCenter.path"
+                  :stroke-width="0"
+                  :stroke-color="'transparent'"
+                  :glow-color="'transparent'"
+                  :glow-blur="0"
+                  :animated="false"
+                  :always-visible="true"
+                  :on-click="handleSportsCenterClick"
+               />
+               <HouseOutline
+                  v-if="currentLevel === 'start' && startMaskConfig.sportsCenterTop?.points?.length"
+                  :points="startMaskConfig.sportsCenterTop.points"
+                  :path="startMaskConfig.sportsCenterTop.path"
+                  :stroke-width="0"
+                  :stroke-color="'transparent'"
+                  :glow-color="'transparent'"
+                  :glow-blur="0"
+                  :animated="false"
+                  :always-visible="true"
+                  :on-click="handleSportsCenterTopClick"
+               />
+               <HouseOutline
+                  v-if="currentLevel === 'start' && startMaskConfig.rightStadium?.points?.length"
+                  :points="startMaskConfig.rightStadium.points"
+                  :path="startMaskConfig.rightStadium.path"
+                  :stroke-width="0"
+                  :stroke-color="'transparent'"
+                  :glow-color="'transparent'"
+                  :glow-blur="0"
+                  :animated="false"
+                  :always-visible="true"
+                  :on-click="handleRightStadiumClick"
+               />
+               <HouseOutline
+                  v-if="currentLevel === 'start' && startMaskConfig.innerCourtyard?.points?.length"
+                  :points="startMaskConfig.innerCourtyard.points"
+                  :path="startMaskConfig.innerCourtyard.path"
+                  :stroke-width="0"
+                  :stroke-color="'transparent'"
+                  :glow-color="'transparent'"
+                  :glow-blur="0"
+                  :animated="false"
+                  :always-visible="true"
+                  :on-click="handleInnerCourtyardClick"
+               />
+               <!-- Маска на уровне start: общий контур ЖК для перехода к фасаду (без подсветки) -->
                <HouseOutline
                   v-if="currentLevel === 'start'"
                   :points="startMaskConfig.toApartments.points"
@@ -343,6 +481,83 @@
                   :always-visible="true"
                   :on-click="handleFacadeStartClick"
                />
+               <!-- Подписи зон спорткластера -->
+               <div
+                  v-if="currentLevel === 'start' && startMaskConfig?.toApartments?.points?.length"
+                  class="apartment-label"
+                  :style="{
+                     left: getMaskTopPosition(startMaskConfig.toApartments.points).x + '%',
+                     top: getMaskTopPosition(startMaskConfig.toApartments.points).y + '%',
+                  }"
+               >
+                  ЖК "СОЮЗ"
+               </div>
+               <div
+                  v-if="currentLevel === 'start' && startMaskConfig.innerCourtyard?.points?.length"
+                  class="apartment-label"
+                  :style="{
+                     left: getMaskTopPosition(startMaskConfig.innerCourtyard.points).x + '%',
+                     top: getMaskTopPosition(startMaskConfig.innerCourtyard.points).y + '%',
+                  }"
+                  @click.stop="handleInnerCourtyardClick"
+               >
+                  {{ startMasks.innerCourtyard.name }}
+               </div>
+               <div
+                  v-if="currentLevel === 'start' && startMaskConfig.leftFootballField?.points?.length"
+                  class="apartment-label"
+                  :style="{
+                     left: getMaskTopPosition(startMaskConfig.leftFootballField.points).x + '%',
+                     top: getMaskTopPosition(startMaskConfig.leftFootballField.points).y + '%',
+                  }"
+                  @click.stop="handleLeftFootballFieldClick"
+               >
+                  {{ startMasks.leftFootballField.name }}
+               </div>
+               <div
+                  v-if="currentLevel === 'start' && startMaskConfig.sportsCourts?.points?.length"
+                  class="apartment-label"
+                  :style="{
+                     left: getMaskTopPosition(startMaskConfig.sportsCourts.points).x + '%',
+                     top: getMaskTopPosition(startMaskConfig.sportsCourts.points).y + '%',
+                  }"
+                  @click.stop="handleSportsCourtsClick"
+               >
+                  {{ startMasks.sportsCourts.name }}
+               </div>
+               <div
+                  v-if="currentLevel === 'start' && startMaskConfig.sportsCenter?.points?.length"
+                  class="apartment-label"
+                  :style="{
+                     left: getMaskTopPosition(startMaskConfig.sportsCenter.points).x + '%',
+                     top: getMaskTopPosition(startMaskConfig.sportsCenter.points).y + '%',
+                  }"
+                  @click.stop="handleSportsCenterClick"
+               >
+                  {{ startMasks.sportsCenter.name }}
+               </div>
+               <div
+                  v-if="currentLevel === 'start' && startMaskConfig.sportsCenterTop?.points?.length"
+                  class="apartment-label"
+                  :style="{
+                     left: getMaskTopPosition(startMaskConfig.sportsCenterTop.points).x + '%',
+                     top: getMaskTopPosition(startMaskConfig.sportsCenterTop.points).y + '%',
+                  }"
+                  @click.stop="handleSportsCenterTopClick"
+               >
+                  {{ startMasks.sportsCenterTop.name }}
+               </div>
+               <div
+                  v-if="currentLevel === 'start' && startMaskConfig.rightStadium?.points?.length"
+                  class="apartment-label"
+                  :style="{
+                     left: getMaskTopPosition(startMaskConfig.rightStadium.points).x + '%',
+                     top: getMaskTopPosition(startMaskConfig.rightStadium.points).y + '%',
+                  }"
+                  @click.stop="handleRightStadiumClick"
+               >
+                  {{ startMasks.rightStadium.name }}
+               </div>
                <template
                   v-for="floorId in ['g', '1', '2', '3', '4', '5']"
                   :key="floorId"
@@ -369,11 +584,11 @@
                      v-if="isFloorLevel"
                      :points="apartment.points"
                      :path="apartment.path || ''"
-                     :stroke-width="3"
-                     :stroke-color="'rgba(0, 255, 255, 0.9)'"
-                     :glow-color="'rgba(0, 255, 255, 0.5)'"
-                     :glow-blur="20"
-                     :animated="true"
+                     :stroke-width="0"
+                     :stroke-color="'transparent'"
+                     :glow-color="'transparent'"
+                     :glow-blur="0"
+                     :animated="false"
                      :always-visible="selectedApartmentId === apartment.id"
                      :on-click="() => handleApartmentMaskClick(apartment)"
                   />
@@ -495,11 +710,7 @@ import Icon from "../components/Icon.vue";
 import BottomActions from "../components/BottomActions.vue";
 import HouseOutline from "../components/HouseOutline.vue";
 import FloorPlanModal from "../components/FloorPlanModal.vue";
-import {
-   floorsConfig,
-   levelImages,
-   levelTransitions,
-} from "../config/navigation.js";
+import { floorsConfig, levelImages, levelTransitions } from "../config/navigation.js";
 import { floorApartmentMasksByFloor } from "../config/floorApartmentMasks.js";
 import { useMasks } from "../composables/useMasks.js";
 import { mapMasks, twoProjectsMasks, startMasks } from "../config/navigation.js";
@@ -576,6 +787,14 @@ const getMaskTopPosition = (points) => {
    const minY = Math.min(...points.map(p => p.y));
    // Позиционирование над маской (координаты в процентах, отступ будет через margin)
    return { x: avgX, y: minY };
+};
+
+const getMaskBottomPosition = (points) => {
+   if (!points || points.length === 0) return { x: 0, y: 0 };
+   const avgX = points.reduce((sum, p) => sum + p.x, 0) / points.length;
+   const maxY = Math.max(...points.map((p) => p.y));
+   const offset = 2;
+   return { x: avgX, y: Math.min(98, maxY + offset) };
 };
 
 const getInvertedMaskStyle = () => {
@@ -1126,6 +1345,12 @@ const {
    handleFloorClick,
    handleBackClick,
    handleBackFromFacade,
+   handleLeftFootballFieldClick,
+   handleSportsCourtsClick,
+   handleSportsCenterClick,
+   handleSportsCenterTopClick,
+   handleRightStadiumClick,
+   handleInnerCourtyardClick,
 } = navigation;
 
 getActiveLevel = getActiveLevelFn;
@@ -1842,11 +2067,11 @@ onUnmounted(() => {
 
 .apartment-label {
    position: absolute;
-   background: transparent;
-   color: white;
-   padding: 0.5rem 1rem;
-   border-radius: 8px;
-   border: 1px solid rgba(255, 255, 255, 0.8);
+   background: rgba(255, 255, 255, 0.95);
+   color: #000;
+   padding: 0.35rem 0.75rem;
+   border-radius: 6px;
+   border: none;
    font-size: 16px;
    font-weight: 500;
    white-space: nowrap;
@@ -1854,7 +2079,8 @@ onUnmounted(() => {
    pointer-events: all;
    cursor: pointer;
    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-   transition: opacity 0.2s ease, border-color 0.2s ease;
+   transition: opacity 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+   transform: translateX(-50%);
    will-change: transform;
    max-width: calc(100% - 20px);
    overflow: hidden;
@@ -1863,7 +2089,7 @@ onUnmounted(() => {
 
 .apartment-label:hover {
    opacity: 0.9;
-   border-color: rgba(255, 255, 255, 1);
+   border-color: transparent;
 }
 
 .apartment-label-left {

@@ -134,6 +134,42 @@ export function useNavigation(
       }
    };
 
+   const handleLeftFootballFieldClick = () => {
+      if (isTransitioning.value) return;
+      levelHistory.value.push(currentLevel.value);
+      startLevelTransition(levelTransitions["start-to-leftFootballField"], "leftFootballField");
+   };
+
+   const handleSportsCourtsClick = () => {
+      if (isTransitioning.value) return;
+      levelHistory.value.push(currentLevel.value);
+      startLevelTransition(levelTransitions["start-to-sportsCourts"], "sportsCourts");
+   };
+
+   const handleSportsCenterClick = () => {
+      if (isTransitioning.value) return;
+      levelHistory.value.push(currentLevel.value);
+      startLevelTransition(levelTransitions["start-to-sportsCenter"], "sportsCenter");
+   };
+
+   const handleSportsCenterTopClick = () => {
+      if (isTransitioning.value) return;
+      levelHistory.value.push(currentLevel.value);
+      startLevelTransition(levelTransitions["start-to-sportsCenterTop"], "sportsCenterTop");
+   };
+
+   const handleRightStadiumClick = () => {
+      if (isTransitioning.value) return;
+      levelHistory.value.push(currentLevel.value);
+      startLevelTransition(levelTransitions["start-to-rightStadium"], "rightStadium");
+   };
+
+   const handleInnerCourtyardClick = () => {
+      if (isTransitioning.value) return;
+      levelHistory.value.push(currentLevel.value);
+      startLevelTransition(levelTransitions["start-to-innerCourtyard"], "innerCourtyard");
+   };
+
    const handleBackClick = () => {
       if (isTransitioning.value) return;
 
@@ -163,6 +199,18 @@ export function useNavigation(
             return;
          }
          goBackToLevel(previousLevel);
+         return;
+      }
+
+      if (
+         currentLevel.value === "leftFootballField" ||
+         currentLevel.value === "sportsCourts" ||
+         currentLevel.value === "sportsCenter" ||
+         currentLevel.value === "sportsCenterTop" ||
+         currentLevel.value === "rightStadium" ||
+         currentLevel.value === "innerCourtyard"
+      ) {
+         goBackToLevel("start");
          return;
       }
 
@@ -210,5 +258,11 @@ export function useNavigation(
       handleFloorClick,
       handleBackClick,
       handleBackFromFacade,
+      handleLeftFootballFieldClick,
+      handleSportsCourtsClick,
+      handleSportsCenterClick,
+      handleSportsCenterTopClick,
+      handleRightStadiumClick,
+      handleInnerCourtyardClick,
    };
 }

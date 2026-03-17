@@ -50,17 +50,21 @@ export function useMasks() {
       },
    }));
 
-   const startMaskConfig = computed(() => ({
-      toApartments: {
-         points: startMasks.toApartments?.points ?? [],
-         path: startMasks.toApartments?.path ?? "",
-         strokeWidth: houseOutlineWidth.value,
-         glowColor: houseOutlineGlow.value,
-         glowBlur: houseOutlineGlowBlur.value,
-         animated: editMode.value ? false : houseOutlineAnimated.value,
-         alwaysVisible: editMode.value,
-      },
-   }));
+   const startMaskConfig = computed(() => {
+      const config = {};
+      Object.entries(startMasks).forEach(([key, mask]) => {
+         config[key] = {
+            points: mask?.points ?? [],
+            path: mask?.path ?? "",
+            strokeWidth: houseOutlineWidth.value,
+            glowColor: houseOutlineGlow.value,
+            glowBlur: houseOutlineGlowBlur.value,
+            animated: editMode.value ? false : houseOutlineAnimated.value,
+            alwaysVisible: editMode.value,
+         };
+      });
+      return config;
+   });
 
    const getFloorMaskConfig = (floorId) => {
       const floor = floorsConfig[floorId];
