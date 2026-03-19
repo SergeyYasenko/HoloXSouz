@@ -1,5 +1,10 @@
 import { computed, nextTick } from "vue";
-import { levelImages, levelTransitions, floorsConfig } from "../config/navigation.js";
+import {
+   levelImages,
+   apartmentsLeftLevelImages,
+   levelTransitions,
+   floorsConfig,
+} from "../config/navigation.js";
 
 export function useNavigation(
    currentLevel,
@@ -14,6 +19,10 @@ export function useNavigation(
    forwardSourceLevel = null
 ) {
    const getLevelImage = (level) => {
+      // Для обратного облёта ЖК по `prev` используем отдельную привязку кадров.
+      if (isReverseTransition?.value && apartmentsLeftLevelImages[level]) {
+         return apartmentsLeftLevelImages[level];
+      }
       if (levelImages[level]) return levelImages[level];
 
       if (level?.startsWith("floor-")) {

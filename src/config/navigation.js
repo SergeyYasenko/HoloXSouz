@@ -8,6 +8,10 @@ import apartmentsImage1 from "../assets/holo/Appartments-right1.jpeg";
 import apartmentsImage2 from "../assets/holo/Appartments-right2.jpeg";
 import apartmentsImage3 from "../assets/holo/Appartments-right3.jpeg";
 import apartmentsImage4 from "../assets/holo/Appartments-right4.jpeg";
+import apartmentsLeftImage1 from "../assets/holo/Appartments-left1.jpeg";
+import apartmentsLeftImage2 from "../assets/holo/Appartments-left2.jpeg";
+import apartmentsLeftImage3 from "../assets/holo/Appartments-left3.jpeg";
+import apartmentsLeftImage4 from "../assets/holo/Appartments-left4.jpeg";
 import leftFootballFieldImage from "../assets/holo/moves/leftFootballField.png";
 import sportsCourtsImage from "../assets/holo/moves/sportsCourts.png";
 import sportsCenterImage from "../assets/holo/moves/sportsCenter.png";
@@ -225,6 +229,14 @@ export const levelImages = {
    sportsCenterTop: sportsCenterTopImage,
    rightStadium: rightStadiumImage,
    innerCourtyard: innerCourtyardImage,
+};
+
+// Карты для "обратного" облёта ЖК (стрелка `prev`)
+export const apartmentsLeftLevelImages = {
+   "facade-start-2": apartmentsLeftImage1,
+   "view-4": apartmentsLeftImage2,
+   "view-5": apartmentsLeftImage3,
+   "view-6": apartmentsLeftImage4,
 };
 
 // Конфигурация видео переходов между уровнями
