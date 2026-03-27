@@ -73,9 +73,9 @@
                "
             />
             <template v-if="editMode">
-               <!-- Overlay с затемнением для map, 2-projects и start в режиме редактирования -->
+               <!-- Overlay с затемнением для map, start и plane в режиме редактирования -->
                <div
-                  v-if="currentLevel === 'map' || currentLevel === '2-projects' || currentLevel === 'start'"
+                  v-if="currentLevel === 'map' || currentLevel === 'start' || currentLevel === 'plane'"
                   class="home-mask-overlay"
                >
                   <!-- SVG маска для затемнения -->
@@ -99,17 +99,17 @@
                            />
                            <!-- Временно закомментировано для TheRoyalYacht -->
                            <!-- <polygon
-                              v-if="currentLevel === '2-projects' && showHouseOutline1 && twoProjectsMaskConfig?.project1?.points"
+                              v-if="currentLevel === 'start' && showHouseOutline1 && twoProjectsMaskConfig?.project1?.points"
                               :points="twoProjectsMaskConfig.project1.points.map(p => `${p.x/100},${p.y/100}`).join(' ')"
                               fill="black"
                            /> -->
                            <polygon
-                              v-if="currentLevel === '2-projects' && showHouseOutline2 && twoProjectsMaskConfig?.project2?.points"
+                              v-if="currentLevel === 'start' && showHouseOutline2 && twoProjectsMaskConfig?.project2?.points"
                               :points="twoProjectsMaskConfig.project2.points.map(p => `${p.x/100},${p.y/100}`).join(' ')"
                               fill="black"
                            />
                            <polygon
-                              v-if="currentLevel === 'start' && startMaskConfig?.toApartments?.points?.length"
+                              v-if="currentLevel === 'plane' && startMaskConfig?.toApartments?.points?.length"
                               :points="startMaskConfig.toApartments.points.map(p => `${p.x/100},${p.y/100}`).join(' ')"
                               fill="black"
                            />
@@ -156,7 +156,7 @@
                      {{ mapMasks.house2.name }}
                   </div>
                </template>
-               <template v-if="currentLevel === '2-projects'">
+               <template v-if="currentLevel === 'plane'">
                   <!-- Временно закомментировано для TheRoyalYacht -->
                   <!-- <HouseOutline
                      :points="twoProjectsMaskConfig.project1.points"
@@ -181,8 +181,8 @@
                      :on-click="handleProject2Click"
                   />
                </template>
-               <template v-if="currentLevel === 'start'">
-                  <!-- Невидимые, но кликабельные маски на уровне start в режиме редактирования -->
+               <template v-if="currentLevel === 'plane'">
+                  <!-- Невидимые, но кликабельные маски на уровне plane в режиме редактирования -->
                   <HouseOutline
                      v-if="startMaskConfig.toApartments?.points?.length"
                      :points="startMaskConfig.toApartments.points"
@@ -353,7 +353,7 @@
                </div>
                <!-- Временно закомментировано для TheRoyalYacht -->
                <!-- <HouseOutline
-                  v-show="currentLevel === '2-projects' && showHouseOutline1"
+                  v-show="currentLevel === 'start' && showHouseOutline1"
                   :points="twoProjectsMaskConfig.project1.points"
                   :path="twoProjectsMaskConfig.project1.path"
                   :stroke-width="0"
@@ -365,7 +365,7 @@
                   :on-click="handleProject1Click"
                />
                <div
-                  v-if="currentLevel === '2-projects' && showHouseOutline1 && twoProjectsMaskConfig?.project1?.points"
+                  v-if="currentLevel === 'start' && showHouseOutline1 && twoProjectsMaskConfig?.project1?.points"
                   class="apartment-label apartment-label-right"
                   :style="{
                      left: getMaskRightPosition(twoProjectsMaskConfig.project1.points).x + '%',
@@ -375,7 +375,7 @@
                   {{ twoProjectsMasks.project1.name }}
                </div> -->
                <HouseOutline
-                  v-show="currentLevel === '2-projects' && showHouseOutline2"
+                  v-show="currentLevel === 'start' && showHouseOutline2"
                   :points="twoProjectsMaskConfig.project2.points"
                   :path="twoProjectsMaskConfig.project2.path"
                   :stroke-width="0"
@@ -387,7 +387,7 @@
                   :on-click="handleProject2Click"
                />
                <div
-                  v-if="currentLevel === '2-projects' && twoProjectsMaskConfig?.project2?.points"
+                  v-if="currentLevel === 'start' && twoProjectsMaskConfig?.project2?.points"
                   class="apartment-label"
                   :style="{
                      left: getMaskTopPosition(twoProjectsMaskConfig.project2.points).x + '%',
@@ -397,7 +397,7 @@
                   {{ twoProjectsMasks.project2.name }}
                </div>
                <HouseOutline
-                  v-if="currentLevel === 'start' && startMaskConfig.leftFootballField?.points?.length"
+                  v-if="currentLevel === 'plane' && startMaskConfig.leftFootballField?.points?.length"
                   :points="startMaskConfig.leftFootballField.points"
                   :path="startMaskConfig.leftFootballField.path"
                   :stroke-width="0"
@@ -409,7 +409,7 @@
                   :on-click="handleLeftFootballFieldClick"
                />
                <HouseOutline
-                  v-if="currentLevel === 'start' && startMaskConfig.sportsCourts?.points?.length"
+                  v-if="currentLevel === 'plane' && startMaskConfig.sportsCourts?.points?.length"
                   :points="startMaskConfig.sportsCourts.points"
                   :path="startMaskConfig.sportsCourts.path"
                   :stroke-width="0"
@@ -421,7 +421,7 @@
                   :on-click="handleSportsCourtsClick"
                />
                <HouseOutline
-                  v-if="currentLevel === 'start' && startMaskConfig.sportsCenter?.points?.length"
+                  v-if="currentLevel === 'plane' && startMaskConfig.sportsCenter?.points?.length"
                   :points="startMaskConfig.sportsCenter.points"
                   :path="startMaskConfig.sportsCenter.path"
                   :stroke-width="0"
@@ -433,7 +433,7 @@
                   :on-click="handleSportsCenterClick"
                />
                <HouseOutline
-                  v-if="currentLevel === 'start' && startMaskConfig.sportsCenterTop?.points?.length"
+                  v-if="currentLevel === 'plane' && startMaskConfig.sportsCenterTop?.points?.length"
                   :points="startMaskConfig.sportsCenterTop.points"
                   :path="startMaskConfig.sportsCenterTop.path"
                   :stroke-width="0"
@@ -445,7 +445,7 @@
                   :on-click="handleSportsCenterTopClick"
                />
                <HouseOutline
-                  v-if="currentLevel === 'start' && startMaskConfig.rightStadium?.points?.length"
+                  v-if="currentLevel === 'plane' && startMaskConfig.rightStadium?.points?.length"
                   :points="startMaskConfig.rightStadium.points"
                   :path="startMaskConfig.rightStadium.path"
                   :stroke-width="0"
@@ -457,7 +457,7 @@
                   :on-click="handleRightStadiumClick"
                />
                <HouseOutline
-                  v-if="currentLevel === 'start' && startMaskConfig.innerCourtyard?.points?.length"
+                  v-if="currentLevel === 'plane' && startMaskConfig.innerCourtyard?.points?.length"
                   :points="startMaskConfig.innerCourtyard.points"
                   :path="startMaskConfig.innerCourtyard.path"
                   :stroke-width="0"
@@ -468,9 +468,9 @@
                   :always-visible="true"
                   :on-click="handleInnerCourtyardClick"
                />
-               <!-- Маска на уровне start: общий контур ЖК для перехода к фасаду (без подсветки) -->
+               <!-- Маска на уровне plane: общий контур ЖК для перехода к фасаду (без подсветки) -->
                <HouseOutline
-                  v-if="currentLevel === 'start'"
+                  v-if="currentLevel === 'plane'"
                   :points="startMaskConfig.toApartments.points"
                   :path="startMaskConfig.toApartments.path"
                   :stroke-width="0"
@@ -483,7 +483,7 @@
                />
                <!-- Подписи зон спорткластера -->
                <div
-                  v-if="currentLevel === 'start' && startMaskConfig?.toApartments?.points?.length"
+                  v-if="currentLevel === 'plane' && startMaskConfig?.toApartments?.points?.length"
                   class="apartment-label"
                   :style="{
                      left: getMaskTopPosition(startMaskConfig.toApartments.points).x + '%',
@@ -493,7 +493,7 @@
                   ЖК "СОЮЗ"
                </div>
                <div
-                  v-if="currentLevel === 'start' && startMaskConfig.innerCourtyard?.points?.length"
+                  v-if="currentLevel === 'plane' && startMaskConfig.innerCourtyard?.points?.length"
                   class="apartment-label"
                   :style="{
                      left: getMaskTopPosition(startMaskConfig.innerCourtyard.points).x + '%',
@@ -504,7 +504,7 @@
                   {{ startMasks.innerCourtyard.name }}
                </div>
                <div
-                  v-if="currentLevel === 'start' && startMaskConfig.leftFootballField?.points?.length"
+                  v-if="currentLevel === 'plane' && startMaskConfig.leftFootballField?.points?.length"
                   class="apartment-label"
                   :style="{
                      left: getMaskTopPosition(startMaskConfig.leftFootballField.points).x + '%',
@@ -515,7 +515,7 @@
                   {{ startMasks.leftFootballField.name }}
                </div>
                <div
-                  v-if="currentLevel === 'start' && startMaskConfig.sportsCourts?.points?.length"
+                  v-if="currentLevel === 'plane' && startMaskConfig.sportsCourts?.points?.length"
                   class="apartment-label"
                   :style="{
                      left: getMaskTopPosition(startMaskConfig.sportsCourts.points).x + '%',
@@ -526,7 +526,7 @@
                   {{ startMasks.sportsCourts.name }}
                </div>
                <div
-                  v-if="currentLevel === 'start' && startMaskConfig.sportsCenter?.points?.length"
+                  v-if="currentLevel === 'plane' && startMaskConfig.sportsCenter?.points?.length"
                   class="apartment-label"
                   :style="{
                      left: getMaskTopPosition(startMaskConfig.sportsCenter.points).x + '%',
@@ -537,7 +537,7 @@
                   {{ startMasks.sportsCenter.name }}
                </div>
                <div
-                  v-if="currentLevel === 'start' && startMaskConfig.sportsCenterTop?.points?.length"
+                  v-if="currentLevel === 'plane' && startMaskConfig.sportsCenterTop?.points?.length"
                   class="apartment-label"
                   :style="{
                      left: getMaskTopPosition(startMaskConfig.sportsCenterTop.points).x + '%',
@@ -548,7 +548,7 @@
                   {{ startMasks.sportsCenterTop.name }}
                </div>
                <div
-                  v-if="currentLevel === 'start' && startMaskConfig.rightStadium?.points?.length"
+                  v-if="currentLevel === 'plane' && startMaskConfig.rightStadium?.points?.length"
                   class="apartment-label"
                   :style="{
                      left: getMaskTopPosition(startMaskConfig.rightStadium.points).x + '%',
@@ -564,7 +564,7 @@
                >
                   <HouseOutline
                      v-if="
-                        currentLevel === 'start' && getFloorMaskConfig(floorId)
+                        currentLevel === 'plane' && getFloorMaskConfig(floorId)
                      "
                      :points="getFloorMaskConfig(floorId).points"
                      :path="getFloorMaskConfig(floorId).path"
@@ -632,11 +632,11 @@
                   v-if="currentLevel !== 'map'"
                   class="home-content-top-back"
                   :class="{ 'home-content-top-back-disabled': isTransitioning }"
-                  @click="handleBackClick"
+                  @click="handleBackButtonClick"
                >
                   <Icon name="arrow" :size="24" color="currentColor" />
                   <div class="home-content-top-back-text">
-                     <p>Назад</p>
+                     <p>{{ currentLevel === "start" ? "Map" : "Назад" }}</p>
                   </div>
                </div>
                <div class="home-content-top-actions">
@@ -706,6 +706,7 @@ import {
    nextTick,
    inject,
 } from "vue";
+import { useRouter } from "vue-router";
 import Icon from "../components/Icon.vue";
 import BottomActions from "../components/BottomActions.vue";
 import HouseOutline from "../components/HouseOutline.vue";
@@ -722,6 +723,11 @@ import { useEnergySaving } from "../composables/useEnergySaving.js";
 
 const showHeader = inject("showHeader", ref(false));
 const { currentLevel, levelHistory } = useLevelStorage();
+
+const router = useRouter();
+const goToMap = () => {
+   router.push("/map");
+};
 
 const imageWrapperRef = ref(null);
 const homeImageRef = ref(null);
@@ -1353,8 +1359,102 @@ const {
    handleInnerCourtyardClick,
 } = navigation;
 
+/** После build8→builds-2 круг замкнут: «Назад» ведёт на plane (Build2) с Build3-reverse. */
+const facadeLoopCompleted = ref(false);
+/** Резервный маркер: в текущем заходе по фасаду уже доходили до build8. */
+const reachedBuild8InCurrentFacadeRun = ref(false);
+
+watch(currentLevel, (level, oldLevel) => {
+   const isFacadeLevel = (value) =>
+      value === "builds" ||
+      value === "builds-2" ||
+      value === "view-4" ||
+      value === "view-5" ||
+      value === "view-6" ||
+      value === "build8";
+
+   if (level === "build8") {
+      reachedBuild8InCurrentFacadeRun.value = true;
+   }
+
+   if (level === "builds-2" && oldLevel === "build8") {
+      facadeLoopCompleted.value = true;
+   }
+   if (level === "builds" && oldLevel === "plane") {
+      facadeLoopCompleted.value = false;
+      reachedBuild8InCurrentFacadeRun.value = false;
+   }
+   if (
+      oldLevel === "builds-2" &&
+      (level === "view-4" || level === "build8")
+   ) {
+      facadeLoopCompleted.value = false;
+   }
+
+   // Сброс при выходе из фасадного обхода (назад на plane/map/start или в другие режимы).
+   if (oldLevel && isFacadeLevel(oldLevel) && !isFacadeLevel(level)) {
+      facadeLoopCompleted.value = false;
+      reachedBuild8InCurrentFacadeRun.value = false;
+   }
+});
+
+const triggerFacadeSnapToBuilds = () => {
+   if (currentLevel.value === "builds") return;
+   currentLevel.value = "builds";
+};
+
+const FACADE_PERIPHERAL_LEVELS = [
+   "builds-2",
+   "view-4",
+   "view-5",
+   "view-6",
+   "build8",
+];
+
 getActiveLevel = getActiveLevelFn;
 getLevelImageZIndex = getLevelImageZIndexFn;
+
+/**
+ * Логика «Назад» только по currentLevel: getActiveLevel() учитывает forward/reverse во время роликов
+ * и может расходиться с фактическим уровнем — из‑за этого лишний snap и двойные нажатия.
+ */
+const handleBackButtonClick = () => {
+   if (isTransitioning.value) return;
+   const level = currentLevel.value;
+   const activeLevel = getActiveLevel();
+
+   // Жесткое правило: если фактически на целевом build3 (уровень builds),
+   // «Назад» всегда сразу ведет на build2 (plane).
+   if (activeLevel === "builds" || level === "builds") {
+      facadeLoopCompleted.value = false;
+      reachedBuild8InCurrentFacadeRun.value = false;
+      goBackToLevel("plane");
+      return;
+   }
+
+   if (level === "start") {
+      goToMap();
+      return;
+   }
+   if (
+      level === "builds-2" &&
+      (facadeLoopCompleted.value || reachedBuild8InCurrentFacadeRun.value)
+   ) {
+      facadeLoopCompleted.value = false;
+      reachedBuild8InCurrentFacadeRun.value = false;
+      startLevelTransition(
+         levelTransitions["facade-start-to-start"],
+         "plane",
+         true
+      );
+      return;
+   }
+   if (FACADE_PERIPHERAL_LEVELS.includes(level)) {
+      triggerFacadeSnapToBuilds();
+      return;
+   }
+   handleBackClick();
+};
 
 updateActiveImageRef = () => {
    nextTick(() => {
@@ -1440,19 +1540,19 @@ watch(
    { flush: "post" }
 );
 
-const arrowLevels = ["facade-start", "facade-start-2", "view-4", "view-5", "view-6"];
+const arrowLevels = ["builds", "build8", "builds-2", "view-4", "view-5", "view-6"];
 const hasNavigationArrows = computed(() => {
    const level = currentLevel.value;
    return typeof level === "string" && arrowLevels.includes(level);
 });
 
 const arrowChainRight = {
-   start: { key: "start-to-facade-start", next: "facade-start" },
-   "facade-start": {
+   plane: { key: "start-to-facade-start", next: "builds" },
+   builds: {
       key: "start-to-facade-start-2",
-      next: "facade-start-2",
+      next: "builds-2",
    },
-   "facade-start-2": {
+   "builds-2": {
       key: "facade-start-to-view-4",
       next: "view-4",
    },
@@ -1460,15 +1560,20 @@ const arrowChainRight = {
    "view-5": { key: "view-5-to-view-6", next: "view-6" },
    "view-6": {
       key: "view-6-to-facade-start",
-      next: "facade-start",
+      next: "build8",
+   },
+   build8: {
+      key: "start-to-facade-start-2",
+      next: "builds-2",
    },
 };
 
 // Обратный просмотр ЖК по зданию (Appartment): только reverse-видео по цепочке
 const arrowChainLeft = {
-   "facade-start": "view-6",
-   "facade-start-2": "facade-start",
-   "view-4": "facade-start-2",
+   builds: "view-6",
+   build8: "view-6",
+   "builds-2": "build8",
+   "view-4": "builds-2",
    "view-5": "view-4",
    "view-6": "view-5",
 };
@@ -1488,6 +1593,12 @@ const handleArrowNavigation = (direction) => {
 
    const chainStep = arrowChainRight[currentLevel.value];
    if (!chainStep) return;
+
+   // Замыкание круга по часовой: build8 → builds-2 (тот же ключ видео, что builds → builds-2).
+   // Ставим флаг до старта перехода — не зависит от порядка срабатывания watch(currentLevel).
+   if (currentLevel.value === "build8" && chainStep.next === "builds-2") {
+      facadeLoopCompleted.value = true;
+   }
 
    const videoSrc = levelTransitions[chainStep.key];
    if (!videoSrc) {
@@ -1933,7 +2044,6 @@ onUnmounted(() => {
 .home-content-top-back-disabled {
    opacity: 0.5;
    cursor: not-allowed;
-   pointer-events: none;
 }
 
 .home-content-top-title {

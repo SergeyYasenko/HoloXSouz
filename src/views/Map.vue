@@ -71,7 +71,7 @@
 <script setup>
 import { ref, onMounted, onUnmounted, watch } from "vue";
 import BottomActions from "../components/BottomActions.vue";
-import mapImage from "../assets/holo/Build-start.jpeg";
+import mapImage from "../assets/holo/map.jpeg";
 import Icon from "../components/Icon.vue";
 import { useImageDrag } from "../composables/useImageDrag.js";
 

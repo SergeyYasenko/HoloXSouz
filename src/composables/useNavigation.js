@@ -1,10 +1,14 @@
 import { computed, nextTick } from "vue";
-import {
-   levelImages,
-   apartmentsLeftLevelImages,
-   levelTransitions,
-   floorsConfig,
-} from "../config/navigation.js";
+import { levelImages, apartmentsRightLevelImages, levelTransitions, floorsConfig } from "../config/navigation.js";
+
+/** Периферия обхода фасада — «Назад» обрабатывается в Home (мгновенно на builds). */
+const FACADE_PERIPHERAL_LEVELS = new Set([
+   "builds-2",
+   "view-4",
+   "view-5",
+   "view-6",
+   "build8",
+]);
 
 export function useNavigation(
    currentLevel,
@@ -19,9 +23,9 @@ export function useNavigation(
    forwardSourceLevel = null
 ) {
    const getLevelImage = (level) => {
-      // Для обратного облёта ЖК по `prev` используем отдельную привязку кадров.
-      if (isReverseTransition?.value && apartmentsLeftLevelImages[level]) {
-         return apartmentsLeftLevelImages[level];
+      // For reverse transitions (prev/left chain) use dedicated left images.
+      if (isReverseTransition?.value && apartmentsRightLevelImages?.[level]) {
+         return apartmentsRightLevelImages[level];
       }
       if (levelImages[level]) return levelImages[level];
 
@@ -68,13 +72,13 @@ export function useNavigation(
    const handleHouse1Click = () => {
       if (isTransitioning.value) return;
       levelHistory.value.push(currentLevel.value);
-      startLevelTransition(levelTransitions["map-to-2-projects"], "2-projects");
+      startLevelTransition(levelTransitions["map-to-2-projects"], "start");
    };
 
    const handleHouse2Click = () => {
       if (isTransitioning.value) return;
       levelHistory.value.push(currentLevel.value);
-      startLevelTransition(levelTransitions["map-to-2-projects"], "2-projects");
+      startLevelTransition(levelTransitions["map-to-2-projects"], "start");
    };
 
    const handleProject1Click = () => {
@@ -84,7 +88,7 @@ export function useNavigation(
    const handleProject2Click = () => {
       if (isTransitioning.value) return;
       levelHistory.value.push(currentLevel.value);
-      startLevelTransition(levelTransitions["2-projects-to-start"], "start");
+      startLevelTransition(levelTransitions["2-projects-to-start"], "plane");
    };
 
    const handleFacadeStartClick = async () => {
@@ -95,7 +99,7 @@ export function useNavigation(
 
       startLevelTransition(
          levelTransitions["start-to-facade-start"],
-         "facade-start"
+         "builds"
       );
 
       await nextTick();
@@ -104,7 +108,7 @@ export function useNavigation(
          disabledArrowRight.value = true;
 
          setTimeout(() => {
-            if (currentLevel.value !== "facade-start" && currentLevel.value === previousLevel) {
+            if (currentLevel.value !== "builds" && currentLevel.value === previousLevel) {
                disabledArrowRight.value = false;
             }
          }, 2000);
@@ -116,18 +120,18 @@ export function useNavigation(
 
       startLevelTransition(
          levelTransitions["start-to-facade-start-2"],
-         "facade-start-2"
+         "builds-2"
       );
    };
 
    const handleBackToStartFromFacade = () => {
       if (isTransitioning.value) return;
-      goBackToLevel("start");
+      goBackToLevel("plane");
    };
 
    const handleBackToStartFromFacade2 = () => {
       if (isTransitioning.value) return;
-      goBackToLevel("start");
+      goBackToLevel("plane");
    };
 
    const handleFloorClick = (floorId) => {
@@ -182,29 +186,20 @@ export function useNavigation(
    const handleBackClick = () => {
       if (isTransitioning.value) return;
 
-      // При просмотре ЖК: с любого вида один шаг "Назад" возвращает на facade-start (Build3-end)
-      if (
-         currentLevel.value === "facade-start-2" ||
-         currentLevel.value === "view-4" ||
-         currentLevel.value === "view-5" ||
-         currentLevel.value === "view-6"
-      ) {
-         goBackToLevel("facade-start");
+      if (currentLevel.value === "builds") {
+         goBackToLevel("plane");
          return;
       }
 
-      if (
-         currentLevel.value === "facade-start" ||
-         currentLevel.value === "facade-start-2"
-      ) {
-         goBackToLevel("start");
+      if (FACADE_PERIPHERAL_LEVELS.has(currentLevel.value)) {
+         currentLevel.value = "builds";
          return;
       }
 
-      if (currentLevel.value === "start") {
+      if (currentLevel.value === "plane") {
          const previousLevel = levelHistory.value.pop();
          if (!previousLevel) {
-            goBackToLevel("2-projects");
+            goBackToLevel("start");
             return;
          }
          goBackToLevel(previousLevel);
@@ -219,15 +214,15 @@ export function useNavigation(
          currentLevel.value === "rightStadium" ||
          currentLevel.value === "innerCourtyard"
       ) {
-         goBackToLevel("start");
+         goBackToLevel("plane");
          return;
       }
 
       const previousLevel = levelHistory.value.pop();
       if (!previousLevel) {
          if (currentLevel.value.startsWith("floor-")) {
-            goBackToLevel("start");
-         } else if (currentLevel.value === "2-projects") {
+            goBackToLevel("plane");
+         } else if (currentLevel.value === "start") {
             goBackToLevel("map");
          }
          return;
@@ -239,11 +234,11 @@ export function useNavigation(
    const handleBackFromFacade = (isStepToRight) => {
       const level = currentLevel.value;
 
-      if (level === "facade-start") {
+      if (level === "builds") {
          if (isStepToRight) {
             handleBackToStartFromFacade();
          }
-      } else if (level === "facade-start-2") {
+      } else if (level === "builds-2") {
          if (!isStepToRight) {
             handleBackToStartFromFacade2();
          }

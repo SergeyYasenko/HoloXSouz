@@ -4,6 +4,14 @@ import { levelTransitions, floorsConfig, levelImages } from "../config/navigatio
 const TRANSITION_END_DELAY = 100;
 const NORMAL_TRANSITION_DELAY = 100;
 const IMAGE_SWITCH_DELAY = 150;
+const APARTMENT_CHAIN_LEVELS = new Set([
+   "builds",
+   "build8",
+   "builds-2",
+   "view-4",
+   "view-5",
+   "view-6",
+]);
 
 export function useTransitions(currentLevel, levelHistory) {
    const isTransitioning = ref(false);
@@ -114,10 +122,11 @@ export function useTransitions(currentLevel, levelHistory) {
       }
 
       const forwardTransitions = {
-         [levelTransitions["map-to-2-projects"]]: "2-projects",
-         [levelTransitions["2-projects-to-start"]]: "start",
-         [levelTransitions["start-to-facade-start"]]: "facade-start",
-         [levelTransitions["start-to-facade-start-2"]]: "facade-start-2",
+         [levelTransitions["map-to-2-projects"]]: "start",
+         [levelTransitions["2-projects-to-start"]]: "plane",
+         [levelTransitions["start-to-facade-start"]]: "builds",
+         [levelTransitions["start-to-facade-start-2"]]: "builds-2",
+         [levelTransitions["view-6-to-facade-start"]]: "build8",
       };
 
       if (forwardTransitions[currentVideoPath]) {
@@ -143,8 +152,6 @@ export function useTransitions(currentLevel, levelHistory) {
       const video = transitionVideo.value;
       if (!video.duration || video.currentTime < video.duration * 0.5) return;
 
-      hasSwitchedLevel = true;
-
       if (!isTransitioning.value) return;
 
       const targetImageElement = document.querySelector(
@@ -153,6 +160,12 @@ export function useTransitions(currentLevel, levelHistory) {
 
       const switchToTarget = () => {
          if (!isTransitioning.value) return;
+
+         // Mark only after the static level actually switched.
+         // Otherwise on `ended` we may reset transition before the image swap,
+         // causing a visible "jump" at the end of the forward chain.
+         hasSwitchedLevel = true;
+
          if (!isReverseTransition.value) {
             forwardSourceLevel.value = targetLevel;
          }
@@ -189,6 +202,9 @@ export function useTransitions(currentLevel, levelHistory) {
       }
 
       const targetImage = getLevelImage(targetLevel);
+      const shouldAwaitPreloadImage =
+         APARTMENT_CHAIN_LEVELS.has(targetLevel) && !!targetImage;
+
       if (targetImage) {
          preloadImageLoaded.value = false;
          preloadImage.value = targetImage;
@@ -217,6 +233,19 @@ export function useTransitions(currentLevel, levelHistory) {
 
       const video = transitionVideo.value;
       video.load();
+
+      // Ensure target static image is fully decoded before starting the transition.
+      // This prevents visible "jump" caused by late image swap on some steps.
+      if (shouldAwaitPreloadImage && isTransitioning.value) {
+         const preloadImg = document.querySelector(".home-image-preload");
+         if (preloadImg && !preloadImg.complete) {
+            await new Promise((resolve) => {
+               preloadImg.addEventListener("load", () => resolve(), { once: true });
+               preloadImg.addEventListener("error", () => resolve(), { once: true });
+               setTimeout(() => resolve(), 1500); // Safety timeout
+            });
+         }
+      }
 
       try {
          if (video.readyState < 2) {
@@ -291,7 +320,7 @@ export function useTransitions(currentLevel, levelHistory) {
          resetTransitionState();
       }
 
-      if (currentLevel.value.startsWith("floor-") && targetLevel === "start") {
+      if (currentLevel.value.startsWith("floor-") && targetLevel === "plane") {
          const floorId = currentLevel.value.replace("floor-", "");
          const floor = floorsConfig[floorId];
 
@@ -304,21 +333,24 @@ export function useTransitions(currentLevel, levelHistory) {
       }
 
       const reverseMap = {
-         "start:2-projects": "2-projects-to-start",
-         "2-projects:map": "map-to-2-projects",
-         "facade-start:start": "start-to-facade-start",
-         "facade-start-2:start": "start-to-facade-start-2",
-         "facade-start-2:facade-start": "facade-start-to-facade-start-2",
-         "view-4:facade-start-2": "facade-start-to-view-4",
+         "plane:start": "2-projects-to-start",
+         "start:map": "map-to-2-projects",
+         // Влево с builds: обход круга к view-6 — реверс от сегмента view-6 → build8
+         "builds:view-6": "view-6-to-facade-start",
+         "builds:plane": "start-to-facade-start",
+         "builds-2:plane": "start-to-facade-start-2",
+         "builds-2:builds": "facade-start-to-facade-start-2",
+         "view-4:builds-2": "facade-start-to-view-4",
          "view-5:view-4": "view-4-to-view-5",
          "view-6:view-5": "view-5-to-view-6",
-         "facade-start:view-6": "view-6-to-facade-start",
-         "leftFootballField:start": "start-to-leftFootballField",
-         "sportsCourts:start": "start-to-sportsCourts",
-         "sportsCenter:start": "start-to-sportsCenter",
-         "sportsCenterTop:start": "start-to-sportsCenterTop",
-         "rightStadium:start": "start-to-rightStadium",
-         "innerCourtyard:start": "start-to-innerCourtyard",
+         "build8:view-6": "view-6-to-facade-start",
+         "builds-2:build8": "start-to-facade-start-2",
+         "leftFootballField:plane": "start-to-leftFootballField",
+         "sportsCourts:plane": "start-to-sportsCourts",
+         "sportsCenter:plane": "start-to-sportsCenter",
+         "sportsCenterTop:plane": "start-to-sportsCenterTop",
+         "rightStadium:plane": "start-to-rightStadium",
+         "innerCourtyard:plane": "start-to-innerCourtyard",
       };
 
       const key = `${currentLevel.value}:${targetLevel}`;
@@ -328,10 +360,10 @@ export function useTransitions(currentLevel, levelHistory) {
          const reverseVideo = getReverseVideo(forwardKey);
 
          if (reverseVideo) {
-            if (currentLevel.value === "facade-start" && disabledArrowRightRef) {
+            if (currentLevel.value === "builds" && disabledArrowRightRef) {
                disabledArrowRightRef.value = false;
             }
-            if (currentLevel.value === "facade-start-2" && disabledArrowLeftRef) {
+            if (currentLevel.value === "builds-2" && disabledArrowLeftRef) {
                disabledArrowLeftRef.value = false;
             }
 

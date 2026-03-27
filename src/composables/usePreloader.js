@@ -1,10 +1,11 @@
 import { ref, computed } from "vue";
 
-import mapImage from "../assets/holo/Build-start.jpeg";
-import startImage from "../assets/holo/Build2-end.jpeg";
-import twoProjectsImage from "../assets/holo/Build-end.jpeg";
+// Порядок: Build1 фото → карта → Build2 фото, затем видео Build1–4
+import build1Image from "../assets/holo/Build1.jpeg";
+import mapImage from "../assets/holo/map.jpeg";
+import build2Image from "../assets/holo/Build2.jpeg";
 
-import facadeImage from "../assets/holo/Build-end.jpeg";
+import build3Image from "../assets/holo/Build3.jpeg";
 import apartmentsImage from "../assets/holo/Appartments-right1.jpeg";
 
 import build1Video from "../assets/holo/Build1.mp4";
@@ -12,9 +13,9 @@ import build2Video from "../assets/holo/Build2.mp4";
 import build3Video from "../assets/holo/Build3.mp4";
 import build4Video from "../assets/holo/Build4.mp4";
 
-const CRITICAL_IMAGES = [mapImage, startImage, twoProjectsImage];
+const CRITICAL_IMAGES = [build1Image, mapImage, build2Image];
 
-const SECONDARY_IMAGES = [facadeImage, apartmentsImage];
+const SECONDARY_IMAGES = [build3Image, apartmentsImage];
 
 const VIDEOS_TO_PRELOAD = [
    { key: "build1", src: build1Video },

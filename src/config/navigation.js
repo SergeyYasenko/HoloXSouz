@@ -1,32 +1,52 @@
 // Конфигурация навигации: видео, картинки и координаты масок
+// Порядок импортов: для каждого build — сначала фото, затем forward-видео, затем reverse (где есть).
 
-import mapImage from "../assets/holo/Build-start.jpeg";
-import buildEndImage from "../assets/holo/Build-end.jpeg";
-import build2EndImage from "../assets/holo/Build2-end.jpeg";
-import build3EndImage from "../assets/holo/Build3-end.jpeg";
+// --- Build 1
+import build1Image from "../assets/holo/Build1.jpeg";
+import build1Video from "../assets/holo/Build1.mp4";
+import build1Reverse from "../assets/holo/build1-reverse.mp4";
+
+// --- Build 2
+import build2Image from "../assets/holo/Build2.jpeg";
+import build2Video from "../assets/holo/Build2.mp4";
+import build2Reverse from "../assets/holo/Build2-reverse.mp4";
+
+// --- Build 3
+import build3Image from "../assets/holo/Build3.jpeg";
+import build3Video from "../assets/holo/Build3.mp4";
+import build3Reverse from "../assets/holo/Build3-reverse.mp4";
+
+// --- Build 4–7 (только видео)
+import build4Video from "../assets/holo/Build4.mp4";
+import build4Reverse from "../assets/holo/Build4-reverse.mp4";
+import build5Video from "../assets/holo/Build5.mp4";
+import build5Reverse from "../assets/holo/Build5-reverse.mp4";
+import build6Video from "../assets/holo/Build6.mp4";
+import build6Reverse from "../assets/holo/Build6-reverse.mp4";
+import build7Video from "../assets/holo/Build7.mp4";
+import build7Reverse from "../assets/holo/Build7-reverse.mp4";
+
+// --- Build 8
+import build8Image from "../assets/holo/Build8.jpeg";
+import build8Video from "../assets/holo/Build8.mp4";
+import build8Reverse from "../assets/holo/Build8-reverse.mp4";
+
+// --- Карта и квартиры
+import mapImage from "../assets/holo/map.jpeg";
 import apartmentsImage1 from "../assets/holo/Appartments-right1.jpeg";
 import apartmentsImage2 from "../assets/holo/Appartments-right2.jpeg";
 import apartmentsImage3 from "../assets/holo/Appartments-right3.jpeg";
 import apartmentsImage4 from "../assets/holo/Appartments-right4.jpeg";
-import apartmentsLeftImage1 from "../assets/holo/Appartments-left1.jpeg";
-import apartmentsLeftImage2 from "../assets/holo/Appartments-left2.jpeg";
-import apartmentsLeftImage3 from "../assets/holo/Appartments-left3.jpeg";
-import apartmentsLeftImage4 from "../assets/holo/Appartments-left4.jpeg";
-import leftFootballFieldImage from "../assets/holo/moves/leftFootballField.png";
-import sportsCourtsImage from "../assets/holo/moves/sportsCourts.png";
-import sportsCenterImage from "../assets/holo/moves/sportsCenter.png";
-import sportsCenterTopImage from "../assets/holo/moves/sportsCenterTop.png";
-import rightStadiumImage from "../assets/holo/moves/rightStadium.png";
-import innerCourtyardImage from "../assets/holo/moves/innerCourtyard.png";
 
-import build1Video from "../assets/holo/Build1.mp4";
-import build2Video from "../assets/holo/Build2.mp4";
-import build3Video from "../assets/holo/Build3.mp4";
-import build4Video from "../assets/holo/Build4.mp4";
-import build5Video from "../assets/holo/Build5.mp4";
-import build6Video from "../assets/holo/Build6.mp4";
-import build7Video from "../assets/holo/Build7.mp4";
-import build8Video from "../assets/holo/Build8.mp4";
+// --- Переходы по локациям (картинки превью)
+import leftFootballFieldImage from "../assets/holo/moves/leftFootballField.jpg";
+import sportsCourtsImage from "../assets/holo/moves/sportsCourts.jpg";
+import sportsCenterImage from "../assets/holo/moves/sportsCenter.jpg";
+import sportsCenterTopImage from "../assets/holo/moves/sportsCenterTop.jpg";
+import rightStadiumImage from "../assets/holo/moves/rightStadium.jpeg";
+import innerCourtyardImage from "../assets/holo/moves/innerCourtyard.jpeg";
+
+// --- Видео переходов по локациям
 import leftFootballFieldVideo from "../assets/holo/moves/leftFootballField.mp4";
 import sportsCourtsVideo from "../assets/holo/moves/sportsCourts.mp4";
 import sportsCenterVideo from "../assets/holo/moves/sportsCenter.mp4";
@@ -34,14 +54,7 @@ import sportsCenterTopVideo from "../assets/holo/moves/sportsCenterTop.mp4";
 import rightStadiumVideo from "../assets/holo/moves/rightStadium.mp4";
 import innerCourtyardVideo from "../assets/holo/moves/innerCourtyard.mp4";
 
-import build1Reverse from "../assets/holo/Build1-reverse.mp4";
-import build2Reverse from "../assets/holo/Build2-reverse.mp4";
-import build3Reverse from "../assets/holo/Build3-reverse.mp4";
-import build4Reverse from "../assets/holo/Build4-reverse.mp4";
-import build5Reverse from "../assets/holo/Build5-reverse.mp4";
-import build6Reverse from "../assets/holo/Build6-reverse.mp4";
-import build7Reverse from "../assets/holo/Build7-reverse.mp4";
-import build8Reverse from "../assets/holo/Build8-reverse.mp4";
+// --- Reverse переходов по локациям
 import leftFootballFieldReverse from "../assets/holo/moves/reverse/leftFootballField-reverse4.mp4";
 import sportsCourtsReverse from "../assets/holo/moves/reverse/sportsCourts-reverse3.mp4";
 import sportsCenterReverse from "../assets/holo/moves/reverse/sportsCenter-reverse1.mp4";
@@ -188,7 +201,7 @@ export const startMasks = {
          { x: 54.5, y: 64.5 },
          { x: 54.7, y: 68.5 },
          { x: 54.9, y: 72 },
-          { x: 55.2, y: 76 },
+         { x: 55.2, y: 76 },
          { x: 56.5, y: 78.8 },
          { x: 59, y: 81.6 },
          { x: 62, y: 82.3 },
@@ -216,10 +229,12 @@ export const floorsConfig = {};
 // Конфигурация уровней и их изображений
 export const levelImages = {
    map: mapImage,
-   "2-projects": buildEndImage,
-   start: build2EndImage,
-   "facade-start": build3EndImage,
-   "facade-start-2": apartmentsImage1,
+   start: build1Image,
+   plane: build2Image,
+   // next/right chain: right1 -> right2 -> right3 -> right4 -> build3 (close chain)
+   builds: build3Image,
+   build8: build8Image,
+   "builds-2": apartmentsImage1,
    "view-4": apartmentsImage2,
    "view-5": apartmentsImage3,
    "view-6": apartmentsImage4,
@@ -231,12 +246,14 @@ export const levelImages = {
    innerCourtyard: innerCourtyardImage,
 };
 
-// Карты для "обратного" облёта ЖК (стрелка `prev`)
-export const apartmentsLeftLevelImages = {
-   "facade-start-2": apartmentsLeftImage1,
-   "view-4": apartmentsLeftImage2,
-   "view-5": apartmentsLeftImage3,
-   "view-6": apartmentsLeftImage4,
+// prev/left chain should use "right" static images.
+export const apartmentsRightLevelImages = {
+   builds: build3Image,
+   build8: build8Image,
+   "builds-2": apartmentsImage1,
+   "view-4": apartmentsImage2,
+   "view-5": apartmentsImage3,
+   "view-6": apartmentsImage4,
 };
 
 // Конфигурация видео переходов между уровнями
@@ -285,4 +302,3 @@ export default {
    levelImages,
    levelTransitions,
 };
-
