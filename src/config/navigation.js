@@ -4,7 +4,7 @@
 // --- Build 1
 import build1Image from "../assets/holo/Build1.jpeg";
 import build1Video from "../assets/holo/Build1.mp4";
-import build1Reverse from "../assets/holo/build1-reverse.mp4";
+import build1Reverse from "../assets/holo/Build1-reverse.mp4";
 
 // --- Build 2
 import build2Image from "../assets/holo/Build2.jpeg";
