@@ -720,6 +720,10 @@ import { useNavigation } from "../composables/useNavigation.js";
 import { useTransitions } from "../composables/useTransitions.js";
 import { useImageDrag } from "../composables/useImageDrag.js";
 import { useEnergySaving } from "../composables/useEnergySaving.js";
+import {
+   BACK_NAV_ACTIONS,
+   decideBackNavigationAction,
+} from "../utils/backNavigationDecision.js";
 
 const showHeader = inject("showHeader", ref(false));
 const { currentLevel, levelHistory } = useLevelStorage();
@@ -1377,7 +1381,12 @@ watch(currentLevel, (level, oldLevel) => {
       reachedBuild8InCurrentFacadeRun.value = true;
    }
 
-   if (level === "builds-2" && oldLevel === "build8") {
+   // Замкнули круг по часовой: build8 -> builds-2.
+   // Также считаем замыканием круга сценарий против часовой: view-4 -> builds-2.
+   if (
+      level === "builds-2" &&
+      (oldLevel === "build8" || oldLevel === "view-4")
+   ) {
       facadeLoopCompleted.value = true;
    }
    if (level === "builds" && oldLevel === "plane") {
@@ -1419,40 +1428,43 @@ getLevelImageZIndex = getLevelImageZIndexFn;
  * и может расходиться с фактическим уровнем — из‑за этого лишний snap и двойные нажатия.
  */
 const handleBackButtonClick = () => {
-   if (isTransitioning.value) return;
    const level = currentLevel.value;
    const activeLevel = getActiveLevel();
-
-   // Жесткое правило: если фактически на целевом build3 (уровень builds),
-   // «Назад» всегда сразу ведет на build2 (plane).
-   if (activeLevel === "builds" || level === "builds") {
+   const backToPlaneFromTargetBuild3 = () => {
       facadeLoopCompleted.value = false;
       reachedBuild8InCurrentFacadeRun.value = false;
+      // Для целевого кадра всегда используем reverse переход builds -> plane (Build3-reverse).
+      if (currentLevel.value !== "builds") {
+         currentLevel.value = "builds";
+      }
       goBackToLevel("plane");
-      return;
-   }
+   };
 
-   if (level === "start") {
+   const action = decideBackNavigationAction({
+      level,
+      activeLevel,
+      isTransitioning: isTransitioning.value,
+      facadeLoopCompleted: facadeLoopCompleted.value,
+      reachedBuild8InCurrentFacadeRun: reachedBuild8InCurrentFacadeRun.value,
+   });
+
+   if (action === BACK_NAV_ACTIONS.TO_MAP) {
       goToMap();
       return;
    }
-   if (
-      level === "builds-2" &&
-      (facadeLoopCompleted.value || reachedBuild8InCurrentFacadeRun.value)
-   ) {
-      facadeLoopCompleted.value = false;
-      reachedBuild8InCurrentFacadeRun.value = false;
-      startLevelTransition(
-         levelTransitions["facade-start-to-start"],
-         "plane",
-         true
-      );
+
+   if (action === BACK_NAV_ACTIONS.TO_PLANE_VIA_BUILD3) {
+      backToPlaneFromTargetBuild3();
       return;
    }
-   if (FACADE_PERIPHERAL_LEVELS.includes(level)) {
+
+   if (action === BACK_NAV_ACTIONS.NOOP) return;
+
+   if (action === BACK_NAV_ACTIONS.SNAP_TO_BUILDS || FACADE_PERIPHERAL_LEVELS.includes(level)) {
       triggerFacadeSnapToBuilds();
       return;
    }
+
    handleBackClick();
 };
 
@@ -1584,6 +1596,10 @@ const handleArrowNavigation = (direction) => {
    if (direction === "left") {
       const prevLevel = arrowChainLeft[currentLevel.value];
       if (prevLevel) {
+         // Замыкание круга против часовой: view-4 -> builds-2.
+         if (currentLevel.value === "view-4" && prevLevel === "builds-2") {
+            facadeLoopCompleted.value = true;
+         }
          goBackToLevel(prevLevel);
       }
       return;
