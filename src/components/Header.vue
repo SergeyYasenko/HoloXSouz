@@ -100,7 +100,7 @@ watch(
 <style scoped>
 .header {
    position: fixed;
-   background-color: rgba(255, 255, 255, 0.1);
+   background-color: rgba(0, 0, 0, 0.55);
    backdrop-filter: blur(20px);
    -webkit-backdrop-filter: blur(20px);
    top: 5px;
@@ -115,7 +115,7 @@ watch(
    min-height: 92px;
    box-sizing: border-box;
    border-radius: 16px;
-   border: 1px solid rgba(255, 255, 255, 0.3);
+   border: 1px solid rgba(255, 255, 255, 0.18);
 }
 
 .header:not(.header-visible) {
@@ -292,10 +292,10 @@ watch(
    left: 0;
    right: 0;
    bottom: 0;
-   background-color: rgba(255, 255, 255, 0.1);
+   background-color: rgba(0, 0, 0, 0.55);
    backdrop-filter: blur(20px);
    -webkit-backdrop-filter: blur(20px);
-   border: 1px solid rgba(255, 255, 255, 0.3);
+   border: 1px solid rgba(255, 255, 255, 0.18);
    border-top: none;
    border-radius: 16px;
    z-index: 0;
