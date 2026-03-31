@@ -6,6 +6,7 @@ import mapImage from "../assets/holo/map.jpeg";
 import build2Image from "../assets/holo/Build2.jpeg";
 
 import build3Image from "../assets/holo/Build3.jpeg";
+import buildFloorImage from "../assets/holo/Build-floor.jpeg";
 import apartmentsImage from "../assets/holo/Appartments-right1.jpeg";
 
 import build1Video from "../assets/holo/Build1.mp4";
@@ -15,7 +16,7 @@ import build4Video from "../assets/holo/Build4.mp4";
 
 const CRITICAL_IMAGES = [build1Image, mapImage, build2Image];
 
-const SECONDARY_IMAGES = [build3Image, apartmentsImage];
+const SECONDARY_IMAGES = [build3Image, buildFloorImage, apartmentsImage];
 
 const VIDEOS_TO_PRELOAD = [
    { key: "build1", src: build1Video },

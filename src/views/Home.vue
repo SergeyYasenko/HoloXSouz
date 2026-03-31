@@ -30,6 +30,7 @@
          <div
             ref="homeImageContentRef"
             class="home-image-content"
+            :class="{ 'home-image-content--facade-floor-plan': facadeFloorPlanLayerMounted }"
             :style="homeImageStyle"
          >
             <img
@@ -304,6 +305,22 @@
                      />
                   </template>
                </template>
+               <HouseOutline
+                  v-for="(row, index) in activeCentralFloorMaskRows"
+                  :key="`facade-floor-edit-${currentLevel}-${index}`"
+                  v-if="
+                     !isTransitioning &&
+                     !facadeFloorPlanLayerMounted
+                  "
+                  :points="row.points"
+                  :path="row.path"
+                  :stroke-width="row.strokeWidth"
+                  :glow-color="row.glowColor"
+                  :glow-blur="row.glowBlur"
+                  :animated="row.animated"
+                  :always-visible="row.alwaysVisible"
+                  :on-click="handleCentralFloorMaskClick"
+               />
             </template>
             <template v-else>
                <!-- Временно закомментировано для house1 -->
@@ -593,7 +610,38 @@
                      :on-click="() => handleApartmentMaskClick(apartment)"
                   />
                </template>
+               <HouseOutline
+                  v-for="(row, index) in activeCentralFloorMaskRows"
+                  :key="`facade-floor-${currentLevel}-${index}`"
+                  v-if="
+                     !isTransitioning &&
+                     !facadeFloorPlanLayerMounted
+                  "
+                  :points="row.points"
+                  :path="row.path"
+                  :stroke-width="row.strokeWidth"
+                  :glow-color="row.glowColor"
+                  :glow-blur="row.glowBlur"
+                  :animated="row.animated"
+                  :always-visible="row.alwaysVisible"
+                  :on-click="handleCentralFloorMaskClick"
+               />
             </template>
+            <div
+               v-if="facadeFloorPlanLayerMounted"
+               class="home-facade-floor-layer"
+               :class="{ 'home-facade-floor-layer--open': facadeFloorPlanLayerOpen }"
+            >
+               <img
+                  class="home-facade-floor-layer-img"
+                  :src="facadeCentralFloorPlanImage"
+                  alt=""
+               />
+               <div
+                  class="home-facade-floor-layer-shade"
+                  aria-hidden="true"
+               />
+            </div>
          </div>
          <video
             v-show="isTransitioning && transitionVideoSrc"
@@ -651,9 +699,15 @@
                   class="home-nav-arrow home-nav-arrow-left"
                   :class="{
                      'home-nav-arrow-disabled':
-                        disabledArrowLeft || isTransitioning,
+                        disabledArrowLeft ||
+                        isTransitioning ||
+                        facadeFloorPlanLayerMounted,
                   }"
-                  :disabled="disabledArrowLeft || isTransitioning"
+                  :disabled="
+                     disabledArrowLeft ||
+                     isTransitioning ||
+                     facadeFloorPlanLayerMounted
+                  "
                   @click="handleArrowNavigation('left')"
                >
                   <Icon name="arrow" :size="32" color="currentColor" />
@@ -662,9 +716,15 @@
                   class="home-nav-arrow home-nav-arrow-right"
                   :class="{
                      'home-nav-arrow-disabled':
-                        disabledArrowRight || isTransitioning,
+                        disabledArrowRight ||
+                        isTransitioning ||
+                        facadeFloorPlanLayerMounted,
                   }"
-                  :disabled="disabledArrowRight || isTransitioning"
+                  :disabled="
+                     disabledArrowRight ||
+                     isTransitioning ||
+                     facadeFloorPlanLayerMounted
+                  "
                   @click="handleArrowNavigation('right')"
                >
                   <Icon
@@ -676,7 +736,10 @@
                </button>
             </div>
             <div class="home-content-bottom home-content">
-               <BottomActions :show-labels="true" :disabled="isTransitioning" />
+               <BottomActions
+                  :show-labels="true"
+                  :disabled="isTransitioning || facadeFloorPlanLayerMounted"
+               />
             </div>
             <button
                v-if="isFloorLevel && currentFloorScheme2D && !showFloorPlanModal"
@@ -711,6 +774,10 @@ import Icon from "../components/Icon.vue";
 import BottomActions from "../components/BottomActions.vue";
 import HouseOutline from "../components/HouseOutline.vue";
 import FloorPlanModal from "../components/FloorPlanModal.vue";
+import {
+   facadeCentralFloorPlanImage,
+   FACADE_ORBIT_LEVEL_SET,
+} from "../config/facadeCentralFloorMasks.js";
 import { floorsConfig, levelImages, levelTransitions } from "../config/navigation.js";
 import { floorApartmentMasksByFloor } from "../config/floorApartmentMasks.js";
 import { useMasks } from "../composables/useMasks.js";
@@ -841,6 +908,9 @@ watch(currentLevel, (newLevel) => {
    const isNewLevelFloor = typeof newLevel === "string" && newLevel.startsWith("floor-");
    if (!isNewLevelFloor) {
       showFloorPlanModal.value = false;
+   }
+   if (!FACADE_ORBIT_LEVEL_SET.has(newLevel)) {
+      closeFacadeFloorPlanLayer();
    }
 });
 
@@ -1258,6 +1328,7 @@ const {
    twoProjectsMaskConfig,
    getFloorMaskConfig,
    startMaskConfig,
+   facadeCentralFloorMaskConfig,
 } = useMasks();
 
 const disabledArrowLeft = ref(false);
@@ -1423,11 +1494,60 @@ const FACADE_PERIPHERAL_LEVELS = [
 getActiveLevel = getActiveLevelFn;
 getLevelImageZIndex = getLevelImageZIndexFn;
 
+const activeCentralFloorMaskRows = computed(() => {
+   const level = getActiveLevel();
+   if (!FACADE_ORBIT_LEVEL_SET.has(level)) return [];
+   const list = facadeCentralFloorMaskConfig.value[level];
+   if (!list) return [];
+   return Array.isArray(list) ? list.filter((row) => row?.points?.length) : [list];
+});
+
+/** Вложенный «уровень»: план этажа на весь фон внутри home-image-content */
+const facadeFloorPlanLayerMounted = ref(false);
+const facadeFloorPlanLayerOpen = ref(false);
+let facadeFloorPlanCloseTimer = null;
+
+const closeFacadeFloorPlanLayer = () => {
+   facadeFloorPlanLayerOpen.value = false;
+   if (facadeFloorPlanCloseTimer) {
+      clearTimeout(facadeFloorPlanCloseTimer);
+   }
+   facadeFloorPlanCloseTimer = setTimeout(() => {
+      facadeFloorPlanLayerMounted.value = false;
+      facadeFloorPlanCloseTimer = null;
+   }, 520);
+};
+
+const openFacadeFloorPlanLayer = () => {
+   if (isTransitioning.value) return;
+   facadeFloorPlanLayerMounted.value = true;
+   facadeFloorPlanLayerOpen.value = false;
+   nextTick(() => {
+      requestAnimationFrame(() => {
+         facadeFloorPlanLayerOpen.value = true;
+      });
+   });
+};
+
+const handleCentralFloorMaskClick = () => {
+   if (isTransitioning.value) return;
+   openFacadeFloorPlanLayer();
+};
+
+watch(isTransitioning, (transitioning) => {
+   if (transitioning) closeFacadeFloorPlanLayer();
+});
+
 /**
  * Логика «Назад» только по currentLevel: getActiveLevel() учитывает forward/reverse во время роликов
  * и может расходиться с фактическим уровнем — из‑за этого лишний snap и двойные нажатия.
  */
 const handleBackButtonClick = () => {
+   if (facadeFloorPlanLayerMounted.value) {
+      closeFacadeFloorPlanLayer();
+      return;
+   }
+
    const level = currentLevel.value;
    const activeLevel = getActiveLevel();
    const backToPlaneFromTargetBuild3 = () => {
@@ -1555,7 +1675,11 @@ watch(
 const arrowLevels = ["builds", "build8", "builds-2", "view-4", "view-5", "view-6"];
 const hasNavigationArrows = computed(() => {
    const level = currentLevel.value;
-   return typeof level === "string" && arrowLevels.includes(level);
+   return (
+      typeof level === "string" &&
+      arrowLevels.includes(level) &&
+      !facadeFloorPlanLayerMounted.value
+   );
 });
 
 const arrowChainRight = {
@@ -1746,6 +1870,12 @@ watch(
    { flush: "post" }
 );
 
+const onFacadeFloorPlanKeydown = (event) => {
+   if (event.key === "Escape" && facadeFloorPlanLayerMounted.value) {
+      closeFacadeFloorPlanLayer();
+   }
+};
+
 onMounted(() => {
    if (imageWrapperRef.value) {
       imageWrapperRef.value.style.cursor = "grab";
@@ -1816,6 +1946,7 @@ onMounted(() => {
    });
 
    window.addEventListener("resize", handleResize);
+   window.addEventListener("keydown", onFacadeFloorPlanKeydown);
    
    // Also listen to visualViewport changes for Telegram mini app and mobile browsers
    if (window.visualViewport) {
@@ -1827,11 +1958,15 @@ onMounted(() => {
 onUnmounted(() => {
    transitions.cleanup();
    window.removeEventListener("resize", handleResize);
+   window.removeEventListener("keydown", onFacadeFloorPlanKeydown);
    
    // Remove visualViewport listeners
    if (window.visualViewport) {
       window.visualViewport.removeEventListener("resize", handleResize);
       window.visualViewport.removeEventListener("scroll", handleResize);
+   }
+   if (facadeFloorPlanCloseTimer) {
+      clearTimeout(facadeFloorPlanCloseTimer);
    }
 });
 </script>
@@ -2335,5 +2470,64 @@ onUnmounted(() => {
       width: 44px;
       height: 44px;
    }
+}
+
+.home-image-content--facade-floor-plan .home-image-level {
+   opacity: 0 !important;
+   visibility: hidden !important;
+   transition: opacity 0.35s ease, visibility 0.35s ease;
+}
+
+.home-facade-floor-layer {
+   position: absolute;
+   inset: 0;
+   z-index: 20;
+   overflow: hidden;
+   pointer-events: none;
+}
+
+.home-facade-floor-layer--open {
+   pointer-events: auto;
+}
+
+.home-facade-floor-layer-img {
+   position: absolute;
+   inset: 0;
+   display: block;
+   width: 100%;
+   height: 100%;
+   object-fit: cover;
+   object-position: center;
+   opacity: 0;
+   transform: scale(1.03);
+   transition:
+      opacity 0.5s ease,
+      transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+   user-select: none;
+   -webkit-user-select: none;
+   pointer-events: none;
+}
+
+.home-facade-floor-layer--open .home-facade-floor-layer-img {
+   opacity: 1;
+   transform: scale(1);
+}
+
+.home-facade-floor-layer-shade {
+   position: absolute;
+   inset: 0;
+   z-index: 1;
+   background: radial-gradient(
+      ellipse 92% 88% at 50% 48%,
+      rgba(0, 0, 0, 0.08) 0%,
+      rgba(0, 0, 0, 0.9) 100%
+   );
+   opacity: 1;
+   transition: opacity 0.55s ease;
+   pointer-events: none;
+}
+
+.home-facade-floor-layer--open .home-facade-floor-layer-shade {
+   opacity: 0;
 }
 </style>

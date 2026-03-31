@@ -1,5 +1,6 @@
 import { ref, computed } from "vue";
 import { mapMasks, twoProjectsMasks, startMasks, floorsConfig } from "../config/navigation.js";
+import { facadeCentralFloorMasks } from "../config/facadeCentralFloorMasks.js";
 
 export function useMasks() {
    let defaultEditMode = false;
@@ -82,6 +83,24 @@ export function useMasks() {
       };
    };
 
+   const facadeCentralFloorMaskConfig = computed(() => {
+      const config = {};
+      Object.entries(facadeCentralFloorMasks).forEach(([key, value]) => {
+         // Поддержка как одиночной маски, так и массива масок по этажам
+         const masksArray = Array.isArray(value) ? value : [value];
+         config[key] = masksArray.map((mask) => ({
+            points: mask?.points ?? [],
+            path: mask?.path ?? "",
+            strokeWidth: houseOutlineWidth.value,
+            glowColor: houseOutlineGlow.value,
+            glowBlur: houseOutlineGlowBlur.value,
+            animated: editMode.value ? false : houseOutlineAnimated.value,
+            alwaysVisible: editMode.value,
+         }));
+      });
+      return config;
+   });
+
    return {
       editMode,
       showDisclaimerMode,
@@ -92,5 +111,6 @@ export function useMasks() {
       twoProjectsMaskConfig,
       startMaskConfig,
       getFloorMaskConfig,
+      facadeCentralFloorMaskConfig,
    };
 }
